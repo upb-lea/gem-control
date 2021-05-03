@@ -122,7 +122,7 @@ def tune_pi_speed_controller(pi_controller, env, motor_type, action_type, contro
         tune_foc_speed_pi(pi_controller, env, motor_type, action_type, control_task, a)
 
 
-def tune_dc_speed_pi(pi_controller, env, motor_type, action_type, control_task, a=4):
+def tune_dc_speed_pi(pi_controller, env, motor_type, _action_type, __control_task, a=4):
     j_total = env.physical_system.mechanical_load.j_total
     tau = env.physical_system.tau
     r_a = reader.r_reader[motor_type](env)[0]
@@ -144,7 +144,7 @@ def tune_dc_speed_pi(pi_controller, env, motor_type, action_type, control_task, 
     pi_controller.action_range = torque_range
 
 
-def tune_foc_speed_pi(pi_controller, env, motor_type, action_type, control_task, a=4):
+def tune_foc_speed_pi(pi_controller, env, motor_type, _action_type, _control_task, a=4):
     raise NotImplementedError
 
 
@@ -159,7 +159,7 @@ def tune_foc_current_pi(pi_controller, env, motor_type, action_type, control_tas
     raise NotImplementedError
 
 
-def tune_dc_current_pi(pi_controller, env, motor_type, action_type, control_task, a):
+def tune_dc_current_pi(pi_controller, env, motor_type, _, __, a):
     l_ = reader.l_reader[motor_type](env)
     tau = env.physical_system.tau
     currents = reader.currents[motor_type]

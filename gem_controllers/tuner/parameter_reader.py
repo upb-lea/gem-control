@@ -2,6 +2,9 @@ from gym_electric_motor.physical_systems import converters as cv
 
 import numpy as np
 
+dc_motors = ['SeriesDc', 'ShuntDc', 'PermExDc', 'ExtExDc']
+synchronous_motors = ['PMSM', 'SynRM']
+induction_motors = ['DFIM', 'SCIM']
 
 psi_reader = {
     'SeriesDc': lambda env: np.array([0.0]),

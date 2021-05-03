@@ -25,7 +25,7 @@ def design_dc_controller(action_type, control_task, motor, base_current_controll
     if control_task == 'SC':
         stages_.append(_controller_registry[base_speed_controller]())
     if control_task in ['SC', 'TC']:
-        stages_.append(stages.TorqueToCurrentSetPoint())
+        stages_.append(stages.torque_to_current_function[motor]())
     stages_.append(_controller_registry[base_current_controller]())
     if action_type == 'Cont':
         stages_.append(stages.Feedforward())
