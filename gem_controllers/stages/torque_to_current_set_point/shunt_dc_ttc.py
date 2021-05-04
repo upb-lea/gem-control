@@ -66,6 +66,7 @@ class ShuntDcTorqueToCurrent(TorqueToCurrentSetPoint):
         return reference / self._cross_inductance / i_e
 
     def tune(self, env, motor, action_type, control_task, current_safety_margin=0.2):
+        super().tune(env, motor, action_type, control_task, current_safety_margin)
         self._cross_inductance = l_prime_reader['ShuntDc'](env)
         self._i_e_idx = env.state_names.index('i_e')
         self._i_a_idx = env.state_names.index('i_a')

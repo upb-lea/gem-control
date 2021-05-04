@@ -1,7 +1,7 @@
 import numpy as np
 
 from gem_controllers.stages.stage import Stage
-
+from gem_controllers.tuner import parameter_reader as reader
 
 class TorqueToCurrentSetPoint(Stage):
 
@@ -27,3 +27,11 @@ class TorqueToCurrentSetPoint(Stage):
 
     def _torque_to_current(self, state, reference):
         raise NotImplementedError
+
+    def tune(self, env, motor_type, action_type, control_task, current_safety_margin=0.2):
+        currents = reader.currents[motor_type]
+        current_indices = [env.state_names.index(current) for current in currents]
+        state_space = env.observation_space[0]
+        upper_limit = env.limits[current_indices] * state_space.high[current_indices] * (1 - current_safety_margin)
+        lower_limit = env.limits[current_indices] * state_space.low[current_indices] * (1 - current_safety_margin)
+        self.action_range = (lower_limit, upper_limit)

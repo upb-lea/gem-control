@@ -19,13 +19,13 @@ class PIController(PController, IController):
         fct(env, motor_type, action_type, control_task, a)
     
     def _get_tuning_function(self, motor_type, action_type, sub_control_task):
-        if motor_type in reader.dc_motors & sub_control_task == 'CC':
+        if (motor_type in reader.dc_motors) and (sub_control_task == 'CC'):
             fct = self.tune_dc_current_controller
-        elif motor_type in reader.synchronous_motors & sub_control_task == 'CC':
+        elif (motor_type in reader.synchronous_motors) and sub_control_task == 'CC':
             fct = self.tune_foc_current_controller
-        elif motor_type in reader.dc_motors & sub_control_task == 'SC':
+        elif motor_type in reader.dc_motors and sub_control_task == 'SC':
             fct = self.tune_dc_speed_controller
-        elif motor_type in reader.synchronous_motors & sub_control_task == 'SC':
+        elif motor_type in reader.synchronous_motors and sub_control_task == 'SC':
             fct = self.tune_foc_speed_controller
         else:
             raise Exception(

@@ -21,5 +21,6 @@ class SeriesDcTorqueToCurrent(TorqueToCurrentSetPoint):
     def _torque_to_current(self, state, reference):
         return np.sqrt(reference / self._cross_inductance)
 
-    def tune(self, env, motor, action_type, control_task):
+    def tune(self, env, motor, action_type, control_task, current_safety_margin=0.2):
+        super().tune(env, motor, action_type, control_task, current_safety_margin)
         self._cross_inductance = l_prime_reader[motor](env)

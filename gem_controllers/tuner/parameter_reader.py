@@ -5,6 +5,12 @@ import numpy as np
 dc_motors = ['SeriesDc', 'ShuntDc', 'PermExDc', 'ExtExDc']
 synchronous_motors = ['PMSM', 'SynRM']
 induction_motors = ['DFIM', 'SCIM']
+ac_motors = synchronous_motors + induction_motors
+
+control_tasks_ = ['CC', 'TC', 'SC']
+dc_actions = ['Finite', 'Cont']
+ac_actions = ['Finite', 'DqCont', 'AbcCont']
+
 
 psi_reader = {
     'SeriesDc': lambda env: np.array([0.0]),
