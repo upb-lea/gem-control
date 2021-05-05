@@ -1,9 +1,9 @@
 import numpy as np
 
-from .stage import Stage
+from .base_controller import BaseController
 
 
-class ThreePointController(Stage):
+class ThreePointController(BaseController):
 
     @property
     def high_action(self):
@@ -45,8 +45,8 @@ class ThreePointController(Stage):
     def hysteresis(self, value):
         self._hysteresis = np.array(value)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, control_task):
+        super().__init__(control_task)
         self._hysteresis = np.array([])
         self._referenced_state_indices = np.array([])
         self._idle_action = 0.0
@@ -58,3 +58,6 @@ class ThreePointController(Stage):
         high_actions = referenced_states + self._hysteresis < reference
         low_actions = referenced_states - self._hysteresis > reference
         return np.select([low_actions, high_actions], [self._low_action, self._high_action], default=self._idle_action)
+
+    def tune(self, env, motor_type, action_type, control_task, **base_controller_kwargs):
+        raise NotImplementedError

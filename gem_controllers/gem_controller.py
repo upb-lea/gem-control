@@ -46,9 +46,7 @@ class GemController:
         self._stages = []
 
     def control(self, state, reference):
-        for stage in self._stages:
-            reference = stage(state, reference)
-        return reference
+        raise NotImplementedError
 
     def reset(self):
         for stage in self._stages:

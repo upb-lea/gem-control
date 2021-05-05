@@ -1,15 +1,7 @@
-from .gem_controller import GemController
+import gem_controllers as gc
 
 
-class FeedforwardController(GemController):
-
-    def __init__(self):
-        super().__init__()
-        self._stages = []
-
-    def reset(self):
-        for stage in self._stages:
-            stage.reset()
+class FeedforwardController(gc.GemController):
 
     def control(self, state, reference):
         for stage in self._stages:

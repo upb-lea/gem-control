@@ -34,7 +34,7 @@ class PController(BaseController):
         return self.control(state, reference)
 
     def __init__(self, control_task, p_gain=np.array([0.0]), action_range=(np.array([0.0]), np.array([0.0]))):
-        super().__init__(control_task)
+        BaseController.__init__(self, control_task)
         self._p_gain = p_gain
         self._action_range = action_range
         self._state_indices = np.array([])
@@ -57,6 +57,8 @@ class PController(BaseController):
             self._tune_dc_speed_control(env, motor_type, action_type, control_task, a)
         elif self._control_task == EControlTask.SpeedControl and motor_type in reader.synchronous_motors:
             self._tune_foc_speed_control(env, motor_type, action_type, control_task, a)
+        else:
+            raise Exception(f'No Tuner available for control task{self._control_task} and motor type {motor_type}.')
 
     def _tune_dc_current_control(self, env, motor_type, _action_type, _control_task, a):
         l_ = reader.l_reader[motor_type](env)
@@ -82,15 +84,13 @@ class PController(BaseController):
         speed_index = env.state_names.index('omega')
         torque_limit = env.limits[torque_index]
         speed_limit = env.limits[speed_index]
-        torque_range = (
-            np.array([env.observation_space[0].low[torque_index] * torque_limit]),
-            np.array([env.observation_space[0].high[torque_index] * torque_limit])
-        )
         p_gain = j_total / (a * (l_a / r_a)) * speed_limit / torque_limit
         self.p_gain = np.array([p_gain])
-
         self.state_indices = [speed_index]
-        self._action_range = torque_range
+        self.action_range = (
+            env.observation_space[0].low[[torque_index]] * np.array([torque_limit]),
+            env.observation_space[0].high[[torque_index]] * np.array([torque_limit])
+        )
 
     def _tune_foc_speed_control(self, env, motor_type, action_type, control_task, a):
         raise NotImplementedError

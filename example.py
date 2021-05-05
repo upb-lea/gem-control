@@ -4,7 +4,13 @@ import gem_controllers as gc
 env_id = 'Cont-SC-ExtExDc-v0'
 env = gem.make(env_id, visualization=dict(state_plots='all'))
 
-c = gc.GemController.make(env, env_id, tuner_kwargs=dict(a=6, current_safety_margin=0.3))
+c = gc.GemController.make(
+    env,
+    env_id,
+    tuner_kwargs=dict(a=6, current_safety_margin=0.3),
+    designer_kwargs=dict(base_current_controller='PI', base_speed_controller='PID')
+)
+
 
 done = True
 

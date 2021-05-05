@@ -1,5 +1,5 @@
 from gem_controllers import stages
-
+import gem_controllers as gc
 
 dc_motors = ['PermExDc', 'ExtExDc', 'SeriesDc', 'ShuntDc']
 sync_motors = ['PMSM', 'SynRM']
@@ -18,22 +18,22 @@ def design_controller(env, action_type, motor, control_task,  base_current_contr
 
 
 def design_dc_controller(action_type, control_task, motor, base_current_controller=None, base_speed_controller='PI'):
-    from gem_controllers.gem_controller import GemController
+
     if base_current_controller is None:
         base_current_controller = 'ThreePoint' if action_type == 'Finite' else 'PI'
     stages_ = [stages.InputStage()]
     if control_task == 'SC':
-        stages_.append(_controller_registry[base_speed_controller]())
+        stages_.append(_controller_registry[base_speed_controller](control_task='SC'))
     if control_task in ['SC', 'TC']:
         stages_.append(stages.torque_to_current_function[motor]())
-    stages_.append(_controller_registry[base_current_controller]())
+    stages_.append(_controller_registry[base_current_controller](control_task='CC'))
     if action_type == 'Cont':
         stages_.append(stages.Feedforward())
     if action_type == 'Finite':
         stages_.append(stages.DiscOutputStage())
     else:
         stages_.append(stages.ContOutputStage())
-    controller = GemController()
+    controller = gc.FeedforwardController()
     controller.stages.extend(stages_)
     return controller
 

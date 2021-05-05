@@ -1,9 +1,9 @@
 import numpy as np
 
-from .stage import Stage
+from ..base_controllers import BaseController
 
 
-class IController(Stage):
+class IController(BaseController):
 
     # (float): Additional term to avoid division by zero
     epsilon = 1e-6
@@ -51,8 +51,8 @@ class IController(Stage):
     def state_indices(self, value):
         self._state_indices = np.array(value)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, control_task):
+        super().__init__(control_task)
         self._state_indices = np.array([])
         self._action_range = (np.array([]), np.array([]))
         self.i_gain = np.array([])
@@ -76,7 +76,7 @@ class IController(Stage):
 
     def integrate(self, state, reference):
         error = reference - state
-        self._integrator += error * self._tau
+        self._integrator = self._integrator + error * self._tau
         self._integrator = np.clip(self._integrator, self._integrator_range[0], self._integrator_range[1])
 
     def reset(self):
