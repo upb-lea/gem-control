@@ -1,6 +1,6 @@
 import numpy as np
 
-from .base_controller import BaseController, EControlTask
+from .base_controller import BaseController, EBaseControllerTask
 from gem_controllers.tuner import parameter_reader as reader
 
 
@@ -49,13 +49,13 @@ class PController(BaseController):
         return self._clip(self._control(state[self._state_indices], reference))
 
     def tune(self, env, motor_type, action_type, control_task, a=4):
-        if self._control_task == EControlTask.CurrentControl and motor_type in reader.dc_motors:
+        if self._control_task == EBaseControllerTask.CurrentControl and motor_type in reader.dc_motors:
             self._tune_dc_current_control(env, motor_type, action_type, control_task, a)
-        elif self._control_task == EControlTask.CurrentControl and motor_type in reader.synchronous_motors:
+        elif self._control_task == EBaseControllerTask.CurrentControl and motor_type in reader.synchronous_motors:
             self._tune_foc_current_control(env, motor_type, action_type, control_task, a)
-        elif self._control_task == EControlTask.SpeedControl and motor_type in reader.dc_motors:
+        elif self._control_task == EBaseControllerTask.SpeedControl and motor_type in reader.dc_motors:
             self._tune_dc_speed_control(env, motor_type, action_type, control_task, a)
-        elif self._control_task == EControlTask.SpeedControl and motor_type in reader.synchronous_motors:
+        elif self._control_task == EBaseControllerTask.SpeedControl and motor_type in reader.synchronous_motors:
             self._tune_foc_speed_control(env, motor_type, action_type, control_task, a)
         else:
             raise Exception(f'No Tuner available for control task{self._control_task} and motor type {motor_type}.')

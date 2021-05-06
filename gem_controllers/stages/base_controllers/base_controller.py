@@ -1,21 +1,11 @@
-from enum import Enum
-
 from ..stage import Stage
-
-
-class EControlTask:
-    CC = 'CC'
-    CurrentControl = 'CC'
-    TC = 'TC'
-    TorqueControl = 'TC'
-    SC = 'SC'
-    SpeedControl = 'SC'
+from.e_base_controller_task import EBaseControllerTask
 
 
 class BaseController(Stage):
 
     def __init__(self, control_task):
-        self._control_task = control_task
+        self._control_task = EBaseControllerTask.get_control_task(control_task)
 
     def __call__(self, stage, reference):
         raise NotImplementedError

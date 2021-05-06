@@ -34,7 +34,6 @@ class PIDController(PIController):
         super()._tune_dc_speed_control(env, motor_type, action_type, control_task, a)
         self.d_gain = self.p_gain * self.tau
 
-
     def _tune_foc_current_control(self, env, motor_type, action_type, control_task, a):
         raise NotImplementedError
 

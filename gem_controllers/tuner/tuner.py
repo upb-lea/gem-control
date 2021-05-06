@@ -16,17 +16,15 @@ def tune_dc_controller(controller, env, dc_motor, action_type, control_task, a=4
     controller.stages[i].tune(env, dc_motor, action_type, control_task)
     i += 1
     if control_task == 'SC':
-        controller.stages[i].tune(env, dc_motor, action_type, control_task, a)
+        controller.stages[i].tune(env, dc_motor, action_type, control_task, a=a)
         i += 1
     if control_task in ['SC', 'TC']:
         controller.stages[i].tune(env, dc_motor, action_type, control_task, current_safety_margin)
         i += 1
-    controller.stages[i].tune(env, dc_motor, action_type, control_task, a)
+    controller.stages[i].tune(env, dc_motor, action_type, control_task, a=a)
     i += 1
     if action_type == 'Cont':
         controller.stages[i].tune(env, dc_motor, action_type, control_task)
         i += 1
-        controller.stages[i].tune(env, dc_motor, action_type, control_task)
-    else:
-        raise NotImplementedError
+    controller.stages[i].tune(env, dc_motor, action_type, control_task)
     return controller

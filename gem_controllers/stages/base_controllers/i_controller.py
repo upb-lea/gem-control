@@ -62,14 +62,13 @@ class IController(BaseController):
     def __call__(self, state, reference):
         return self.control(state, reference)
 
-    def _control(self, state, reference):
+    def _control(self, _state, _reference):
         return self._i_gain * self._integrator
 
     def _clip(self, action):
         return np.clip(action, self._action_range[0], self._action_range[1])
 
     def control(self, state, reference):
-        error = reference - state
         action = self._control(state, reference)
         self.integrate(state, reference)
         return self._clip(action)

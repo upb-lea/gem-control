@@ -3,6 +3,7 @@ import numpy as np
 from .p_controller import PController
 from .i_controller import IController
 from ...tuner import parameter_reader as reader
+from .e_base_controller_task import EBaseControllerTask
 
 
 class PIController(PController, IController):
@@ -19,13 +20,13 @@ class PIController(PController, IController):
         fct(env, motor_type, action_type, control_task, a)
 
     def _get_tuning_function(self, motor_type, action_type, sub_control_task):
-        if (motor_type in reader.dc_motors) and (sub_control_task == 'CC'):
+        if (motor_type in reader.dc_motors) and (sub_control_task == EBaseControllerTask.CC):
             fct = self._tune_dc_current_control
-        elif (motor_type in reader.synchronous_motors) and sub_control_task == 'CC':
+        elif (motor_type in reader.synchronous_motors) and sub_control_task == EBaseControllerTask.CC:
             fct = self._tune_foc_current_control
-        elif motor_type in reader.dc_motors and sub_control_task == 'SC':
+        elif motor_type in reader.dc_motors and sub_control_task == EBaseControllerTask.SC:
             fct = self._tune_dc_speed_control
-        elif motor_type in reader.synchronous_motors and sub_control_task == 'SC':
+        elif motor_type in reader.synchronous_motors and sub_control_task == EBaseControllerTask.SC:
             fct = self._tune_foc_speed_control
         else:
             raise Exception(
