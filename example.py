@@ -1,16 +1,14 @@
 import gym_electric_motor as gem
 import gem_controllers as gc
 
-env_id = 'Finite-CC-PermExDc-v0'
+env_id = 'Finite-CC-SeriesDc-v0'
 env = gem.make(env_id, visualization=dict(state_plots='all'), constraints=())
 
 c = gc.GemController.make(
     env,
     env_id,
     tuner_kwargs=dict(a=6, current_safety_margin=0.3),
-    designer_kwargs=dict(base_current_controller='PI')
 )
-
 
 done = True
 
