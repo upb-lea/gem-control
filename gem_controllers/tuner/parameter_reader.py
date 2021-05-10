@@ -46,6 +46,65 @@ l_reader = {
     ]),
 }
 
+l_emf_reader = {
+    'SeriesDc': lambda env: np.array([
+        -env.physical_system.electrical_motor.motor_parameter['l_e_prime']
+    ]),
+    'ShuntDc': lambda env: np.array([
+        -env.physical_system.electrical_motor.motor_parameter['l_e_prime'],
+    ]),
+    'ExtExDc': lambda env: np.array([
+        -env.physical_system.electrical_motor.motor_parameter['l_e_prime'],
+        0.0
+    ]),
+    'PermExDc': lambda env: np.array([0.0]),
+    'PMSM': lambda env: np.array([
+        env.physical_system.electric_motor.motor_parameter['l_sd'],
+        - env.physical_system.electric_motor.motor_parameter['l_sq']
+    ]),
+    'SynRM': lambda env: np.array([
+        env.physical_system.electric_motor.motor_parameter['l_sd'],
+        - env.physical_system.electric_motor.motor_parameter['l_sq']
+    ]),
+}
+
+tau_current_loop_reader = {
+    'SeriesDc': lambda env: np.array([(
+            env.physical_system.electrical_motor.motor_parameter['l_e']
+            + env.physical_system.electrical_motor.motor_parameter['l_a']
+        ) / (
+            env.physical_system.electrical_motor.motor_parameter['r_e']
+            + env.physical_system.electrical_motor.motor_parameter['r_a']
+        )
+    ]),
+    'ShuntDc': lambda env: np.array([
+        env.physical_system.electrical_motor.motor_parameter['l_a']
+        / env.physical_system.electrical_motor.motor_parameter['r_a']
+    ]),
+    'ExtExDc': lambda env: np.array([
+        env.physical_system.electrical_motor.motor_parameter['l_a']
+        / env.physical_system.electrical_motor.motor_parameter['r_a'],
+        env.physical_system.electrical_motor.motor_parameter['l_e']
+        / env.physical_system.electrical_motor.motor_parameter['r_e']
+    ]),
+    'PermExDc': lambda env: np.array(
+        env.physical_system.electrical_motor.motor_parameter['l_a']
+        / env.physical_system.electrical_motor.motor_parameter['r_a']
+    ),
+    'PMSM': lambda env: np.array([
+        env.physical_system.electric_motor.motor_parameter['l_sq']
+        / env.physical_system.electrical_motor.motor_parameter['r_s'],
+        env.physical_system.electric_motor.motor_parameter['l_sd']
+        / env.physical_system.electrical_motor.motor_parameter['r_s']
+    ]),
+    'SynRM': lambda env: np.array([
+        env.physical_system.electric_motor.motor_parameter['l_sq']
+        / env.physical_system.electrical_motor.motor_parameter['r_s'],
+        env.physical_system.electric_motor.motor_parameter['l_sd']
+        / env.physical_system.electrical_motor.motor_parameter['r_s']
+    ]),
+}
+
 r_reader = {
     'SeriesDc': lambda env: np.array([
         env.physical_system.electrical_motor.motor_parameter['r_a']
@@ -76,6 +135,14 @@ currents = {
     'SeriesDc': ['i'],
     'ShuntDc': ['i_a'],
     'ExtExDc': ['i_a', 'i_e'],
+    'PermExDc': ['i'],
+    'PMSM': ['i_sd', 'i_sq'],
+    'SynRM': ['i_sd', 'i_sq']
+}
+emf_currents = {
+    'SeriesDc': ['i'],
+    'ShuntDc': ['i_e'],
+    'ExtExDc': ['i_e', 'i_a'],
     'PermExDc': ['i'],
     'PMSM': ['i_sd', 'i_sq'],
     'SynRM': ['i_sd', 'i_sq']
@@ -121,7 +188,7 @@ def series_torque_to_current_factory(env):
 def shunt_torque_to_current_factory(env, i_e_margin=0.2):
     cross_inductance = l_prime_reader['ShuntDc'](env)
     i_e_idx = env.state_names.index('i_e')
-    i_a_idx = env.state_names.index('i_a')
+    i_a_2idx = env.state_names.index('i_a')
     i_a_limit = env.limits[i_a_idx] * (1 - i_e_margin)
     i_e_limit = env.limits[i_e_idx] * (1 - i_e_margin)
 

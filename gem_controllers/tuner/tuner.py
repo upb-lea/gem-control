@@ -23,8 +23,7 @@ def tune_dc_controller(controller, env, dc_motor, action_type, control_task, a=4
         i += 1
     controller.stages[i].tune(env, dc_motor, action_type, control_task, a=a)
     i += 1
-    if action_type == 'Cont':
-        controller.stages[i].tune(env, dc_motor, action_type, control_task)
-        i += 1
+    controller.stages[i].tune(env, dc_motor, action_type, control_task)
+    i += 1
     controller.stages[i].tune(env, dc_motor, action_type, control_task)
     return controller

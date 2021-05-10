@@ -4,7 +4,7 @@ import gym_electric_motor.physical_systems.converters as cv
 
 
 def non_parameterized(*args, **kwargs):
-    raise Exception('Component not parameterized. Call the parameterize() function before the first control cycle.')
+    raise Exception('Component not parameterized. Call the tune() function before the first control cycle.')
 
 
 def disc_converter_actions(converter):

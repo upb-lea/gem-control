@@ -27,8 +27,7 @@ def design_dc_controller(action_type, control_task, motor, base_current_controll
     if control_task in ['SC', 'TC']:
         stages_.append(stages.torque_to_current_function[motor]())
     stages_.append(_controller_registry[base_current_controller](control_task='CC'))
-    if action_type == 'Cont':
-        stages_.append(stages.Feedforward())
+    stages_.append(stages.EMFFeedforward())
     if action_type == 'Finite':
         stages_.append(stages.DiscOutputStage())
     else:
@@ -53,7 +52,7 @@ def design_field_oriented_controller(
         stages_.append(stages.AbcTransformation())
     stages_.append(_controller_registry[base_current_controller]())
     if action_type == 'Cont':
-        stages_.append(stages.Feedforward())
+        stages_.append(stages.EMFFeedforward())
         stages_.append(stages.AbcTransformation())
     if action_type == 'Finite':
         stages_.append(stages.DiscOutputStage())
