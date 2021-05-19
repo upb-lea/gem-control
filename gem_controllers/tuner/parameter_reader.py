@@ -130,6 +130,40 @@ r_reader = {
     ]),
 }
 
+tau_n_reader = {
+    'SeriesDc': lambda env: np.array([
+        (env.physical_system.electrical_motor.motor_parameter['r_a']
+            + env.physical_system.electrical_motor.motor_parameter['r_e'])
+        / (env.physical_system.electrical_motor.motor_parameter['l_a']
+            + env.physical_system.electrical_motor.motor_parameter['l_e'])
+    ]),
+    'ShuntDc': lambda env: np.array([
+        env.physical_system.electrical_motor.motor_parameter['r_a']
+        / env.physical_system.electrical_motor.motor_parameter['l_a'],
+    ]),
+    'ExtExDc': lambda env: np.array([
+        env.physical_system.electrical_motor.motor_parameter['r_a']
+        / env.physical_system.electrical_motor.motor_parameter['l_a'],
+        env.physical_system.electrical_motor.motor_parameter['r_e']
+        / env.physical_system.electrical_motor.motor_parameter['l_e']
+    ]),
+    'PermExDc': lambda env: np.array([
+        env.physical_system.electrical_motor.motor_parameter['r_a']
+        / env.physical_system.electrical_motor.motor_parameter['l_a'],
+    ]),
+    'PMSM': lambda env: np.array([
+        env.physical_system.electrical_motor.motor_parameter['r_s']
+        / env.physical_system.electrical_motor.motor_parameter['l_d'],
+        env.physical_system.electrical_motor.motor_parameter['r_s']
+        / env.physical_system.electrical_motor.motor_parameter['l_q']
+    ]),
+    'SynRM': lambda env: np.array([
+        env.physical_system.electrical_motor.motor_parameter['r_s']
+        / env.physical_system.electrical_motor.motor_parameter['l_d'],
+        env.physical_system.electrical_motor.motor_parameter['r_s']
+        / env.physical_system.electrical_motor.motor_parameter['l_q']
+    ]),
+}
 
 currents = {
     'SeriesDc': ['i'],
@@ -193,7 +227,7 @@ def shunt_torque_to_current_factory(env, i_e_margin=0.2):
     i_e_limit = env.limits[i_e_idx] * (1 - i_e_margin)
 
     def shunt_torque_to_current(state, reference):
-        # If i_e is too high, set torque reference to 0.
+        # If i_e is too high, set torque current_reference to 0.
         if abs(state[i_e_idx]) > i_e_limit:
             return np.zeros(1, dtype=float)
         return reference / cross_inductance / max(state[i_e_idx], 1e-3 * i_e_limit)

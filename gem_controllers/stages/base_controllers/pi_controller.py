@@ -8,6 +8,10 @@ from .e_base_controller_task import EBaseControllerTask
 
 class PIController(PController, IController):
 
+    def __init__(self, control_task):
+        PController.__init__(self, control_task=control_task)
+        IController.__init__(self, control_task=control_task)
+
     def control(self, state, reference):
         filtered_state = state[self._state_indices]
         action = PController._control(self, filtered_state, reference) \
@@ -19,7 +23,7 @@ class PIController(PController, IController):
         fct = self._get_tuning_function(motor_type, action_type, self._control_task)
         fct(env, motor_type, action_type, control_task, a)
 
-    def _get_tuning_function(self, motor_type, action_type, sub_control_task):
+    def _get_tuning_function(self, motor_type, _action_type, sub_control_task):
         if (motor_type in reader.dc_motors) and (sub_control_task == EBaseControllerTask.CC):
             fct = self._tune_dc_current_control
         elif (motor_type in reader.synchronous_motors) and sub_control_task == EBaseControllerTask.CC:
@@ -62,7 +66,7 @@ class PIController(PController, IController):
         r_a = reader.r_reader[motor_type](env)[0]
         l_a = reader.l_reader[motor_type](env)[0]
         self.i_gain = self.p_gain / (a ** 2 * (l_a / r_a))
-        self.tau = env.physical_system.tau
+        self.tau = env.physical_system.tau_n
         speed_index = env.state_names.index('omega')
         self.state_indices = [speed_index]
 

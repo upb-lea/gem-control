@@ -55,7 +55,7 @@ class ShuntDcTorqueToCurrent(TorqueToCurrentSetPoint):
         self._i_e_limit = np.array([])
 
     def _torque_to_current(self, state, reference):
-        # If i_e is too high, set i_a reference to 0 to also lower i_e again.
+        # If i_e is too high, set i_a current_reference to 0 to also lower i_e again.
         if state[self._i_e_idx] > self._i_e_limit:
             return -self._i_a_limit
         if state[self._i_e_idx] < -self._i_e_limit:

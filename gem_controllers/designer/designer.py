@@ -23,16 +23,16 @@ def design_dc_controller(action_type, control_task, motor, base_current_controll
         base_current_controller = 'ThreePoint' if action_type == 'Finite' else 'PI'
     stages_ = [stages.InputStage()]
     if control_task == 'SC':
-        stages_.append(_controller_registry[base_speed_controller](control_task='SC'))
+        stages_.append(controller_registry[base_speed_controller](control_task='SC'))
     if control_task in ['SC', 'TC']:
         stages_.append(stages.torque_to_current_function[motor]())
-    stages_.append(_controller_registry[base_current_controller](control_task='CC'))
+    stages_.append(controller_registry[base_current_controller](control_task='CC'))
     stages_.append(stages.EMFFeedforward())
     if action_type == 'Finite':
         stages_.append(stages.DiscOutputStage())
     else:
         stages_.append(stages.ContOutputStage())
-    controller = gc.FeedforwardController()
+    controller = gc.CascadedController()
     controller.stages.extend(stages_)
     return controller
 
@@ -45,12 +45,12 @@ def design_field_oriented_controller(
         base_current_controller = 'ThreePoint' if action_type == 'Finite' else 'PI'
     stages_ = [stages.InputStage()]
     if control_task == 'SC':
-        stages_.append(_controller_registry[base_speed_controller]())
+        stages_.append(controller_registry[base_speed_controller]())
     if control_task in ['SC', 'TC']:
         stages_.append(stages.MTPC())
     if action_type == 'Finite':
         stages_.append(stages.AbcTransformation())
-    stages_.append(_controller_registry[base_current_controller]())
+    stages_.append(controller_registry[base_current_controller]())
     if action_type == 'Cont':
         stages_.append(stages.EMFFeedforward())
         stages_.append(stages.AbcTransformation())
@@ -63,7 +63,7 @@ def design_field_oriented_controller(
     return controller
 
 
-_controller_registry = {
+controller_registry = {
     'PI': stages.PIController,
     'P': stages.PController,
     'I': stages.IController,
