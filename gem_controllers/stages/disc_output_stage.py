@@ -47,7 +47,7 @@ class DiscOutputStage(Stage):
         return np.select(conditions, [self.low_action, self.high_action], default=self.idle_action)
 
     def tune(self, env, motor_type, action_type, control_task):
-        voltages = reader.voltages[motor_type]
+        voltages = reader.get_output_voltages(motor_type, action_type)
         voltage_indices = [env.state_names.index(voltage) for voltage in voltages]
         voltage_limits = env.limits[voltage_indices]
 

@@ -26,12 +26,12 @@ class PIDController(PIController):
         self._last_error = current_error
         return np.clip(pi_action + d_action, self._action_range[0], self._action_range[1])
 
-    def _tune_dc_current_control(self, env, motor_type, action_type, control_task, a=4):
-        super()._tune_dc_current_control(env, motor_type, action_type, control_task, a)
+    def _tune_current_controller(self, env, motor_type, action_type, control_task, a=4):
+        super()._tune_current_controller(env, motor_type, action_type, control_task, a)
         self.d_gain = self.p_gain * self.tau
 
-    def _tune_dc_speed_control(self, env, motor_type, action_type, control_task, a=4):
-        super()._tune_dc_speed_control(env, motor_type, action_type, control_task, a)
+    def _tune_speed_controller(self, env, motor_type, action_type, control_task, a=4):
+        super()._tune_speed_controller(env, motor_type, action_type, control_task, a)
         self.d_gain = self.p_gain * self.tau
 
     def _tune_foc_current_control(self, env, motor_type, action_type, control_task, a):

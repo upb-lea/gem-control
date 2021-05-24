@@ -49,18 +49,14 @@ class PController(BaseController):
         return self._clip(self._control(state[self._state_indices], reference))
 
     def tune(self, env, motor_type, action_type, control_task, a=4):
-        if self._control_task == EBaseControllerTask.CurrentControl and motor_type in reader.dc_motors:
-            self._tune_dc_current_control(env, motor_type, action_type, control_task, a)
-        elif self._control_task == EBaseControllerTask.CurrentControl and motor_type in reader.synchronous_motors:
-            self._tune_foc_current_control(env, motor_type, action_type, control_task, a)
-        elif self._control_task == EBaseControllerTask.SpeedControl and motor_type in reader.dc_motors:
-            self._tune_dc_speed_control(env, motor_type, action_type, control_task, a)
-        elif self._control_task == EBaseControllerTask.SpeedControl and motor_type in reader.synchronous_motors:
-            self._tune_foc_speed_control(env, motor_type, action_type, control_task, a)
+        if self._control_task == EBaseControllerTask.CurrentControl:
+            self._tune_current_controller(env, motor_type, action_type, control_task, a)
+        elif self._control_task == EBaseControllerTask.SpeedControl:
+            self._tune_speed_controller(env, motor_type, action_type, control_task, a)
         else:
-            raise Exception(f'No Tuner available for control task{self._control_task} and motor type {motor_type}.')
+            raise Exception(f'No Tuner available for control task{self._control_task}.')
 
-    def _tune_dc_current_control(self, env, motor_type, _action_type, _control_task, a):
+    def _tune_current_controller(self, env, motor_type, _action_type, _control_task, a):
         l_ = reader.l_reader[motor_type](env)
         tau = env.physical_system.tau
         currents = reader.currents[motor_type]
@@ -76,24 +72,18 @@ class PController(BaseController):
         )
         self.state_indices = current_indices
 
-    def _tune_dc_speed_control(self, env, motor_type, _action_range, _control_task, a=4):
+    def _tune_speed_controller(self, env, motor_type, _action_range, _control_task, a=4, t_n=None):
+        if t_n is None:
+            t_n = env.physical_system.tau
         j_total = env.physical_system.mechanical_load.j_total
-        r_a = reader.r_reader[motor_type](env)[0]
-        l_a = reader.l_reader[motor_type](env)[0]
         torque_index = env.state_names.index('torque')
         speed_index = env.state_names.index('omega')
         torque_limit = env.limits[torque_index]
         speed_limit = env.limits[speed_index]
-        p_gain = j_total / (a * (l_a / r_a)) * speed_limit / torque_limit
+        p_gain = j_total / (a * t_n) * speed_limit / torque_limit
         self.p_gain = np.array([p_gain])
         self.state_indices = [speed_index]
         self.action_range = (
             env.observation_space[0].low[[torque_index]] * np.array([torque_limit]),
             env.observation_space[0].high[[torque_index]] * np.array([torque_limit])
         )
-
-    def _tune_foc_speed_control(self, env, motor_type, action_type, control_task, a):
-        raise NotImplementedError
-
-    def _tune_foc_current_control(self, env, motor_type, action_type, control_task, a):
-        raise NotImplementedError

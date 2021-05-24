@@ -22,6 +22,6 @@ class ContOutputStage(Stage):
         return reference / self.voltage_limit
 
     def tune(self, env, motor_type, action_type, control_task):
-        voltages = reader.voltages[motor_type]
+        voltages = reader.get_output_voltages(motor_type, action_type)
         voltage_indices = [env.state_names.index(voltage) for voltage in voltages]
         self.voltage_limit = env.limits[voltage_indices]

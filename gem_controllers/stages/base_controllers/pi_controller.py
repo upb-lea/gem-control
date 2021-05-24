@@ -19,27 +19,16 @@ class PIController(PController, IController):
         self.integrate(filtered_state, reference)
         return np.clip(action, self._action_range[0], self._action_range[1])
 
-    def tune(self, env, motor_type, action_type, control_task, a=4):
-        fct = self._get_tuning_function(motor_type, action_type, self._control_task)
-        fct(env, motor_type, action_type, control_task, a)
-
-    def _get_tuning_function(self, motor_type, _action_type, sub_control_task):
-        if (motor_type in reader.dc_motors) and (sub_control_task == EBaseControllerTask.CC):
-            fct = self._tune_dc_current_control
-        elif (motor_type in reader.synchronous_motors) and sub_control_task == EBaseControllerTask.CC:
-            fct = self._tune_foc_current_control
-        elif motor_type in reader.dc_motors and sub_control_task == EBaseControllerTask.SC:
-            fct = self._tune_dc_speed_control
-        elif motor_type in reader.synchronous_motors and sub_control_task == EBaseControllerTask.SC:
-            fct = self._tune_foc_speed_control
+    def tune(self, env, motor_type, action_type, control_task, a=4, t_n=None):
+        if self._control_task == EBaseControllerTask.CC:
+            self._tune_current_controller(env, motor_type, action_type, control_task, a)
+        elif self._control_task == EBaseControllerTask.SC:
+            self._tune_speed_controller(env, motor_type, action_type, control_task, a, t_n)
         else:
-            raise Exception(
-                f'No tuning method available for motor type {motor_type} and control_task {sub_control_task}'
-            )
-        return fct
+            raise Exception(f'No tuning method available.')
 
-    def _tune_dc_current_control(self, env, motor_type, action_type, control_task, a=4):
-        PController._tune_dc_current_control(self, env, motor_type, action_type, control_task, a)
+    def _tune_current_controller(self, env, motor_type, action_type, control_task, a=4):
+        PController._tune_current_controller(self, env, motor_type, action_type, control_task, a)
         l_ = reader.l_reader[motor_type](env)
         tau = env.physical_system.tau
         currents = reader.currents[motor_type]
@@ -47,31 +36,22 @@ class PIController(PController, IController):
         voltage_indices = [env.state_names.index(voltage) for voltage in voltages]
         current_indices = [env.state_names.index(current) for current in currents]
         voltage_limits = env.limits[voltage_indices]
-        current_limits = env.limits[current_indices]
-        p_gain = l_ / (tau * a) * current_limits / voltage_limits
-        i_gain = p_gain / (tau * a ** 2)
+        i_gain = self.p_gain / (tau * a ** 2)
 
         action_range = (
             env.observation_space[0].low[voltage_indices] * voltage_limits,
             env.observation_space[0].high[voltage_indices] * voltage_limits,
         )
-        self.p_gain = p_gain
         self.i_gain = i_gain
         self.action_range = action_range
         self.tau = tau
         self.state_indices = current_indices
 
-    def _tune_dc_speed_control(self, env, motor_type, action_type, control_task, a=4):
-        PController._tune_dc_speed_control(self, env, motor_type, action_type, control_task, a)
-        r_a = reader.r_reader[motor_type](env)[0]
-        l_a = reader.l_reader[motor_type](env)[0]
-        self.i_gain = self.p_gain / (a ** 2 * (l_a / r_a))
-        self.tau = env.physical_system.tau_n
+    def _tune_speed_controller(self, env, motor_type, action_type, control_task, a=4, t_n=None):
+        PController._tune_speed_controller(self, env, motor_type, action_type, control_task, a, t_n)
+        if t_n is None:
+            t_n = env.physical_system.tau
+        self.i_gain = self.p_gain / (a * t_n)
+        self.tau = env.physical_system.tau
         speed_index = env.state_names.index('omega')
         self.state_indices = [speed_index]
-
-    def _tune_foc_current_control(self, env, motor_type, action_type, control_task, a):
-        raise NotImplementedError
-
-    def _tune_foc_speed_control(self, env, motor_type, action_type, control_task, a):
-        raise NotImplementedError
