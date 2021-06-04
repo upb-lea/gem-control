@@ -6,24 +6,6 @@ import gem_controllers as gc
 class TorqueController(gc.GemController):
 
     @property
-    def output_stage(self):
-        return self._output_stage
-
-    @output_stage.setter
-    def output_stage(self, value):
-        assert isinstance(value, (gc.stages.ContOutputStage, gc.stages.DiscOutputStage))
-        self._output_stage = value
-
-    @property
-    def input_stage(self):
-        return self._input_stage
-
-    @input_stage.setter
-    def input_stage(self, value):
-        assert isinstance(value, gc.stages.InputStage)
-        self._input_stage = value
-
-    @property
     def torque_to_current_stage(self):
         return self._torque_to_current_stage
 
@@ -38,7 +20,7 @@ class TorqueController(gc.GemController):
 
     @current_controller.setter
     def current_controller(self, value):
-        assert isinstance(value, gc.CurrentController)
+        assert isinstance(value, gc.PICurrentController)
         self._current_controller = value
 
     @property
@@ -47,40 +29,28 @@ class TorqueController(gc.GemController):
 
     def __init__(self):
         super().__init__()
-        self._input_stage = None
-        self._output_stage = None
         self._torque_to_current_stage = None
         self._current_controller = None
         self._current_reference = np.array([])
 
-    def design(self, action_type, motor_type, base_current_controller='PI', decoupling=True):
-        self._input_stage = gc.stages.InputStage()
-        if action_type == 'Finite':
-            self._output_stage = gc.stages.DiscOutputStage()
-        else:
-            self._output_stage = gc.stages.ContOutputStage()
-        self._torque_to_current_stage = gc.stages.torque_to_current_function[motor_type]()
-        self._current_controller = gc.CurrentController()
-        self._current_controller.design(action_type, motor_type, base_current_controller, decoupling)
+    def design(self, env, env_id, base_current_controller='PI', decoupling=True):
+        self._torque_to_current_stage = gc.stages.torque_to_current_function[gc.utils.get_motor_type(env_id)]()
+        self._current_controller = gc.PICurrentController()
+        self._current_controller.design(env, env_id, base_current_controller, decoupling)
 
-    def tune(self, env, motor_type, action_type, control_task, a=4):
-        self._torque_to_current_stage.tune(env, motor_type, action_type, control_task)
-        self._current_controller.tune(env, motor_type, action_type, control_task='CC', a=a)
-        self._input_stage.tune(env, motor_type, action_type, control_task)
-        self._output_stage.tune(env, motor_type, action_type, control_task)
+    def tune(self, env, env_id, current_safety_margin=0.2, **kwargs):
+        self._torque_to_current_stage.tune(env, env_id, current_safety_margin)
+        self._current_controller.tune(env, env_id, **kwargs)
 
     def torque_control(self, state, reference):
         self._current_reference = self._torque_to_current_stage(state, reference)
         return self._current_reference
 
     def control(self, state, reference):
-        reference = self._input_stage(state, reference)
-        reference = self.torque_control(state, reference)
-        reference = self._current_controller.current_control(state, reference)
-        return self._output_stage(state, reference)
+        self._current_reference = self.torque_control(state, reference)
+        reference = self._current_controller.current_control(state, self._current_reference)
+        return reference
 
     def reset(self):
         self._current_controller.reset()
-        self._input_stage.reset()
-        self._output_stage.reset()
         self._torque_to_current_stage.reset()

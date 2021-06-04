@@ -42,19 +42,19 @@ l_reader = {
     ]),
     'SynRM': lambda env: np.array([
         env.physical_system.electrical_motor.motor_parameter['l_d'],
-        - env.physical_system.electrical_motor.motor_parameter['l_q']
+        env.physical_system.electrical_motor.motor_parameter['l_q']
     ]),
 }
 
 l_emf_reader = {
     'SeriesDc': lambda env: np.array([
-        -env.physical_system.electrical_motor.motor_parameter['l_e_prime']
+        env.physical_system.electrical_motor.motor_parameter['l_e_prime']
     ]),
     'ShuntDc': lambda env: np.array([
-        -env.physical_system.electrical_motor.motor_parameter['l_e_prime'],
+        env.physical_system.electrical_motor.motor_parameter['l_e_prime'],
     ]),
     'ExtExDc': lambda env: np.array([
-        -env.physical_system.electrical_motor.motor_parameter['l_e_prime'],
+        env.physical_system.electrical_motor.motor_parameter['l_e_prime'],
         0.0
     ]),
     'PermExDc': lambda env: np.array([0.0]),
@@ -182,14 +182,6 @@ emf_currents = {
     'SynRM': ['i_sd', 'i_sq']
 }
 
-voltages = {
-    'SeriesDc': ['u'],
-    'ShuntDc': ['u'],
-    'ExtExDc': ['u_a', 'u_e'],
-    'PermExDc': ['u'],
-    'PMSM': ['u_a', 'u_b', 'u_c'],
-    'SynRM': ['u_a', 'u_b', 'u_c'],
-}
 
 voltages = {
     'SeriesDc': ['u'],
@@ -221,8 +213,8 @@ l_prime_reader = {
     'PermExDc': lambda env: np.array([0.0]),
     'PMSM': lambda env: np.array([0.0, 0.0]),
     'SynRM': lambda env: np.array([
+        - env.physical_system.electrical_motor.motor_parameter['l_sq'],
         env.physical_system.electrical_motor.motor_parameter['l_sd']
-        - env.physical_system.electrical_motor.motor_parameter['l_sq']
     ]),
 }
 

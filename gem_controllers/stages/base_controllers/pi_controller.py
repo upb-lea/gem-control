@@ -4,6 +4,7 @@ from .p_controller import PController
 from .i_controller import IController
 from ...tuner import parameter_reader as reader
 from .e_base_controller_task import EBaseControllerTask
+import gem_controllers as gc
 
 
 class PIController(PController, IController):
@@ -19,16 +20,17 @@ class PIController(PController, IController):
         self.integrate(filtered_state, reference)
         return np.clip(action, self._action_range[0], self._action_range[1])
 
-    def tune(self, env, motor_type, action_type, control_task, a=4, t_n=None):
+    def tune(self, env, env_id, a=4, t_n=None):
         if self._control_task == EBaseControllerTask.CC:
-            self._tune_current_controller(env, motor_type, action_type, control_task, a)
+            self._tune_current_controller(env, env_id, a)
         elif self._control_task == EBaseControllerTask.SC:
-            self._tune_speed_controller(env, motor_type, action_type, control_task, a, t_n)
+            self._tune_speed_controller(env, env_id, a, t_n)
         else:
             raise Exception(f'No tuning method available.')
 
-    def _tune_current_controller(self, env, motor_type, action_type, control_task, a=4):
-        PController._tune_current_controller(self, env, motor_type, action_type, control_task, a)
+    def _tune_current_controller(self, env, env_id, a=4):
+        action_type, control_task, motor_type = gc.utils.split_env_id(env_id)
+        PController._tune_current_controller(self, env, env_id, a)
         l_ = reader.l_reader[motor_type](env)
         tau = env.physical_system.tau
         currents = reader.currents[motor_type]
@@ -47,8 +49,8 @@ class PIController(PController, IController):
         self.tau = tau
         self.state_indices = current_indices
 
-    def _tune_speed_controller(self, env, motor_type, action_type, control_task, a=4, t_n=None):
-        PController._tune_speed_controller(self, env, motor_type, action_type, control_task, a, t_n)
+    def _tune_speed_controller(self, env, env_id, a=4, t_n=None):
+        PController._tune_speed_controller(self, env, env_id, a, t_n)
         if t_n is None:
             t_n = env.physical_system.tau
         self.i_gain = self.p_gain / (a * t_n)

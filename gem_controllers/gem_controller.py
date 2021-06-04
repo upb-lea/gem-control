@@ -1,6 +1,6 @@
 import numpy as np
 
-from gem_controllers.designer.designer import design_controller
+import gem_controllers as gc
 from gem_controllers.tuner.tuner import tune_controller
 
 
@@ -32,17 +32,11 @@ class GemController:
             GemController: An initialized (and tuned) instance of a controller that fits to the specified environment.
         """
 
-        action_type, control_task, motor_type, _ = env_id.split('-')
-
-        assert action_type is not '', 'action_type is unset. Pass either the env-id or an explicit action_type.'
-        assert motor_type is not '', 'motor_type is unset. Pass either the env-id or an explicit motor_type.'
-        assert control_task is not '', 'control_task is unset. Pass either the env-id or an explicit control_task.'
-
         designer_kwargs = designer_kwargs if designer_kwargs is not None else {}
         tuner_kwargs = tuner_kwargs if tuner_kwargs is not None else {}
-        controller = design_controller(env, action_type, motor_type, control_task, **designer_kwargs)
         if tune:
-            tune_controller(controller, env, action_type, motor_type, control_task, **tuner_kwargs)
+            tune_controller(controller, env, env_id, **tuner_kwargs)
+        controller = gc.GymElectricMotorAdapter(controller, env, env_id)
         return controller
 
     @property
@@ -58,3 +52,6 @@ class GemController:
     def reset(self):
         for stage in self._stages:
             stage.reset()
+
+    def tune(self, env, env_id):
+        pass

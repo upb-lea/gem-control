@@ -17,5 +17,5 @@ class BaseController(Stage):
     def __call__(self, stage, reference):
         raise NotImplementedError
 
-    def tune(self, env, motor_type, action_type, control_task, **base_controller_kwargs):
+    def tune(self, env, env_id, **base_controller_kwargs):
         pass

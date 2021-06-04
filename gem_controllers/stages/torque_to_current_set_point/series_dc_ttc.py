@@ -1,7 +1,8 @@
 import numpy as np
 
+import gem_controllers as gc
 from .torque_to_current_set_point import TorqueToCurrentSetPoint
-from ...tuner.parameter_reader import l_prime_reader
+from ...tuner import parameter_reader as reader
 
 
 class SeriesDcTorqueToCurrent(TorqueToCurrentSetPoint):
@@ -21,6 +22,7 @@ class SeriesDcTorqueToCurrent(TorqueToCurrentSetPoint):
     def _torque_to_current(self, state, reference):
         return np.sqrt(reference / self._cross_inductance)
 
-    def tune(self, env, motor, action_type, control_task, current_safety_margin=0.2):
-        super().tune(env, motor, action_type, control_task, current_safety_margin)
-        self._cross_inductance = l_prime_reader[motor](env)
+    def tune(self, env, env_id, current_safety_margin=0.2):
+        super().tune(env, env_id, current_safety_margin=current_safety_margin)
+        motor = gc.utils.get_motor_type(env_id)
+        self._cross_inductance = reader.l_prime_reader[motor](env)

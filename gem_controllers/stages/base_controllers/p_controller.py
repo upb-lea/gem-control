@@ -2,6 +2,7 @@ import numpy as np
 
 from .base_controller import BaseController, EBaseControllerTask
 from gem_controllers.tuner import parameter_reader as reader
+import gem_controllers as gc
 
 
 class PController(BaseController):
@@ -48,15 +49,16 @@ class PController(BaseController):
     def control(self, state, reference):
         return self._clip(self._control(state[self._state_indices], reference))
 
-    def tune(self, env, motor_type, action_type, control_task, a=4):
+    def tune(self, env, env_id, a=4):
         if self._control_task == EBaseControllerTask.CurrentControl:
-            self._tune_current_controller(env, motor_type, action_type, control_task, a)
+            self._tune_current_controller(env, env_id, a)
         elif self._control_task == EBaseControllerTask.SpeedControl:
-            self._tune_speed_controller(env, motor_type, action_type, control_task, a)
+            self._tune_speed_controller(env, env_id, a)
         else:
             raise Exception(f'No Tuner available for control task{self._control_task}.')
 
-    def _tune_current_controller(self, env, motor_type, _action_type, _control_task, a):
+    def _tune_current_controller(self, env, env_id, a):
+        action_type, control_task, motor_type = gc.utils.split_env_id(env_id)
         l_ = reader.l_reader[motor_type](env)
         tau = env.physical_system.tau
         currents = reader.currents[motor_type]
@@ -72,7 +74,7 @@ class PController(BaseController):
         )
         self.state_indices = current_indices
 
-    def _tune_speed_controller(self, env, motor_type, _action_range, _control_task, a=4, t_n=None):
+    def _tune_speed_controller(self, env, env_id, a=4, t_n=None):
         if t_n is None:
             t_n = env.physical_system.tau
         j_total = env.physical_system.mechanical_load.j_total

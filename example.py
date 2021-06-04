@@ -1,8 +1,13 @@
 import gym_electric_motor as gem
 import gem_controllers as gc
+import numpy as np
 
-env_id = 'DqCont-CC-PMSM-v0'
-env = gem.make(env_id, visualization=dict(state_plots=['omega', 'i_sd', 'i_sq', 'torque']))
+env_id = 'Finite-TC-PermExDc-v0'
+env = gem.make(
+    env_id, visualization=dict(state_plots='all'),
+    converter='Finite-4QC'
+    #supply=dict(u_nominal=80.0),
+)
 '''
 c = gc.GemController.make(
     env,
@@ -10,10 +15,11 @@ c = gc.GemController.make(
     tuner_kwargs=dict(a=4, current_safety_margin=0.15),
 )
 '''
-c = gc.CurrentController()
+c = gc.TorqueController()
+c = gc.GymElectricMotorAdapter(c)
 action_type, control_type, motor_type, *version_ = env_id.split('-')
-c.design(action_type, motor_type, decoupling=False)
-c.tune(env, motor_type, action_type, control_type)
+c.design(env, env_id)
+c.tune(env, env_id, a=6, current_safety_margin=0.3)
 
 
 done = True

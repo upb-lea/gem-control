@@ -5,6 +5,7 @@ from gym_electric_motor.physical_systems import converters as cv
 from .stage import Stage
 from ..utils import non_parameterized
 from ..tuner import parameter_reader as reader
+import gem_controllers as gc
 
 
 class DiscOutputStage(Stage):
@@ -42,11 +43,12 @@ class DiscOutputStage(Stage):
     def to_multi_discrete(multi_discrete_action):
         return multi_discrete_action
 
-    def to_action(self, state, reference):
+    def to_action(self, _state, reference):
         conditions = [reference <= self.low_level, reference >= self.high_level]
         return np.select(conditions, [self.low_action, self.high_action], default=self.idle_action)
 
-    def tune(self, env, motor_type, action_type, control_task):
+    def tune(self, env, env_id, **__):
+        action_type, _, motor_type = gc.utils.split_env_id(env_id)
         voltages = reader.get_output_voltages(motor_type, action_type)
         voltage_indices = [env.state_names.index(voltage) for voltage in voltages]
         voltage_limits = env.limits[voltage_indices]

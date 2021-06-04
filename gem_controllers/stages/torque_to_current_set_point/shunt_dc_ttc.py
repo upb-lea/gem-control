@@ -1,7 +1,8 @@
 import numpy as np
 
+import gem_controllers as gc
 from .torque_to_current_set_point import TorqueToCurrentSetPoint
-from ...tuner.parameter_reader import l_prime_reader
+from ...tuner import parameter_reader as reader
 
 
 class ShuntDcTorqueToCurrent(TorqueToCurrentSetPoint):
@@ -60,14 +61,17 @@ class ShuntDcTorqueToCurrent(TorqueToCurrentSetPoint):
             return -self._i_a_limit
         if state[self._i_e_idx] < -self._i_e_limit:
             return self._i_a_limit
-
+        i_e = state[self._i_e_idx]
         # avoid division by zero
-        i_e = max(state[self._i_e_idx], 1e-3 * self._i_e_limit)
+        if 0.0 <= i_e < 1e-4:
+            i_e = 1e-4
+        elif 0.0 > i_e > -1e-4:
+            i_e = -1e-4
         return reference / self._cross_inductance / i_e
 
-    def tune(self, env, motor, action_type, control_task, current_safety_margin=0.2):
-        super().tune(env, motor, action_type, control_task, current_safety_margin)
-        self._cross_inductance = l_prime_reader['ShuntDc'](env)
+    def tune(self, env, env_id, current_safety_margin=0.2):
+        super().tune(env, env_id, current_safety_margin)
+        self._cross_inductance = reader.l_prime_reader['ShuntDc'](env)
         self._i_e_idx = env.state_names.index('i_e')
         self._i_a_idx = env.state_names.index('i_a')
         self._i_a_limit = env.limits[self._i_a_idx] * (1 - current_safety_margin)

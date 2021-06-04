@@ -35,7 +35,7 @@ class AbcTransformation(Stage):
     def _angle_advance(self, state):
         return state[self.epsilon_idx] + self._advance_factor * self.tau * state[self.omega_idx]
 
-    def tune(self, env, motor_type, action_type, control_task):
+    def tune(self, env, env_id, **_):
         self.epsilon_idx = env.state_names.index('epsilon')
         self.omega_idx = env.state_names.index('omega')
         if hasattr(env.physical_system.converter, 'dead_time'):
