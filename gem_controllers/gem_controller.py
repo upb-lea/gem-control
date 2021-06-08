@@ -75,7 +75,8 @@ class GemController:
         state, reference = env.reset()
         self.reset()
         for _ in range(n_steps):
-            env.render()
+            if render_env:
+                env.render()
             action = self.control(state, reference)
             (state, reference), _, done, _ = env.step(action)
             if done:
