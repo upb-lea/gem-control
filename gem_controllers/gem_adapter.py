@@ -29,19 +29,22 @@ class GymElectricMotorAdapter(gc.GemController):
         self._controller = value
 
     def __init__(
-            self,
-            controller: gc.GemController,
-            env: (gem.core.ElectricMotorEnvironment, None) = None,
-            env_id: (str, None) = None
+        self,
+        _env: (gem.core.ElectricMotorEnvironment, None) = None,
+        env_id: (str, None) = None,
+        controller: (gc.GemController, None) = None
     ):
         super().__init__()
         self._input_stage = None
         self._output_stage = None
         assert isinstance(controller, gc.GemController)
         self._controller = controller
-        if env is not None and env_id is not None:
-            self.design(env, env_id)
-            self.tune(env, env_id)
+        self._input_stage = gc.stages.InputStage()
+        action_type = gc.utils.get_action_type(env_id)
+        if action_type == 'Finite':
+            self._output_stage = gc.stages.DiscOutputStage()
+        else:
+            self._output_stage = gc.stages.ContOutputStage()
 
     def control(self, state, reference):
         denormalized_ref = self._input_stage(state, reference)
@@ -49,19 +52,11 @@ class GymElectricMotorAdapter(gc.GemController):
         action = self._output_stage(state, voltage_set_point)
         return action
 
-    def design(self, env, env_id, **design_kwargs):
-        self._input_stage = gc.stages.InputStage()
-        action_type = gc.utils.get_action_type(env_id)
-        if action_type == 'Finite':
-            self._output_stage = gc.stages.DiscOutputStage()
-        else:
-            self._output_stage = gc.stages.ContOutputStage()
-        self._controller.design(env, env_id, **design_kwargs)
-
-    def tune(self, env, env_id, **kwargs):
+    def tune(self, env, env_id, tune_controller=True, **kwargs):
         self._input_stage.tune(env, env_id)
         self._output_stage.tune(env, env_id)
-        self._controller.tune(env, env_id, **kwargs)
+        if tune_controller:
+            self._controller.tune(env, env_id, **kwargs)
 
     def reset(self):
         self._input_stage.reset()

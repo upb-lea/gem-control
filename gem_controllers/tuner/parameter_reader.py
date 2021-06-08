@@ -92,15 +92,15 @@ tau_current_loop_reader = {
         / env.physical_system.electrical_motor.motor_parameter['r_a']
     ),
     'PMSM': lambda env: np.array([
-        env.physical_system.electric_motor.motor_parameter['l_sq']
+        env.physical_system.electrical_motor.motor_parameter['l_q']
         / env.physical_system.electrical_motor.motor_parameter['r_s'],
-        env.physical_system.electric_motor.motor_parameter['l_sd']
+        env.physical_system.electrical_motor.motor_parameter['l_d']
         / env.physical_system.electrical_motor.motor_parameter['r_s']
     ]),
     'SynRM': lambda env: np.array([
-        env.physical_system.electric_motor.motor_parameter['l_sq']
+        env.physical_system.electrical_motor.motor_parameter['l_q']
         / env.physical_system.electrical_motor.motor_parameter['r_s'],
-        env.physical_system.electric_motor.motor_parameter['l_sd']
+        env.physical_system.electrical_motor.motor_parameter['l_d']
         / env.physical_system.electrical_motor.motor_parameter['r_s']
     ]),
 }

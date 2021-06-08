@@ -28,39 +28,44 @@ class PICurrentController(gc.CurrentController):
         self._emf_feedforward = value
 
     @property
+    def stages(self):
+        stages_ = [self._current_base_controller]
+        if self._decoupling:
+            stages_.append(self._emf_feedforward)
+        if self._coordinate_transformation_required:
+            stages_.append(self._transformation_stage)
+        return stages_
+
+    @property
     def voltage_reference(self) -> np.ndarray:
         return self._voltage_reference
 
     @property
     def t_n(self):
         if hasattr(self._current_base_controller, 'p_gain') \
-        and hasattr(self._current_base_controller, 'i_gain'):
+          and hasattr(self._current_base_controller, 'i_gain'):
             return self._current_base_controller.p_gain / self._current_base_controller.i_gain
         else:
             return self._tau_current_loop
 
-    def __init__(self):
+    def __init__(self, env, env_id, base_current_controller='PI', decoupling=True):
         super().__init__()
         self._current_base_controller = None
         self._emf_feedforward = None
         self._transformation_stage = None
         self._tau_current_loop = np.array([0.0])
         self._coordinate_transformation_required = False
-        self._decoupling = True
+        self._decoupling = decoupling
         self._voltage_reference = np.array([])
-        self._stages = []
-
-    def design(self, action_type, motor_type, base_current_controller='PI', decoupling=True):
-        if action_type in ['Finite', 'AbcCont'] and motor_type in gc.tuner.parameter_reader.ac_motors:
-            self._coordinate_transformation_required = True
         self._transformation_stage = gc.stages.AbcTransformation()
-        if decoupling:
-            self._decoupling = True
         self._emf_feedforward = gc.stages.EMFFeedforward()
         self._current_base_controller = gc.stages.base_controllers.get(base_current_controller)('CC')
-        self._stages = [self._current_base_controller, self._emf_feedforward, self._transformation_stage]
 
     def tune(self, env, env_id, a=4):
+        action_type = gc.utils.get_action_type(env_id)
+        motor_type = gc.utils.get_motor_type(env_id)
+        if action_type in ['Finite', 'AbcCont'] and motor_type in gc.tuner.parameter_reader.ac_motors:
+            self._coordinate_transformation_required = True
         if self._coordinate_transformation_required:
             self._transformation_stage.tune(env, env_id)
         self._emf_feedforward.tune(env, env_id)
@@ -68,8 +73,7 @@ class PICurrentController(gc.CurrentController):
         self._voltage_reference = np.zeros(
             len(gc.tuner.parameter_reader.voltages[gc.utils.get_motor_type(env_id)]), dtype=float
         )
-        motor = gc.utils.get_motor_type(env_id)
-        self._tau_current_loop = gc.tuner.parameter_reader.tau_current_loop_reader[motor]
+        self._tau_current_loop = gc.tuner.parameter_reader.tau_current_loop_reader[motor_type](env)
 
     def current_control(self, state, current_reference):
         voltage_reference = self._current_base_controller(state, current_reference)
@@ -85,5 +89,5 @@ class PICurrentController(gc.CurrentController):
         return self._voltage_reference
 
     def reset(self):
-        for stage in self._stages:
+        for stage in self.stages:
             stage.reset()

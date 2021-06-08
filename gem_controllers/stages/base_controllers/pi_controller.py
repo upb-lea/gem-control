@@ -51,8 +51,6 @@ class PIController(PController, IController):
 
     def _tune_speed_controller(self, env, env_id, a=4, t_n=None):
         PController._tune_speed_controller(self, env, env_id, a, t_n)
-        if t_n is None:
-            t_n = env.physical_system.tau
         self.i_gain = self.p_gain / (a * t_n)
         self.tau = env.physical_system.tau
         speed_index = env.state_names.index('omega')
