@@ -28,8 +28,24 @@ def disc_converter_actions(converter):
             high_actions.append(_converter_actions[subconverter])
 
 _converter_actions = {
-    cv.FiniteOneQuadrantConverter : np.array([[1], [0], [0]]),
-    cv.FiniteTwoQuadrantConverter : np.array([[1], [0], [2]]),
-    cv.FiniteFourQuadrantConverter : np.array([[1], [0], [2]]),
-    cv.FiniteB6BridgeConverter : np.array([[1, 1, 1], [0, 0, 0], [2, 2, 2]])
+    cv.FiniteOneQuadrantConverter: np.array([[1], [0], [0]]),
+    cv.FiniteTwoQuadrantConverter: np.array([[1], [0], [2]]),
+    cv.FiniteFourQuadrantConverter: np.array([[1], [0], [2]]),
+    cv.FiniteB6BridgeConverter: np.array([[1, 1, 1], [0, 0, 0], [2, 2, 2]])
 }
+
+
+def split_env_id(env_id: str):
+    return env_id.split('-')[:3]
+
+
+def get_action_type(env_id: str):
+    return split_env_id(env_id)[0]
+
+
+def get_control_task(env_id: str):
+    return split_env_id(env_id)[1]
+
+
+def get_motor_type(env_id: str):
+    return split_env_id(env_id)[2]

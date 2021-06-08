@@ -31,7 +31,7 @@ class InputStage(Stage):
         state[:] = state * self._state_limits
         return reference * self._reference_limits
 
-    def tune(self, env, motor_type, action_type, control_task, **__):
+    def tune(self, env, env_id, **__):
         self._state_limits = env.limits
         reference_indices = [env.state_names.index(reference) for reference in env.reference_names]
         self.reference_limits = env.limits[reference_indices]

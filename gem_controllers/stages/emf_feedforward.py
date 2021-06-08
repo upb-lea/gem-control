@@ -2,6 +2,7 @@ import numpy as np
 
 from .stage import Stage
 from ..tuner import parameter_reader as reader
+import gem_controllers as gc
 
 
 class EMFFeedforward(Stage):
@@ -52,14 +53,15 @@ class EMFFeedforward(Stage):
 
     def __call__(self, state, reference):
         action = reference + (self._inductance * state[self._current_indices] + self._psi) * state[self._omega_idx]
-        return np.clip(action, self._action_range[0], self._action_range[1])
+        return action
 
-    def tune(self, env, motor_type, action_type, control_task):
+    def tune(self, env, env_id, **_):
+        motor_type = gc.utils.get_motor_type(env_id)
         omega_idx = env.state_names.index('omega')
         current_indices = [env.state_names.index(current) for current in reader.emf_currents[motor_type]]
         self.omega_idx = omega_idx
         self.current_indices = current_indices
-        self.inductance = -reader.l_emf_reader[motor_type](env)
+        self.inductance = reader.l_emf_reader[motor_type](env)
         self.psi = reader.psi_reader[motor_type](env)
         voltages = reader.voltages[motor_type]
         voltage_indices = [env.state_names.index(voltage) for voltage in voltages]

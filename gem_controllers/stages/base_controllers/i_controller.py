@@ -58,6 +58,7 @@ class IController(BaseController):
         self.i_gain = np.array([])
         self._integrator = np.array([])
         self._tau = None
+        self._non_clipped = np.array([])
 
     def __call__(self, state, reference):
         return self.control(state, reference)
@@ -66,7 +67,9 @@ class IController(BaseController):
         return self._i_gain * self._integrator
 
     def _clip(self, action):
-        return np.clip(action, self._action_range[0], self._action_range[1])
+        clipped_action = np.clip(action, self._action_range[0], self._action_range[1])
+        self._non_clipped = (self._action_range[0] < action) & (action < self._action_range[1])
+        return clipped_action
 
     def control(self, state, reference):
         action = self._control(state, reference)
@@ -75,9 +78,9 @@ class IController(BaseController):
 
     def integrate(self, state, reference):
         error = reference - state
-        self._integrator = self._integrator + error * self._tau
-        self._integrator = np.clip(self._integrator, self._integrator_range[0], self._integrator_range[1])
+        self._integrator = self._integrator + (error * self._tau * self._non_clipped)
 
     def reset(self):
         super().reset()
         self._integrator = np.zeros_like(self._i_gain)
+        self._non_clipped = np.zeros_like(self._i_gain)

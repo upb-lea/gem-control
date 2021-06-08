@@ -1,7 +1,8 @@
 import numpy as np
 
 from .torque_to_current_set_point import TorqueToCurrentSetPoint
-from ...tuner.parameter_reader import l_prime_reader
+from ...tuner import parameter_reader as reader
+import gem_controllers as gc
 
 
 class ExtExDcTorqueToCurrent(TorqueToCurrentSetPoint):
@@ -58,8 +59,9 @@ class ExtExDcTorqueToCurrent(TorqueToCurrentSetPoint):
         i_a_ref = reference[0] / self._cross_inductance[0] / max(state[self._i_e_idx], 1e-4)
         return np.array([i_a_ref, i_e_ref])
 
-    def tune(self, env, motor, action_type, control_task, current_safety_margin=0.2):
-        super().tune(env, motor,action_type, control_task, current_safety_margin)
+    def tune(self, env, env_id, current_safety_margin=0.2):
+        super().tune(env, env_id, current_safety_margin)
+        motor = gc.utils.get_motor_type(env_id)
         self._i_e_idx = env.state_names.index('i_e')
         self._i_a_idx = env.state_names.index('i_a')
-        self._cross_inductance = l_prime_reader[motor](env)
+        self._cross_inductance = reader.l_prime_reader[motor](env)

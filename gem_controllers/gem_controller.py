@@ -1,6 +1,6 @@
 import numpy as np
 
-from gem_controllers.designer.designer import design_controller
+import gem_controllers as gc
 from gem_controllers.tuner.tuner import tune_controller
 
 
@@ -16,33 +16,42 @@ class GemController:
     """
 
     @classmethod
-    def make(cls, env, env_id, tune=True, designer_kwargs=None, tuner_kwargs=None):
+    def make(
+        cls, env, env_id, decoupling=True, current_safety_margin=0.2, base_current_controller='PI',
+        base_speed_controller='PI', a=4
+    ):
         """A factory function that generates (and parameterizes) a matching GemController for a given gym-electric-motor
         environment `env`.
 
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
-            tune(bool)=True: Flag, if the controller shall be parameterized automatically.
-            designer_kwargs(dict): Dictionary for additional parameters that are passed to the controller designer.
-                Specific entries can be looked up here. #ToDo Add Link to designer
-            tuner_kwargs(dict): Dictionary for additional parameters that are passed to the controller tuner.
-                Specific entries can be looked up here. #ToDo Add Link to designer
+            decoupling(bool): Flag, if a EMF-Feedforward correction stage should be used in the pi current controller.
+            current_safety_margin(float in [0..1]): The ratio between the maximum current set point
+             the torque controller generates and the absolute current limit.
+            base_speed_controller('PI'/'PID'/'P'/'ThreePoint'): Selection of the basic control algorithm for the
+             speed controller.
+            base_current_controller('PI'/'PID'/'P'/'ThreePoint'): Selection of the basic control algorithm for the
+             current controller.
+            a(float):
         Returns:
             GemController: An initialized (and tuned) instance of a controller that fits to the specified environment.
         """
-
-        action_type, control_task, motor_type, _ = env_id.split('-')
-
-        assert action_type is not '', 'action_type is unset. Pass either the env-id or an explicit action_type.'
-        assert motor_type is not '', 'motor_type is unset. Pass either the env-id or an explicit motor_type.'
-        assert control_task is not '', 'control_task is unset. Pass either the env-id or an explicit control_task.'
-
-        designer_kwargs = designer_kwargs if designer_kwargs is not None else {}
-        tuner_kwargs = tuner_kwargs if tuner_kwargs is not None else {}
-        controller = design_controller(env, action_type, motor_type, control_task, **designer_kwargs)
-        if tune:
-            tune_controller(controller, env, action_type, motor_type, control_task, **tuner_kwargs)
+        control_task = gc.utils.get_control_task(env_id)
+        tuner_kwargs = dict()
+        controller = gc.PICurrentController(
+            env, env_id, base_current_controller=base_current_controller, decoupling=decoupling
+        )
+        tuner_kwargs['a'] = a
+        if control_task in ['TC', 'SC']:
+            controller = gc.TorqueController(env, env_id, current_controller=controller)
+            tuner_kwargs['current_safety_margin'] = current_safety_margin
+        if control_task == 'SC':
+            controller = gc.PISpeedController(
+                env, env_id, torque_controller=controller, base_speed_controller=base_speed_controller
+            )
+        controller = gc.GymElectricMotorAdapter(env, env_id, controller)
+        controller.tune(env, env_id, **tuner_kwargs)
         return controller
 
     @property
@@ -58,3 +67,18 @@ class GemController:
     def reset(self):
         for stage in self._stages:
             stage.reset()
+
+    def tune(self, env, env_id, **kwargs):
+        pass
+
+    def control_environment(self, env, n_steps, render_env=False):
+        state, reference = env.reset()
+        self.reset()
+        for _ in range(n_steps):
+            if render_env:
+                env.render()
+            action = self.control(state, reference)
+            (state, reference), _, done, _ = env.step(action)
+            if done:
+                state, reference = env.reset()
+                self.reset()

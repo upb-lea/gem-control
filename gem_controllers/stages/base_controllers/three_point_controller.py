@@ -3,6 +3,7 @@ import numpy as np
 from .base_controller import BaseController
 from .e_base_controller_task import EBaseControllerTask
 from ...tuner import parameter_reader as reader
+import gem_controllers as gc
 
 
 class ThreePointController(BaseController):
@@ -70,15 +71,16 @@ class ThreePointController(BaseController):
         low_actions = referenced_states - self._hysteresis > reference
         return np.select([low_actions, high_actions], [self._low_action, self._high_action], default=self._idle_action)
 
-    def tune(self, env, motor_type, action_type, control_task, **base_controller_kwargs):
+    def tune(self, env, env_id, **base_controller_kwargs):
         if self._control_task == EBaseControllerTask.SC:
-            self._tune_speed_controller(env, motor_type, action_type, control_task)
+            self._tune_speed_controller(env, env_id)
         elif self._control_task == EBaseControllerTask.CC:
-            self._tune_current_controller(env, motor_type, action_type, control_task)
+            self._tune_current_controller(env, env_id)
         else:
             raise Exception(f'No tuner available for control_task {self._control_task}.')
 
-    def _tune_current_controller(self, env, motor_type, action_type, control_task):
+    def _tune_current_controller(self, env, env_id):
+        motor_type = gc.utils.get_motor_type(env_id)
         voltages = reader.voltages[motor_type]
         currents = reader.currents[motor_type]
         voltage_indices = [env.state_names.index(voltage) for voltage in voltages]
@@ -97,8 +99,7 @@ class ThreePointController(BaseController):
         self.low_action = action_range[0]
         self.idle_action = np.zeros_like(action_range[1])
 
-    def _tune_speed_controller(self, env, motor_type, action_type, control_task):
-
+    def _tune_speed_controller(self, env, _env_id):
         torque_index = [env.state_names.index('torque')]
         torque_limit = env.limits[torque_index]
         self.referenced_state_indices = torque_index
