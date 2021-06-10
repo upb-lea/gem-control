@@ -7,11 +7,11 @@ import gem_controllers as gc
 class TorqueController(gc.GemController):
 
     @property
-    def torque_to_current_stage(self) -> gc.stages.TorqueToCurrentSetPoint:
+    def torque_to_current_stage(self) -> gc.stages.OperationPointSelection:
         return self._torque_to_current_stage
 
     @torque_to_current_stage.setter
-    def torque_to_current_stage(self, value: gc.stages.TorqueToCurrentSetPoint):
+    def torque_to_current_stage(self, value: gc.stages.OperationPointSelection):
         self._torque_to_current_stage = value
 
     @property
@@ -35,7 +35,7 @@ class TorqueController(gc.GemController):
             env: (gem.core.ElectricMotorEnvironment, None) = None,
             env_id: (str, None) = None,
             current_controller: (gc.CurrentController, None) = None,
-            torque_to_current_stage: (gc.stages.TorqueToCurrentSetPoint, None) = None
+            torque_to_current_stage: (gc.stages.OperationPointSelection, None) = None
     ):
         super().__init__()
 

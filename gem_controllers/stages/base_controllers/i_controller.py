@@ -17,11 +17,6 @@ class IController(BaseController):
         # i_gain is at least zero, to avoid unstable behavior
         value = np.clip(value, 0.0, np.inf)
         self._i_gain = value
-        self._integrator_range = (
-            self._action_range[0] / (self._i_gain + self.epsilon),
-            self._action_range[1] / (self._i_gain + self.epsilon),
-        )
-        self._i_gain = value
 
     @property
     def tau(self):
@@ -38,10 +33,6 @@ class IController(BaseController):
     @action_range.setter
     def action_range(self, value):
         self._action_range = value
-        self._integrator_range = (
-            self._action_range[0] / (self._i_gain + self.epsilon),
-            self._action_range[1] / (self._i_gain + self.epsilon),
-        )
 
     @property
     def state_indices(self):
@@ -58,7 +49,7 @@ class IController(BaseController):
         self.i_gain = np.array([])
         self._integrator = np.array([])
         self._tau = None
-        self._non_clipped = np.array([])
+        self._clipped = np.array([])
 
     def __call__(self, state, reference):
         return self.control(state, reference)
@@ -68,19 +59,20 @@ class IController(BaseController):
 
     def _clip(self, action):
         clipped_action = np.clip(action, self._action_range[0], self._action_range[1])
-        self._non_clipped = (self._action_range[0] < action) & (action < self._action_range[1])
+        self._clipped = (self._action_range[0] > action) | (action > self._action_range[1])
         return clipped_action
 
     def control(self, state, reference):
         action = self._control(state, reference)
+        clipped_action = self._clip(action)
         self.integrate(state, reference)
-        return self._clip(action)
+        return clipped_action
 
     def integrate(self, state, reference):
         error = reference - state
-        self._integrator = self._integrator + (error * self._tau * self._non_clipped)
+        self._integrator = self._integrator + (error * self._tau * ~self._clipped)
 
     def reset(self):
         super().reset()
         self._integrator = np.zeros_like(self._i_gain)
-        self._non_clipped = np.zeros_like(self._i_gain)
+        self._clipped = np.zeros_like(self._i_gain, dtype=bool)

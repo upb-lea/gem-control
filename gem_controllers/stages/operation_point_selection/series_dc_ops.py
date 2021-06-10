@@ -1,11 +1,11 @@
 import numpy as np
 
 import gem_controllers as gc
-from .torque_to_current_set_point import TorqueToCurrentSetPoint
+from .operation_point_selection import OperationPointSelection
 from ...tuner import parameter_reader as reader
 
 
-class SeriesDcTorqueToCurrent(TorqueToCurrentSetPoint):
+class SeriesDcOperationPointSelection(OperationPointSelection):
 
     @property
     def cross_inductance(self):
@@ -19,7 +19,7 @@ class SeriesDcTorqueToCurrent(TorqueToCurrentSetPoint):
         super().__init__()
         self._cross_inductance = np.array([])
 
-    def _torque_to_current(self, state, reference):
+    def _select_operating_point(self, state, reference):
         return np.sqrt(reference / self._cross_inductance)
 
     def tune(self, env, env_id, current_safety_margin=0.2):

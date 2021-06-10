@@ -19,3 +19,6 @@ class BaseController(Stage):
 
     def tune(self, env, env_id, **base_controller_kwargs):
         pass
+
+    def feedback(self, state, reference, clipped_reference):
+        pass

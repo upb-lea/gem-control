@@ -1,11 +1,11 @@
 import numpy as np
 
 import gem_controllers as gc
-from .torque_to_current_set_point import TorqueToCurrentSetPoint
+from .operation_point_selection import OperationPointSelection
 from ...tuner import parameter_reader as reader
 
 
-class ShuntDcTorqueToCurrent(TorqueToCurrentSetPoint):
+class ShuntDcOperationPointSelection(OperationPointSelection):
 
     @property
     def cross_inductance(self):
@@ -55,7 +55,7 @@ class ShuntDcTorqueToCurrent(TorqueToCurrentSetPoint):
         self._i_a_limit = np.array([])
         self._i_e_limit = np.array([])
 
-    def _torque_to_current(self, state, reference):
+    def _select_operating_point(self, state, reference):
         # If i_e is too high, set i_a current_reference to 0 to also lower i_e again.
         if state[self._i_e_idx] > self._i_e_limit:
             return -self._i_a_limit
