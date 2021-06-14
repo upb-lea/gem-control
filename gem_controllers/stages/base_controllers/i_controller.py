@@ -42,6 +42,14 @@ class IController(BaseController):
     def state_indices(self, value):
         self._state_indices = np.array(value)
 
+    @property
+    def integrator(self):
+        return self._integrator
+
+    @integrator.setter
+    def integrator(self, value):
+        self._integrator = value
+
     def __init__(self, control_task):
         super().__init__(control_task)
         self._state_indices = np.array([])
@@ -57,16 +65,8 @@ class IController(BaseController):
     def _control(self, _state, _reference):
         return self._i_gain * self._integrator
 
-    def _clip(self, action):
-        clipped_action = np.clip(action, self._action_range[0], self._action_range[1])
-        self._clipped = (self._action_range[0] > action) | (action > self._action_range[1])
-        return clipped_action
-
     def control(self, state, reference):
-        action = self._control(state, reference)
-        clipped_action = self._clip(action)
-        self.integrate(state, reference)
-        return clipped_action
+        return self._control(state[self._state_indices], reference)
 
     def integrate(self, state, reference):
         error = reference - state

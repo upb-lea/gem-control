@@ -1,6 +1,5 @@
 import numpy as np
 
-import gem_controllers as gc
 from .operation_point_selection import OperationPointSelection
 from ...tuner import parameter_reader as reader
 
@@ -54,6 +53,9 @@ class ShuntDcOperationPointSelection(OperationPointSelection):
         self._i_a_idx = None
         self._i_a_limit = np.array([])
         self._i_e_limit = np.array([])
+        self._r = 0.0
+        self._u_max = 0.0
+        self._omega_idx = 0
 
     def _select_operating_point(self, state, reference):
         # If i_e is too high, set i_a current_reference to 0 to also lower i_e again.
@@ -61,6 +63,7 @@ class ShuntDcOperationPointSelection(OperationPointSelection):
             return -self._i_a_limit
         if state[self._i_e_idx] < -self._i_e_limit:
             return self._i_a_limit
+
         i_e = state[self._i_e_idx]
         # avoid division by zero
         if 0.0 <= i_e < 1e-4:

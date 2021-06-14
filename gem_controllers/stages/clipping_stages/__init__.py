@@ -1,2 +1,3 @@
 from .clipping_stage import ClippingStage
-from .absolute_clipping_stage import BoxClippingStage
+from .absolute_clipping_stage import AbsoluteClippingStage
+from .squared_clipping_stage import SquaredClippingStage

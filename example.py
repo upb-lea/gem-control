@@ -3,9 +3,9 @@ import gym_electric_motor as gem
 import gem_controllers as gc
 import time
 
-env_id = 'Cont-SC-PermExDc-v0'
+env_id = 'DqCont-CC-PMSM-v0'
 env = gem.make(
-    env_id, visualization=dict(state_plots='all'), ode_solver='euler'
+    env_id, visualization=dict(state_plots='all'), ode_solver='euler'#, converter='Cont-4QC'
 )
 
 c = gc.GemController.make(

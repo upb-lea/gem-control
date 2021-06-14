@@ -17,5 +17,5 @@ class ClippingStage(Stage):
     def __call__(self, state: np.ndarray, reference: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
-    def tune(self, env, env_id, state_names=('torque',), margin=0.0, **kwargs):
+    def tune(self, env, env_id, margin=0.0):
         pass

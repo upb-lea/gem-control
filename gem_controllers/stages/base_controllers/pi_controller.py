@@ -17,9 +17,7 @@ class PIController(PController, IController):
         filtered_state = state[self._state_indices]
         action = PController._control(self, filtered_state, reference) \
             + IController._control(self, filtered_state, reference)
-        clipped_action = IController._clip(self, action)
-        self.integrate(filtered_state, reference)
-        return clipped_action
+        return action
 
     def tune(self, env, env_id, a=4, t_n=None):
         if self._control_task == EBaseControllerTask.CC:
