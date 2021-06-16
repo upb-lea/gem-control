@@ -9,7 +9,7 @@ class CurrentController(gc.GemController):
     def control(self, state, reference):
         raise NotImplementedError
 
-    def tune(self, env, env_id):
+    def tune(self, env, env_id, **kwargs):
         raise NotImplementedError
 
     @property

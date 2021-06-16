@@ -43,11 +43,8 @@ class PController(BaseController):
     def _control(self, state, reference):
         return self._p_gain * (reference - state)
 
-    def _clip(self, action):
-        return np.clip(action, self._action_range[0], self._action_range[1])
-
     def control(self, state, reference):
-        return self._clip(self._control(state[self._state_indices], reference))
+        return self._control(state[self._state_indices], reference)
 
     def tune(self, env, env_id, a=4):
         if self._control_task == EBaseControllerTask.CurrentControl:

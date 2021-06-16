@@ -34,11 +34,16 @@ class PICurrentController(gc.CurrentController):
             stages_.append(self._emf_feedforward)
         if self._coordinate_transformation_required:
             stages_.append(self._transformation_stage)
+        stages_.append(self._clipping_stage)
         return stages_
 
     @property
     def voltage_reference(self) -> np.ndarray:
         return self._voltage_reference
+
+    @property
+    def clipping_stage(self):
+        return self._clipping_stage
 
     @property
     def t_n(self):
@@ -59,6 +64,11 @@ class PICurrentController(gc.CurrentController):
         self._voltage_reference = np.array([])
         self._transformation_stage = gc.stages.AbcTransformation()
         self._emf_feedforward = gc.stages.EMFFeedforward()
+        if gc.utils.get_motor_type(env_id) in gc.tuner.parameter_reader.ac_motors:
+            self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
+        else:
+            self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
+        self._anti_windup_stage = gc.stages.AntiWindup('CC')
         self._current_base_controller = gc.stages.base_controllers.get(base_current_controller)('CC')
 
     def tune(self, env, env_id, a=4):
@@ -70,6 +80,8 @@ class PICurrentController(gc.CurrentController):
             self._transformation_stage.tune(env, env_id)
         self._emf_feedforward.tune(env, env_id)
         self._current_base_controller.tune(env, env_id, a)
+        self._anti_windup_stage.tune(env, env_id)
+        self._clipping_stage.tune(env, env_id)
         self._voltage_reference = np.zeros(
             len(gc.tuner.parameter_reader.voltages[gc.utils.get_motor_type(env_id)]), dtype=float
         )
@@ -79,9 +91,14 @@ class PICurrentController(gc.CurrentController):
         voltage_reference = self._current_base_controller(state, current_reference)
         if self._decoupling:
             voltage_reference = self._emf_feedforward(state, voltage_reference)
-        self._voltage_reference = voltage_reference
+        self._voltage_reference = self._clipping_stage(state, voltage_reference)
         if self._coordinate_transformation_required:
             voltage_reference = self._transformation_stage(state, voltage_reference)
+        if hasattr(self._current_base_controller, 'integrator'):
+            delta = self._anti_windup_stage.__call__(
+                state, current_reference, self._clipping_stage.clipping_difference
+            )
+            self._current_base_controller.integrator += delta
         return voltage_reference
 
     def control(self, state, reference):

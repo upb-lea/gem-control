@@ -26,10 +26,18 @@ class PISpeedController(gc.GemController):
     def torque_reference(self) -> np.ndarray:
         return self._torque_reference
 
+    @property
+    def anti_windup_stage(self):
+        return self._anti_windup_stage
+
+    @property
+    def clipping_stage(self):
+        return self._clipping_stage
+
     def __init__(
             self,
             _env: (gem.core.ElectricMotorEnvironment, None) = None,
-            _env_id: (str, None) = None,
+            env_id: (str, None) = None,
             torque_controller: (gc.TorqueController, None) = None,
             base_speed_controller: str = 'PI'
     ):
@@ -39,15 +47,23 @@ class PISpeedController(gc.GemController):
         if torque_controller is None:
             self._torque_controller = gc.TorqueController()
         self._torque_reference = np.array([])
+        self._anti_windup_stage = gc.stages.AntiWindup('SC')
+        self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('SC')
 
     def tune(self, env, env_id, tune_torque_controller=True, a=4, **kwargs):
         if tune_torque_controller:
             self._torque_controller.tune(env, env_id, a=a, **kwargs)
+        self._anti_windup_stage.tune(env, env_id)
+        self._clipping_stage.tune(env, env_id)
         t_n = min(self._torque_controller.t_n)
         self._speed_control_stage.tune(env, env_id, t_n=t_n, a=a)
 
     def speed_control(self, state, reference):
-        self._torque_reference = self._speed_control_stage(state, reference)
+        torque_reference = self._speed_control_stage(state, reference)
+        self._torque_reference = self._clipping_stage(state, torque_reference)
+        if hasattr(self._speed_control_stage, 'integrator'):
+            delta = self._anti_windup_stage.__call__(state, reference, self._clipping_stage.clipping_difference)
+            self._speed_control_stage.integrator += delta
         return self._torque_reference
 
     def control(self, state, reference):

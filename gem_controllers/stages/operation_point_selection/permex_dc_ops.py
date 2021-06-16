@@ -1,11 +1,11 @@
 import numpy as np
 
 import gem_controllers as gc
-from .torque_to_current_set_point import TorqueToCurrentSetPoint
+from .operation_point_selection import OperationPointSelection
 from ...tuner import parameter_reader as reader
 
 
-class PermExDcTorqueToCurrent(TorqueToCurrentSetPoint):
+class PermExDcOperationPointSelection(OperationPointSelection):
 
     @property
     def magnetic_flux(self):
@@ -46,7 +46,7 @@ class PermExDcTorqueToCurrent(TorqueToCurrentSetPoint):
         self._resistance = np.array([])
         self._omega_index = 0
 
-    def _torque_to_current(self, state, reference):
+    def _select_operating_point(self, state, reference):
         if state[self._omega_index] > 0:
             return min(reference / self._magnetic_flux, self._max_current_per_speed(state))
         else:

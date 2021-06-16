@@ -1,11 +1,11 @@
 import numpy as np
 
-from .torque_to_current_set_point import TorqueToCurrentSetPoint
+from .operation_point_selection import OperationPointSelection
 from ...tuner import parameter_reader as reader
 import gem_controllers as gc
 
 
-class ExtExDcTorqueToCurrent(TorqueToCurrentSetPoint):
+class ExtExDcOperationPointSelection(OperationPointSelection):
 
     @property
     def cross_inductance(self):
@@ -54,7 +54,7 @@ class ExtExDcTorqueToCurrent(TorqueToCurrentSetPoint):
         """
         return abs(state[self._i_a_idx]) * 0.5
 
-    def _torque_to_current(self, state, reference):
+    def _select_operating_point(self, state, reference):
         i_e_ref = self._i_e_policy(state, reference)
         i_a_ref = reference[0] / self._cross_inductance[0] / max(state[self._i_e_idx], 1e-4)
         return np.array([i_a_ref, i_e_ref])
