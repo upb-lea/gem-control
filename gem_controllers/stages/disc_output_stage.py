@@ -63,16 +63,30 @@ class DiscOutputStage(Stage):
 
         if type(env.action_space) == gym.spaces.MultiDiscrete:
             self.output_stage = DiscOutputStage.to_multi_discrete
+            self.low_action = []
+            self.idle_action = []
+            self.high_action = []
+            for n in env.action_space.nvec:
+                low_action, idle_action, high_action = self._get_actions(n)
+                self.low_action.append(low_action)
+                self.idle_action.append(idle_action)
+                self.high_action.append(high_action)
+
         elif type(env.action_space) == gym.spaces.Discrete \
                 and type(env.physical_system.converter) != cv.FiniteB6BridgeConverter:
             self.output_stage = DiscOutputStage.to_discrete
+            self.low_action, self.idle_action, self.high_action = self._get_actions(env.action_space.n)
         elif type(env.physical_system.converter) == cv.FiniteB6BridgeConverter:
             self.output_stage = DiscOutputStage.to_b6_discrete
         else:
             raise Exception(f'No discrete output stage available for action space {env.action_space}.')
-        self.high_action = 1
-        if env.action_space.n == 2:  # OneQuadrantConverter
-            self.low_action = 0
+
+    @staticmethod
+    def _get_actions(n):
+        high_action = 1
+        if n == 2:  # OneQuadrantConverter
+            low_action = 0
         else:  # Two and FourQuadrantConverter
-            self.low_action = 2
-        self.idle_action = 0
+            low_action = 2
+        idle_action = 0
+        return low_action, idle_action, high_action

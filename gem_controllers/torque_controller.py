@@ -8,11 +8,11 @@ class TorqueController(gc.GemController):
 
     @property
     def torque_to_current_stage(self) -> gc.stages.OperationPointSelection:
-        return self._torque_to_current_stage
+        return self._operation_point_selection
 
     @torque_to_current_stage.setter
     def torque_to_current_stage(self, value: gc.stages.OperationPointSelection):
-        self._torque_to_current_stage = value
+        self._operation_point_selection = value
 
     @property
     def current_controller(self) -> gc.CurrentController:
@@ -27,6 +27,14 @@ class TorqueController(gc.GemController):
         return self._current_reference
 
     @property
+    def clipping_stage(self) -> gc.stages.clipping_stages.ClippingStage:
+        return self._clipping_stage
+
+    @clipping_stage.setter
+    def clipping_stage(self, value: gc.stages.clipping_stages.ClippingStage):
+        self._clipping_stage = value
+
+    @property
     def t_n(self):
         return self._current_controller.t_n
 
@@ -35,32 +43,41 @@ class TorqueController(gc.GemController):
             env: (gem.core.ElectricMotorEnvironment, None) = None,
             env_id: (str, None) = None,
             current_controller: (gc.CurrentController, None) = None,
-            torque_to_current_stage: (gc.stages.OperationPointSelection, None) = None
+            torque_to_current_stage: (gc.stages.OperationPointSelection, None) = None,
+            clipping_stage: (gc.stages.clipping_stages.ClippingStage, None) = None
     ):
         super().__init__()
 
-        self._torque_to_current_stage = torque_to_current_stage
+        self._operation_point_selection = torque_to_current_stage
         if env_id is not None and torque_to_current_stage is None:
-            self._torque_to_current_stage = gc.stages.torque_to_current_function[gc.utils.get_motor_type(env_id)]()
+            self._operation_point_selection = gc.stages.torque_to_current_function[gc.utils.get_motor_type(env_id)]()
         self._current_controller = current_controller
         if env_id is not None and current_controller is None:
             self._current_controller = gc.PICurrentController(env, env_id)
+        if env_id is not None and clipping_stage is None:
+            if gc.utils.get_motor_type(env_id) in gc.tuner.parameter_reader.dc_motors:
+                self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('TC')
+            else:  # motor in ac_motors
+                self._clipping_stage = gc.stages.clipping_stages.SquaredClippingStage('TC')
         self._current_reference = np.array([])
 
     def tune(self, env, env_id, current_safety_margin=0.2, tune_current_controller=True, **kwargs):
         if tune_current_controller:
             self._current_controller.tune(env, env_id, **kwargs)
-        self._torque_to_current_stage.tune(env, env_id, current_safety_margin)
+        self._clipping_stage.tune(env, env_id, margin=current_safety_margin)
+        self._operation_point_selection.tune(env, env_id, current_safety_margin)
 
     def torque_control(self, state, reference):
-        self._current_reference = self._torque_to_current_stage(state, reference)
+        self._current_reference = self._operation_point_selection(state, reference)
         return self._current_reference
 
     def control(self, state, reference):
         self._current_reference = self.torque_control(state, reference)
+        self._current_reference = self._clipping_stage(state, self._current_reference)
         reference = self._current_controller.current_control(state, self._current_reference)
         return reference
 
     def reset(self):
         self._current_controller.reset()
-        self._torque_to_current_stage.reset()
+        self._operation_point_selection.reset()
+        self._clipping_stage.reset()
