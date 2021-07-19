@@ -1,4 +1,6 @@
 import gym_electric_motor as gem
+import numpy as np
+
 import gem_controllers as gc
 
 
@@ -47,9 +49,11 @@ class GymElectricMotorAdapter(gc.GemController):
             self._output_stage = gc.stages.ContOutputStage()
 
     def control(self, state, reference):
-        denormalized_ref = self._input_stage(state, reference)
-        voltage_set_point = self._controller.control(state, denormalized_ref)
-        action = self._output_stage(state, voltage_set_point)
+        # Copy state and reference to be independent from further calculations
+        state_, reference_ = np.copy(state), np.copy(reference)
+        denormalized_ref = self._input_stage(state_, reference_)
+        voltage_set_point = self._controller.control(state_, denormalized_ref)
+        action = self._output_stage(state_, voltage_set_point)
         return action
 
     def tune(self, env, env_id, tune_controller=True, **kwargs):

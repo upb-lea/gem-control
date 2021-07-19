@@ -1,7 +1,7 @@
 import numpy as np
 
 from .stage import Stage
-from ..tuner import parameter_reader as reader
+from .. import parameter_reader as reader
 import gem_controllers as gc
 
 

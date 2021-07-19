@@ -4,7 +4,7 @@ from gym_electric_motor.physical_systems import converters as cv
 
 from .stage import Stage
 from ..utils import non_parameterized
-from ..tuner import parameter_reader as reader
+from .. import parameter_reader as reader
 import gem_controllers as gc
 
 

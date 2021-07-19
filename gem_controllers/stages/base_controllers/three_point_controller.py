@@ -2,7 +2,7 @@ import numpy as np
 
 from .base_controller import BaseController
 from .e_base_controller_task import EBaseControllerTask
-from ...tuner import parameter_reader as reader
+from ... import parameter_reader as reader
 import gem_controllers as gc
 
 

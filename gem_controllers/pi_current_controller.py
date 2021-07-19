@@ -6,6 +6,10 @@ import gem_controllers as gc
 class PICurrentController(gc.CurrentController):
 
     @property
+    def signal_names(self):
+        return ['u_PI', 'u_ff', 'u_out']
+
+    @property
     def transformation_stage(self):
         return self._transformation_stage
 
@@ -64,7 +68,7 @@ class PICurrentController(gc.CurrentController):
         self._voltage_reference = np.array([])
         self._transformation_stage = gc.stages.AbcTransformation()
         self._emf_feedforward = gc.stages.EMFFeedforward()
-        if gc.utils.get_motor_type(env_id) in gc.tuner.parameter_reader.ac_motors:
+        if gc.utils.get_motor_type(env_id) in gc.parameter_reader.ac_motors:
             self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
         else:
             self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
@@ -74,7 +78,7 @@ class PICurrentController(gc.CurrentController):
     def tune(self, env, env_id, a=4):
         action_type = gc.utils.get_action_type(env_id)
         motor_type = gc.utils.get_motor_type(env_id)
-        if action_type in ['Finite', 'AbcCont'] and motor_type in gc.tuner.parameter_reader.ac_motors:
+        if action_type in ['Finite', 'AbcCont'] and motor_type in gc.parameter_reader.ac_motors:
             self._coordinate_transformation_required = True
         if self._coordinate_transformation_required:
             self._transformation_stage.tune(env, env_id)
@@ -83,9 +87,9 @@ class PICurrentController(gc.CurrentController):
         self._anti_windup_stage.tune(env, env_id)
         self._clipping_stage.tune(env, env_id)
         self._voltage_reference = np.zeros(
-            len(gc.tuner.parameter_reader.voltages[gc.utils.get_motor_type(env_id)]), dtype=float
+            len(gc.parameter_reader.voltages[gc.utils.get_motor_type(env_id)]), dtype=float
         )
-        self._tau_current_loop = gc.tuner.parameter_reader.tau_current_loop_reader[motor_type](env)
+        self._tau_current_loop = gc.parameter_reader.tau_current_loop_reader[motor_type](env)
 
     def current_control(self, state, current_reference):
         voltage_reference = self._current_base_controller(state, current_reference)

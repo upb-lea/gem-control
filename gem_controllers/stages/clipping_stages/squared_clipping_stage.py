@@ -37,7 +37,7 @@ class SquaredClippingStage(ClippingStage):
         motor_type = gc.utils.get_motor_type(env_id)
         state_names = []
         if self._control_task == 'CC':
-            state_names = gc.tuner.parameter_reader.currents[motor_type]
+            state_names = gem_controllers.parameter_reader.currents[motor_type]
         elif self._control_task == 'TC':
             state_names = ['torque']
         elif self._control_task == 'SC':

@@ -55,7 +55,7 @@ class TorqueController(gc.GemController):
         if env_id is not None and current_controller is None:
             self._current_controller = gc.PICurrentController(env, env_id)
         if env_id is not None and clipping_stage is None:
-            if gc.utils.get_motor_type(env_id) in gc.tuner.parameter_reader.dc_motors:
+            if gc.utils.get_motor_type(env_id) in gc.parameter_reader.dc_motors:
                 self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('TC')
             else:  # motor in ac_motors
                 self._clipping_stage = gc.stages.clipping_stages.SquaredClippingStage('TC')

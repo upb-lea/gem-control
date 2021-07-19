@@ -29,9 +29,9 @@ class AbsoluteClippingStage(ClippingStage):
         motor_type = gc.utils.get_motor_type(env_id)
         state_names = []
         if self._control_task == 'CC':
-            action_names = gc.tuner.parameter_reader.voltages[motor_type]
+            action_names = gc.parameter_reader.voltages[motor_type]
         elif self._control_task == 'TC':
-            action_names = gc.tuner.parameter_reader.currents[motor_type]
+            action_names = gc.parameter_reader.currents[motor_type]
         elif self._control_task == 'SC':
             action_names = ['torque']
         action_indices = [env.state_names.index(action_name) for action_name in action_names]

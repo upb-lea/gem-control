@@ -1,8 +1,6 @@
-import numpy as np
-
 from .p_controller import PController
 from .i_controller import IController
-from ...tuner import parameter_reader as reader
+from ... import parameter_reader as reader
 from .e_base_controller_task import EBaseControllerTask
 import gem_controllers as gc
 

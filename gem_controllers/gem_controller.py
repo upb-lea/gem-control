@@ -1,7 +1,4 @@
-import numpy as np
-
 import gem_controllers as gc
-from gem_controllers.tuner.tuner import tune_controller
 
 
 class GemController:
@@ -14,6 +11,14 @@ class GemController:
      a classical cascaded motor controller based on classic control techniques like th e proportional-integral (PI)
       controller to control a gym-electric-motor environment.
     """
+
+    @property
+    def signals(self):
+        return []
+
+    @property
+    def signal_names(self):
+        return []
 
     @classmethod
     def make(
@@ -50,7 +55,10 @@ class GemController:
             controller = gc.PISpeedController(
                 env, env_id, torque_controller=controller, base_speed_controller=base_speed_controller
             )
+        # Wrap the controller with the adapter to map the inputs and outputs to the environment
         controller = gc.GymElectricMotorAdapter(env, env_id, controller)
+
+        # Fit the controllers parameters to the environment
         controller.tune(env, env_id, **tuner_kwargs)
         return controller
 
@@ -60,6 +68,9 @@ class GemController:
 
     def __init__(self):
         self._stages = []
+
+    def get_signal_value(self, signal_name):
+        return self.signals[self.signal_names.index(signal_name)]
 
     def control(self, state, reference):
         raise NotImplementedError
