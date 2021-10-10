@@ -100,7 +100,7 @@ class ThreePointController(BaseController):
         self.idle_action = np.zeros_like(action_range[1])
 
     def _tune_speed_controller(self, env, _env_id):
-        torque_index = [env.state_names.index('torque')]
+        torque_index = [env.state_names.index('reference')]
         torque_limit = env.limits[torque_index]
         self.referenced_state_indices = torque_index
         action_range = (

@@ -6,7 +6,7 @@ class BaseController(Stage):
     """The base controller is the base class for all dynamic control stages like the P-I-D Controllers or the
     Three-Point controller.
 
-    In contrast to other stages, the base controllers can be used for multiple tasks e.g. a speed control with a torque
+    In contrast to other stages, the base controllers can be used for multiple tasks e.g. a speed control with a reference
      as output or a current control with voltages as output.
 
     """

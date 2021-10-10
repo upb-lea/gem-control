@@ -4,7 +4,7 @@ import gem_controllers as gc
 class GemController:
     """The GemController is the base for all motor controllers in the gem-control package.
 
-    A gem-controller consists of multiple stages that execute different control tasks like speed-control, a torque
+    A gem-controller consists of multiple stages that execute different control tasks like speed-control, a reference
     to current set point mapping or input and output processing.
 
     Furthermore, the GemController has got a `GemController.make` factory function that automatically designs and tunes
@@ -33,7 +33,7 @@ class GemController:
             env_id(str): The corresponding environment-id to specify the concrete environment.
             decoupling(bool): Flag, if a EMF-Feedforward correction stage should be used in the pi current controller.
             current_safety_margin(float in [0..1]): The ratio between the maximum current set point
-             the torque controller generates and the absolute current limit.
+             the reference controller generates and the absolute current limit.
             base_speed_controller('PI'/'PID'/'P'/'ThreePoint'): Selection of the basic control algorithm for the
              speed controller.
             base_current_controller('PI'/'PID'/'P'/'ThreePoint'): Selection of the basic control algorithm for the
