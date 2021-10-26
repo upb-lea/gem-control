@@ -1,4 +1,5 @@
 import gem_controllers as gc
+import numpy as np
 
 
 class GemController:
@@ -82,14 +83,17 @@ class GemController:
     def tune(self, env, env_id, **kwargs):
         pass
 
-    def control_environment(self, env, n_steps, render_env=False):
+    def control_environment(self, env, n_steps, max_episode_length=np.inf, render_env=False):
         state, reference = env.reset()
         self.reset()
+        current_episode_length = 0
         for _ in range(n_steps):
             if render_env:
                 env.render()
             action = self.control(state, reference)
             (state, reference), _, done, _ = env.step(action)
-            if done:
+            if done or current_episode_length >= max_episode_length:
                 state, reference = env.reset()
                 self.reset()
+                current_episode_length = 0
+            current_episode_length = current_episode_length + 1
