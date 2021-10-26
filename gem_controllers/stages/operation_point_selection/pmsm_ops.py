@@ -8,7 +8,7 @@ from .operation_point_selection import OperationPointSelection
 class PMSMOperationPointSelection(OperationPointSelection):
 
     def __init__(
-            self, torque_control='online', max_modulation_level: float = 2 / np.sqrt(3),
+            self, torque_control='analytical', max_modulation_level: float = 2 / np.sqrt(3),
             modulation_damping: float = 1.2
     ):
         super().__init__()
@@ -42,8 +42,11 @@ class PMSMOperationPointSelection(OperationPointSelection):
         self.epsilon_idx = None
         self.i_sd_idx = None
         self.i_sq_idx = None
+        self.max_torque = None
+        self.invert = None
+        self.tau = None
 
-    def get_mtpc_lookup_table(self):
+    def _get_mtpc_lookup_table(self):
 
         def i_q_(i_d__, torque_, controller):
             return torque_ / (i_d__ * (controller.l_d - controller.l_q) + controller.psi_p) / (1.5 * controller.p)
@@ -53,7 +56,9 @@ class PMSMOperationPointSelection(OperationPointSelection):
 
         # calculate the maximum reference
         self.max_torque = max(
-            1.5 * self.p * (self.psi_p + (self.l_d - self.l_q) * (-self.i_sd_limit)) * self.i_sq_limit, self.limit[self.torque_idx])
+            1.5 * self.p * (self.psi_p + (self.l_d - self.l_q) * (-self.i_sd_limit)) * self.i_sq_limit,
+            self.limit[self.torque_idx]
+        )
         torque = np.linspace(-self.max_torque, self.max_torque, self.t_count)
         characteristic = []
 
@@ -88,8 +93,10 @@ class PMSMOperationPointSelection(OperationPointSelection):
 
     def get_mtpf_lookup_table(self):
         # maximum flux is calculated
-        self.psi_max_mtpf = np.sqrt((self.psi_p + self.l_d * self.i_sd_limit) ** 2 + (
-                self.l_q * self.i_sq_limit) ** 2)
+        self.psi_max_mtpf = np.sqrt(
+            (self.psi_p + self.l_d * self.i_sd_limit) ** 2
+            + (self.l_q * self.i_sq_limit) ** 2
+        )
         psi = np.linspace(0, self.psi_max_mtpf, self.psi_count)
         i_d = np.linspace(-self.i_sd_limit, 0, self.i_count)
         i_d_best = 0
@@ -170,22 +177,19 @@ class PMSMOperationPointSelection(OperationPointSelection):
         )
         self.psi_low = -self.psi_high
         self.integrated_reset = 0.01 * self.psi_low  # Reset value of the modulation controller
-        psi_p = self.psi_p
-        l_d = self.l_d
-        l_q = self.l_q
-        p = self.p
-        limit = self.limit
         self.max_torque = max(
-            1.5 * self.p * (psi_p + (self.l_d - self.l_q) * (-limit[self.i_sd_idx]))
+            1.5 * self.p * (self.psi_p + (self.l_d - self.l_q) * (-self.limit[self.i_sd_idx]))
             * self.i_sq_limit,
-            limit[self.torque_idx]
+            self.limit[self.torque_idx]
         )
         self.psi_max_mtpf = 0.0
-        self.mtpc = self.get_mtpc_lookup_table()
+        self.mtpc = self._get_mtpc_lookup_table()
         self.mtpf = self.get_mtpf_lookup_table()
 
         self.psi_t = np.sqrt(
-            np.power(self.psi_p + self.l_d * self.mtpc[:, 1], 2) + np.power(self.l_q * self.mtpc[:, 2], 2))
+            np.power(self.psi_p + self.l_d * self.mtpc[:, 1], 2) + np.power(self.l_q * self.mtpc[:, 2], 2)
+        )
+
         self.psi_t = np.array([self.mtpc[:, 0], self.psi_t])
 
         self.i_q_max = np.linspace(
@@ -193,6 +197,7 @@ class PMSMOperationPointSelection(OperationPointSelection):
             self.i_sq_limit,
             self.i_count
         )
+
         self.i_d_max = -np.sqrt(self.i_sq_limit ** 2 - np.power(self.i_q_max, 2))
         i_count_mgrid = 200j
         i_d, i_q = np.mgrid[
@@ -233,8 +238,6 @@ class PMSMOperationPointSelection(OperationPointSelection):
             self.psi_grid = res[:, :, 1]
             self.i_d_inter = res[:, :, 2].T
             self.i_q_inter = res[:, :, 3].T
-            self.i_d_inter_plot = self.i_d_inter.T
-            self.i_q_inter_plot = self.i_q_inter.T
 
         elif self.torque_control_type == 'interpolate':
             self.t_grid, self.psi_grid = np.mgrid[
@@ -348,12 +351,12 @@ class PMSMOperationPointSelection(OperationPointSelection):
                 i_q = self.i_q_inter[t_idx, psi_idx]
                 if i_d > self.mtpc[psi_idx_, 1]:
                     i_d = self.mtpc[psi_idx_, 1]
-                    i_q = np.sign(reference) * np.abs(self.mtpc[psi_idx_, 2])
+                    i_q = np.sign(reference[0]) * np.abs(self.mtpc[psi_idx_, 2])
 
         # ensure that the mtpf characteristic curve is observed
         if i_d < self.mtpf[psi_max_idx, 2]:
             i_d = self.mtpf[psi_max_idx, 2]
-            i_q = np.sign(reference) * np.abs(self.mtpf[psi_max_idx, 3])
+            i_q = np.sign(reference[0]) * np.abs(self.mtpf[psi_max_idx, 3])
 
         # invert the i_q if necessary
         i_q = self.invert * i_q
