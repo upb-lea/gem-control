@@ -45,14 +45,14 @@ class ExtExDcOperationPointSelection(OperationPointSelection):
         self._cross_inductance = np.array([])
         self._i_e_idx = None
         self._i_a_idx = None
+        self._r_a_sqrt = None
+        self._r_e_sqrt = None
+        self._l_e_prime = None
         self._i_e_policy = self.__i_e_policy
 
     def __i_e_policy(self, state, reference):
-        """The policy for the exciting current that is used per default.
-
-        It aims to keep i_e = 0.5 * abs(i_a)
-        """
-        return abs(state[self._i_a_idx]) * 0.5
+        """The policy for the exciting current that is used per default."""
+        return np.sqrt(self.r_a_sqrt * abs(reference[0]) / (self.r_e_sqrt * self.l_e_prime))
 
     def _select_operating_point(self, state, reference):
         i_e_ref = self._i_e_policy(state, reference)
@@ -61,7 +61,11 @@ class ExtExDcOperationPointSelection(OperationPointSelection):
 
     def tune(self, env, env_id, current_safety_margin=0.2):
         super().tune(env, env_id, current_safety_margin)
-        motor = gc.utils.get_motor_type(env_id)
+        motor_type = gc.utils.get_motor_type(env_id)
         self._i_e_idx = env.state_names.index('i_e')
         self._i_a_idx = env.state_names.index('i_a')
-        self._cross_inductance = reader.l_prime_reader[motor](env)
+        self._cross_inductance = reader.l_prime_reader[motor_type](env)
+        mp = env.physical_system.electrical_motor.motor_parameter
+        self._r_a_sqrt = np.sqrt(mp['r_a'])
+        self._r_e_sqrt = np.sqrt(mp['r_e'])
+        self._l_e_prime = mp['l_e_prime']
