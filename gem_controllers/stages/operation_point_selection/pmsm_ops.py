@@ -8,7 +8,7 @@ from .operation_point_selection import OperationPointSelection
 class PMSMOperationPointSelection(OperationPointSelection):
 
     def __init__(
-            self, torque_control='analytical', max_modulation_level: float = 2 / np.sqrt(3),
+            self, torque_control='online', max_modulation_level: float = 2 / np.sqrt(3),
             modulation_damping: float = 1.2
     ):
         super().__init__()

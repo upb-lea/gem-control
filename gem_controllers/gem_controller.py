@@ -1,3 +1,5 @@
+import gym_electric_motor.core
+
 import gem_controllers as gc
 import numpy as np
 
@@ -23,8 +25,14 @@ class GemController:
 
     @classmethod
     def make(
-        cls, env, env_id, decoupling=True, current_safety_margin=0.2, base_current_controller='PI',
-        base_speed_controller='PI', a=4
+        cls,
+        env: gym_electric_motor.core.ElectricMotorEnvironment,
+        env_id: str,
+        decoupling: bool = True,
+        current_safety_margin:float = 0.2,
+        base_current_controller: str = 'PI',
+        base_speed_controller: str = 'PI',
+        a: int = 4
     ):
         """A factory function that generates (and parameterizes) a matching GemController for a given gym-electric-motor
         environment `env`.

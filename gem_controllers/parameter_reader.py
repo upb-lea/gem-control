@@ -17,7 +17,7 @@ psi_reader = {
     'ShuntDc': lambda env: np.array([0.0]),
     'PermExDc': lambda env: np.array([env.physical_system.electrical_motor.motor_parameter['psi_e']]),
     'ExtExDc': lambda env: np.array([0.0, 0.0]),
-    'PMSM': lambda env: np.array([env.physical_system.electrical_motor.motor_parameter['psi_p'], 0.0]),
+    'PMSM': lambda env: np.array([0.0, env.physical_system.electrical_motor.motor_parameter['psi_p']]),
     'SynRM': lambda env: np.array([0.0, 0.0]),
 }
 
@@ -59,12 +59,12 @@ l_emf_reader = {
     ]),
     'PermExDc': lambda env: np.array([0.0]),
     'PMSM': lambda env: np.array([
+        - env.physical_system.electrical_motor.motor_parameter['l_q'],
         env.physical_system.electrical_motor.motor_parameter['l_d'],
-        - env.physical_system.electrical_motor.motor_parameter['l_q']
     ]),
     'SynRM': lambda env: np.array([
+        - env.physical_system.electrical_motor.motor_parameter['l_q'],
         env.physical_system.electrical_motor.motor_parameter['l_d'],
-        - env.physical_system.electrical_motor.motor_parameter['l_q']
     ]),
 }
 
@@ -178,8 +178,8 @@ emf_currents = {
     'ShuntDc': ['i_e'],
     'ExtExDc': ['i_e', 'i_a'],
     'PermExDc': ['i'],
-    'PMSM': ['i_sd', 'i_sq'],
-    'SynRM': ['i_sd', 'i_sq']
+    'PMSM': ['i_sq', 'i_sd'],
+    'SynRM': ['i_sq', 'i_sd']
 }
 
 
@@ -224,3 +224,31 @@ converter_high_idle_low_action = {
     cv.FiniteOneQuadrantConverter: (1, 0, 0),
     cv.FiniteB6BridgeConverter: ((1, 0, 2),) * 3,
 }
+
+
+class MotorSpecification:
+
+    _motors = dict()
+
+    @staticmethod
+    def register(motor_key):
+        def reg(motor_specification):
+            assert isinstance(motor_specification, MotorSpecification)
+            assert motor_key not in MotorSpecification._motors.keys()
+            MotorSpecification._motors[motor_key] = motor_specification
+        return reg
+
+    @staticmethod
+    def get(motor_key):
+        return MotorSpecification._motors[motor_key]
+
+    psi = None
+    l = None
+    l_emf = None
+    tau_current_loop = None
+    tau_n = None
+    r = None
+    l_prime = None
+    currents = None
+    emf_currents = None
+    voltages = None
