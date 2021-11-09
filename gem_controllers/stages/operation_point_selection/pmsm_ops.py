@@ -8,7 +8,7 @@ from .operation_point_selection import OperationPointSelection
 class PMSMOperationPointSelection(OperationPointSelection):
 
     def __init__(
-            self, torque_control='online', max_modulation_level: float = 2 / np.sqrt(3),
+            self, torque_control='interpolate', max_modulation_level: float = 2 / np.sqrt(3),
             modulation_damping: float = 1.2
     ):
         super().__init__()
@@ -199,7 +199,7 @@ class PMSMOperationPointSelection(OperationPointSelection):
         )
 
         self.i_d_max = -np.sqrt(self.i_sq_limit ** 2 - np.power(self.i_q_max, 2))
-        i_count_mgrid = 200j
+        i_count_mgrid = self.i_count * 1j
         i_d, i_q = np.mgrid[
             -self.limit[self.i_sd_idx]: 0: i_count_mgrid,
             -self.limit[self.i_sq_idx]: self.limit[self.i_sq_idx]: i_count_mgrid / 2
@@ -373,15 +373,15 @@ class PMSMOperationPointSelection(OperationPointSelection):
         """
 
         a = 2 * np.sqrt(
-            (state[self.u_sd_idx] * self.limit[self.u_sd_idx]) ** 2
-            + (state[self.u_sq_idx] * self.limit[self.u_sq_idx]) ** 2
+            (state[self.u_sd_idx]) ** 2
+            + (state[self.u_sq_idx]) ** 2
         ) / self.u_dc
 
         if a > 1.1 * self.a_max:
             self.integrated = self.integrated_reset
 
         a_delta = self.k_ * self.a_max - a
-        omega = max(np.abs(state[self.omega_idx]) * self.limit[self.omega_idx], 0.0001)
+        omega = max(np.abs(state[self.omega_idx]), 0.0001)
         psi_max_ = self.u_dc / (np.sqrt(3) * omega * self.p)
         k_i = 2 * omega * self.p / self.u_dc
 
