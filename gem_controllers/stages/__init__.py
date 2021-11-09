@@ -9,6 +9,7 @@ from .base_controllers.pid_controller import PIDController
 from .base_controllers.three_point_controller import ThreePointController
 from .base_controllers.base_controller import BaseController
 from .emf_feedforward import EMFFeedforward
+from .emf_feedforward_ind import EMFFeedforwardInd
 from .operation_point_selection import OperationPointSelection, torque_to_current_function
 from .input_stage import InputStage
 from . import clipping_stages

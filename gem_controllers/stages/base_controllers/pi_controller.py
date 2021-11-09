@@ -22,6 +22,8 @@ class PIController(PController, IController):
             self._tune_current_controller(env, env_id, a)
         elif self._control_task == EBaseControllerTask.SC:
             self._tune_speed_controller(env, env_id, a, t_n)
+        elif self._control_task == EBaseControllerTask.FC:
+            self._tune_flux_controller(env, env_id, a, t_n)
         else:
             raise Exception(f'No tuning method available.')
 
@@ -52,3 +54,8 @@ class PIController(PController, IController):
         self.tau = env.physical_system.tau
         speed_index = env.state_names.index('omega')
         self.state_indices = [speed_index]
+
+    def _tune_flux_controller(self, env, env_id, a=4, t_n=None):
+        self.p_gain = a * t_n ** 2
+        self.i_gain = self.p_gain / env.physical_system.tau
+        self.state_indices = 0

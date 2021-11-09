@@ -3,6 +3,7 @@ from .extex_dc_ttc import ExtExDcOperationPointSelection
 from .series_dc_ops import SeriesDcOperationPointSelection
 from .shunt_dc_ops import ShuntDcOperationPointSelection
 from .pmsm_ops import PMSMOperationPointSelection
+from .scim_ops import SCIMOperationPointSelection
 
 torque_to_current_function = {
     'PermExDc': PermExDcOperationPointSelection,
@@ -10,5 +11,6 @@ torque_to_current_function = {
     'SeriesDc': SeriesDcOperationPointSelection,
     'ShuntDc': ShuntDcOperationPointSelection,
     'PMSM': PMSMOperationPointSelection,
-    'SynRM': PMSMOperationPointSelection
+    'SynRM': PMSMOperationPointSelection,
+    'SCIM': SCIMOperationPointSelection,
 }

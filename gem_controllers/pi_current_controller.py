@@ -67,7 +67,10 @@ class PICurrentController(gc.CurrentController):
         self._decoupling = decoupling
         self._voltage_reference = np.array([])
         self._transformation_stage = gc.stages.AbcTransformation()
-        self._emf_feedforward = gc.stages.EMFFeedforward()
+        if gc.utils.get_motor_type(env_id) in gc.parameter_reader.induction_motors:
+            self._emf_feedforward = gc.stages.EMFFeedforwardInd()
+        else:
+            self._emf_feedforward = gc.stages.EMFFeedforward()
         if gc.utils.get_motor_type(env_id) in gc.parameter_reader.ac_motors:
             self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
         else:
