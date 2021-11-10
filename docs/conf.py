@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('..'))
 sys.setrecursionlimit(1500)
 # -- Project information -----------------------------------------------------
 
-project = 'gym-electric-motor'
+project = 'gem-control'
 copyright = '2021, Felix Book, Wilhelm Kirchgässner, Maximilian Schenke, Arne Traue, Oliver Wallscheid'
 author = 'Felix Book, Wilhelm Kirchgässner, Maximilian Schenke, Arne Traue, Oliver Wallscheid'
 

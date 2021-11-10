@@ -6,5 +6,14 @@
 Welcome to GEM-controls documentation!
 ===================================================
 
-The gym-electric-motor (GEM) package is a software toolbox for the simulation of different electric motors to
-train and test reinforcement learning motor controllers and to compare them with classical motor controllers.
+The GEM-control package is a collection of control methods to control the gym-electric-motor(GEM) environments.
+Currently, classic PI controllers are available for most of the environment types.
+
+Contents
+________
+
+.. toctree::
+
+   getting_started
+   usage_guide/usage_guides
+   api_documentation/gem_control
