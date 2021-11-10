@@ -69,7 +69,7 @@ class PICurrentController(gc.CurrentController):
         self._transformation_stage = gc.stages.AbcTransformation()
         self._emf_feedforward = gc.stages.EMFFeedforward()
         if gc.utils.get_motor_type(env_id) in gc.parameter_reader.ac_motors:
-            self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
+            self._clipping_stage = gc.stages.clipping_stages.SquaredClippingStage('CC')
         else:
             self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
         self._anti_windup_stage = gc.stages.AntiWindup('CC')
@@ -99,7 +99,7 @@ class PICurrentController(gc.CurrentController):
         if self._coordinate_transformation_required:
             voltage_reference = self._transformation_stage(state, voltage_reference)
         if hasattr(self._current_base_controller, 'integrator'):
-            delta = self._anti_windup_stage.__call__(
+            delta = self._anti_windup_stage(
                 state, current_reference, self._clipping_stage.clipping_difference
             )
             self._current_base_controller.integrator += delta
