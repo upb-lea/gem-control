@@ -41,7 +41,7 @@ class SquaredClippingStage(ClippingStage):
         elif self._control_task == 'TC':
             state_names = gc.parameter_reader.currents[motor_type]
         elif self._control_task == 'SC':
-            state_names = ['reference']
+            state_names = ['torque']
         state_indices = [env.state_names.index(state_name) for state_name in state_names]
         self._limits = env.limits[state_indices]
 

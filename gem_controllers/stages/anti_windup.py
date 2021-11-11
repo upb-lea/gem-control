@@ -17,7 +17,7 @@ class AntiWindup:
         if self._control_task == 'CC':
             states = gc.parameter_reader.currents[motor_type]
         elif self._control_task == 'TC':
-            states = ['reference']
+            states = ['torque']
         elif self._control_task == 'SC':
             states = ['omega']
         self._state_indices = [env.state_names.index(state) for state in states]
