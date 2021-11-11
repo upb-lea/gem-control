@@ -43,8 +43,13 @@ class EMFFeedforward(Stage):
     def action_range(self):
         return self._action_range
 
+
+    def omega_el(self, state):
+        return state[self._omega_idx] * self._p
+
     def __init__(self):
         super().__init__()
+        self._p = 1
         self._inductance = np.array([])
         self._psi = np.array([])
         self._current_indices = np.array([])
@@ -52,7 +57,7 @@ class EMFFeedforward(Stage):
         self._action_range = np.array([]), np.array([])
 
     def __call__(self, state, reference):
-        action = reference + (self._inductance * state[self._current_indices] + self._psi) * state[self._omega_idx]
+        action = reference + (self._inductance * state[self._current_indices] + self._psi) * self.omega_el(state)
         return action
 
     def tune(self, env, env_id, **_):
@@ -63,6 +68,7 @@ class EMFFeedforward(Stage):
         self.current_indices = current_indices
         self.inductance = reader.l_emf_reader[motor_type](env)
         self.psi = reader.psi_reader[motor_type](env)
+        self._p = reader.p_reader[motor_type](env)
         voltages = reader.voltages[motor_type]
         voltage_indices = [env.state_names.index(voltage) for voltage in voltages]
         voltage_limits = env.limits[voltage_indices]

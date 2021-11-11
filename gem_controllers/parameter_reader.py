@@ -21,6 +21,15 @@ psi_reader = {
     'SynRM': lambda env: np.array([0.0, 0.0]),
 }
 
+p_reader = {
+    'SeriesDc': lambda env: 1,
+    'ShuntDc': lambda env: 1,
+    'ExtExDc': lambda env: 0,
+    'PermExDc': lambda env: 0,
+    'PMSM': lambda env: env.physical_system.electrical_motor.motor_parameter['p'],
+    'SynRM': lambda env: env.physical_system.electrical_motor.motor_parameter['p'],
+}
+
 l_reader = {
     'SeriesDc': lambda env: np.array([
         env.physical_system.electrical_motor.motor_parameter['l_a']
