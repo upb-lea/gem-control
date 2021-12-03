@@ -46,11 +46,13 @@ l_reader = {
         env.physical_system.electrical_motor.motor_parameter['l_q']
     ]),
     'SCIM': lambda env: np.array([
-        env.physical_system.electrical_motor.motor_parameter['l_m']
-        + env.physical_system.electrical_motor.motor_parameter['l_sigs'],
-        env.physical_system.electrical_motor.motor_parameter['l_m']
-        + env.physical_system.electrical_motor.motor_parameter['l_sigr'],
-    ]),
+        (env.physical_system.electrical_motor.motor_parameter['l_sigr'] +
+         env.physical_system.electrical_motor.motor_parameter['l_m']) /
+        env.physical_system.electrical_motor.motor_parameter['r_r'],
+        (env.physical_system.electrical_motor.motor_parameter['l_sigr'] +
+         env.physical_system.electrical_motor.motor_parameter['l_m']) /
+        env.physical_system.electrical_motor.motor_parameter['r_r'],
+        ]),
 }
 
 l_emf_reader = {
@@ -74,11 +76,24 @@ l_emf_reader = {
         env.physical_system.electrical_motor.motor_parameter['l_d'],
     ]),
     'SCIM': lambda env: np.array([
-        env.physical_system.electrical_motor.motor_parameter['l_m']
-        + env.physical_system.electrical_motor.motor_parameter['l_sigs'],
-        env.physical_system.electrical_motor.motor_parameter['l_m']
-        + env.physical_system.electrical_motor.motor_parameter['l_sigr'],
-    ]),
+        -(env.physical_system.electrical_motor.motor_parameter['l_sigs'] *
+          env.physical_system.electrical_motor.motor_parameter['l_sigr'] +
+          env.physical_system.electrical_motor.motor_parameter['l_sigs'] *
+          env.physical_system.electrical_motor.motor_parameter['l_m'] +
+          env.physical_system.electrical_motor.motor_parameter['l_sigr'] *
+          env.physical_system.electrical_motor.motor_parameter['l_m']) /
+        (env.physical_system.electrical_motor.motor_parameter['l_sigr'] +
+         env.physical_system.electrical_motor.motor_parameter['l_m']),
+        (env.physical_system.electrical_motor.motor_parameter['l_sigs'] *
+         env.physical_system.electrical_motor.motor_parameter['l_sigr'] +
+         env.physical_system.electrical_motor.motor_parameter['l_sigs'] *
+         env.physical_system.electrical_motor.motor_parameter['l_m'] +
+         env.physical_system.electrical_motor.motor_parameter['l_sigr'] *
+         env.physical_system.electrical_motor.motor_parameter['l_m']) /
+        (env.physical_system.electrical_motor.motor_parameter['l_sigr'] +
+            env.physical_system.electrical_motor.motor_parameter['l_m'])
+        ]
+    ),
 }
 
 tau_current_loop_reader = {
@@ -210,7 +225,7 @@ emf_currents = {
     'PermExDc': ['i'],
     'PMSM': ['i_sq', 'i_sd'],
     'SynRM': ['i_sq', 'i_sd'],
-    'SCIM': ['i_sd', 'i_sq'],
+    'SCIM': ['i_sq', 'i_sd'],
 }
 
 

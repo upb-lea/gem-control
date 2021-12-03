@@ -8,7 +8,7 @@ from .operation_point_selection import OperationPointSelection
 class PMSMOperationPointSelection(OperationPointSelection):
 
     def __init__(
-            self, torque_control='interpolate', max_modulation_level: float = 2 / np.sqrt(3),
+            self, torque_control='online', max_modulation_level: float = 2 / np.sqrt(3),
             modulation_damping: float = 1.2
     ):
         super().__init__()
@@ -372,10 +372,7 @@ class PMSMOperationPointSelection(OperationPointSelection):
             information can be found at https://ieeexplore.ieee.org/document/7409195.
         """
 
-        a = 2 * np.sqrt(
-            (state[self.u_sd_idx]) ** 2
-            + (state[self.u_sq_idx]) ** 2
-        ) / self.u_dc
+        a = 2 * np.sqrt(state[self.u_sd_idx] ** 2 + state[self.u_sq_idx] ** 2) / self.u_dc
 
         if a > 1.1 * self.a_max:
             self.integrated = self.integrated_reset

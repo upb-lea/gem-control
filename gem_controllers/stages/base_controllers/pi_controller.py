@@ -3,6 +3,7 @@ from .i_controller import IController
 from ... import parameter_reader as reader
 from .e_base_controller_task import EBaseControllerTask
 import gem_controllers as gc
+import numpy as np
 
 
 class PIController(PController, IController):
@@ -56,6 +57,7 @@ class PIController(PController, IController):
         self.state_indices = [speed_index]
 
     def _tune_flux_controller(self, env, env_id, a=4, t_n=None):
-        self.p_gain = a * t_n ** 2
-        self.i_gain = self.p_gain / env.physical_system.tau
-        self.state_indices = 0
+        self.tau = env.physical_system.tau
+        self.p_gain = np.array([a * t_n ** 2])
+        self.i_gain = self.p_gain / self.tau
+        self.state_indices = [0]

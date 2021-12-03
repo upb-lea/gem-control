@@ -26,6 +26,7 @@ class SCIMOperationPointSelection(OperationPointSelection):
 
         self._modulation_damping = modulation_damping
         self.a_max = max_modulation_level
+        self.k_ = None
 
         self.t_count = 1001
         self.psi_count = 1000
@@ -40,7 +41,6 @@ class SCIMOperationPointSelection(OperationPointSelection):
         self.epsilon_idx = None
         self.i_sd_idx = None
         self.i_sq_idx = None
-
         self.psi_controller = psi_controller
 
     def psi_opt(self):
@@ -103,6 +103,7 @@ class SCIMOperationPointSelection(OperationPointSelection):
         self.epsilon_idx = env.state_names.index('epsilon')
         self.i_sd_idx = env.state_names.index('i_sd')
         self.i_sq_idx = env.state_names.index('i_sq')
+        self.psi_abs_idx = env.state_names.index('psi_abs')
 
         self.t_minimum = -self.limit[self.torque_idx]
         self.t_maximum = self.limit[self.torque_idx]
@@ -128,6 +129,7 @@ class SCIMOperationPointSelection(OperationPointSelection):
 
         alpha = self._modulation_damping / (self._modulation_damping - np.sqrt(self._modulation_damping ** 2 - 1))
         self.i_gain = 1 / (self.l_s / (1.25 * self.r_s)) * (alpha - 1) / alpha ** 2
+        self.k_ = 0.8
         self.u_dc = np.sqrt(3) * self.limit[self.u_sa_idx]
         self.limited = False
         self.integrated = 0
@@ -138,27 +140,44 @@ class SCIMOperationPointSelection(OperationPointSelection):
     # Methods to get the indices of the lists for maximum torque and optimal flux
     def get_psi_opt(self, torque):
         torque = np.clip(torque, self.t_minimum, self.t_maximum)
-        return int(round((torque - self.t_minimum) / (self.t_maximum - self.t_minimum) * (self.torque_count - 1)))
+        return int(round((torque - self.t_minimum) / (self.t_maximum - self.t_minimum) * (self.t_count - 1)))
 
     def get_t_max(self, psi):
         psi = np.clip(psi, 0, self.psi_max)
         return int(round(psi / self.psi_max * (self.psi_count - 1)))
 
     def _select_operating_point(self, state, reference):
-        self.psi_controller([1], 0.8)
-        return np.array([0.2, 0])
+        psi = state[self.psi_abs_idx]
+        psi_opt = self.psi_opt_t[1, self.get_psi_opt(reference[0])]
+        psi_max = self.modulation_control(state)
+        psi_opt = min(psi_opt, psi_max)
+
+        t_max = self.t_max_psi[0, self.psi_count - self.get_t_max(psi_opt)]
+
+        torque = np.clip(reference[0], -np.abs(t_max), np.abs(t_max))
+
+        i_sd_ = self.psi_controller(np.array([psi]), np.array([psi_opt]))
+        i_sd = np.clip(i_sd_, -self.i_sd_limit, self.i_sd_limit)
+        if i_sd_ == i_sd:
+            self.psi_controller.integrate(np.array([psi]), np.array([psi_opt]))
+        i_sd = i_sd[0]
+
+        i_sq = np.clip(torque / max(psi, 0.001) * 2 / 3 / self.p * self.l_r / self.l_m, -self.i_sq_limit, self.i_sq_limit)
+        if self.i_sd_limit < np.sqrt(i_sq ** 2 + i_sd ** 2):
+            i_sq = np.sign(i_sq) * np.sqrt(self.nominal_value[self.i_sq_idx] ** 2 - i_sd ** 2)
+
+        return np.array([i_sd, i_sq])
 
     def modulation_control(self, state):
         # Calculate modulation
-        a = 2 * np.sqrt((state[self.u_sd_idx] * self.limit[self.u_sd_idx]) ** 2 + (
-                    state[self.u_sq_idx] * self.limit[self.u_sq_idx]) ** 2) / self.u_dc
+        a = 2 * np.sqrt(state[self.u_sd_idx] ** 2 + state[self.u_sq_idx] ** 2) / self.u_dc
 
         if a > 1.01 * self.a_max:
             self.integrated = self.integrated_reset
 
         a_delta = self.k_ * self.a_max - a
 
-        omega = max(np.abs(state[self.omega_idx]) * self.limit[self.omega_idx], 0.0001)
+        omega = max(np.abs(state[self.omega_idx]), 0.0001)
 
         # Calculate i gain
         k_i = 2 * np.abs(omega) * self.p / self.u_dc
@@ -176,3 +195,8 @@ class SCIMOperationPointSelection(OperationPointSelection):
         psi = max(psi_max + psi_delta, 0)
 
         return psi
+
+    def reset(self):
+        super().reset()
+        self.psi_controller.reset()
+        self.integrated = self.integrated_reset
