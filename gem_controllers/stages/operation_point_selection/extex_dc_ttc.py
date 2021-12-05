@@ -52,7 +52,7 @@ class ExtExDcOperationPointSelection(OperationPointSelection):
 
     def __i_e_policy(self, state, reference):
         """The policy for the exciting current that is used per default."""
-        return np.sqrt(self.r_a_sqrt * abs(reference[0]) / (self.r_e_sqrt * self.l_e_prime))
+        return np.sqrt(self._r_a_sqrt * abs(reference[0]) / (self._r_e_sqrt * self._l_e_prime))
 
     def _select_operating_point(self, state, reference):
         i_e_ref = self._i_e_policy(state, reference)
