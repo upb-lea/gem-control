@@ -162,9 +162,10 @@ class SCIMOperationPointSelection(OperationPointSelection):
             self.psi_controller.integrate(np.array([psi]), np.array([psi_opt]))
         i_sd = i_sd[0]
 
-        i_sq = np.clip(torque / max(psi, 0.001) * 2 / 3 / self.p * self.l_r / self.l_m, -self.i_sq_limit, self.i_sq_limit)
+        i_sq = np.clip(torque / max(psi, 0.001) * 2 / 3 / self.p * self.l_r / self.l_m, -self.i_sq_limit,
+                       self.i_sq_limit)
         if self.i_sd_limit < np.sqrt(i_sq ** 2 + i_sd ** 2):
-            i_sq = np.sign(i_sq) * np.sqrt(self.nominal_value[self.i_sq_idx] ** 2 - i_sd ** 2)
+            i_sq = np.sign(i_sq) * np.sqrt(self.i_sd_limit ** 2 - i_sd ** 2)
 
         return np.array([i_sd, i_sq])
 
