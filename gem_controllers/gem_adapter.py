@@ -2,6 +2,7 @@ import gym_electric_motor as gem
 import numpy as np
 
 import gem_controllers as gc
+from gem_controllers.visualization import *
 
 
 class GymElectricMotorAdapter(gc.GemController):
@@ -30,6 +31,10 @@ class GymElectricMotorAdapter(gc.GemController):
     def controller(self, value):
         self._controller = value
 
+    @property
+    def visualization(self):
+        return self._visualization
+
     def __init__(
         self,
         _env: (gem.core.ElectricMotorEnvironment, None) = None,
@@ -47,6 +52,7 @@ class GymElectricMotorAdapter(gc.GemController):
             self._output_stage = gc.stages.DiscOutputStage()
         else:
             self._output_stage = gc.stages.ContOutputStage()
+        self._visualization = None
 
     def control(self, state, reference):
         # Copy state and reference to be independent from further calculations
@@ -61,6 +67,11 @@ class GymElectricMotorAdapter(gc.GemController):
         self._output_stage.tune(env, env_id)
         if tune_controller:
             self._controller.tune(env, env_id, **kwargs)
+
+    def visualize(self, env_id):
+        self._visualization = Visualization(env_id, self._controller)
+        self._visualization.build()
+        self._visualization.show()
 
     def reset(self):
         self._input_stage.reset()

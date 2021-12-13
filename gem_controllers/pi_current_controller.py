@@ -1,6 +1,7 @@
 import numpy as np
 
 import gem_controllers as gc
+from gem_controllers.visualization import *
 
 
 class PICurrentController(gc.CurrentController):
@@ -111,6 +112,13 @@ class PICurrentController(gc.CurrentController):
     def control(self, state, reference):
         self._voltage_reference = self.current_control(state, reference)
         return self._voltage_reference
+
+    def visualize(self, start):
+        stage_box = StageBox()
+        tb = TextBox(start, (3, 2), ['Current', 'Controller'], fill='white', draw='black')
+        stage_box.append(tb)
+        end = start + Point(5, 0)
+        return [stage_box], end
 
     def reset(self):
         for stage in self.stages:
