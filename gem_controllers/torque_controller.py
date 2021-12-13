@@ -2,7 +2,7 @@ import numpy as np
 
 import gym_electric_motor as gem
 import gem_controllers as gc
-from gem_controllers.visualization import *
+
 
 class TorqueController(gc.GemController):
 
@@ -76,14 +76,6 @@ class TorqueController(gc.GemController):
         self._current_reference = self._clipping_stage(state, self._current_reference)
         reference = self._current_controller.current_control(state, self._current_reference)
         return reference
-
-    def visualize(self, start):
-        stage_box = StageBox()
-        tb = TextBox(start, (3, 2), ['Torque', 'Controller'], fill='white', draw='black')
-        stage_box.append(tb)
-        end = start + Point(5, 0)
-        current_stage_box, end = self._current_controller.visualize(end)
-        return [stage_box] + current_stage_box, end
 
     def reset(self):
         self._current_controller.reset()

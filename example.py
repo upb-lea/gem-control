@@ -9,7 +9,7 @@ env_id = 'Cont-TC-ShuntDc-v0'
 
 env = gem.make(
         env_id,
-        #visualization=MotorDashboard(state_plots=('torque', 'i', 'u')),
+        #visualization=MotorDashboard(state_plots=['torque', 'i', 'u']),
     )
 
 state, reference = env.reset()
@@ -20,7 +20,6 @@ c = gc.GemController.make(
     env_id,
     a=5,
     current_safety_margin=0.15,
-    visualization=True
     )
 
 c.control_environment(env, n_steps=50001, render_env=True)
