@@ -3,17 +3,18 @@ import gym_electric_motor as gem
 import gem_controllers as gc
 import time
 
-env_id = 'DqCont-SC-PMSM-v0'
+env_id = 'Cont-CC-ShuntDc-v0'
 env = gem.make(
     env_id,
-    visualization=gem.visualization.MotorDashboard(state_plots='all')
+    #visualization=gem.visualization.MotorDashboard(state_plots=('i', 'torque', 'u'))
 )
 
 c = gc.GemController.make(
     env,
     env_id,
     a=4,
-    current_safety_margin=0.15
+    current_safety_margin=0.15,
+    visualization=True
 )
 env.reset()
 start = time.time()

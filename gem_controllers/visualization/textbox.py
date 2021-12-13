@@ -40,7 +40,7 @@ class TextBox:
         self._text_pos = [TikZCoordinate(self._pos_x, self._top - (i + 1) / (self._len_text + 1) * self._size_y) for i in
                           range(self._len_text)]
 
-    def create(self, pic):
+    def build(self, pic):
         box = TikZDraw([TikZCoordinate(self._left, self._top), 'rectangle', TikZCoordinate(self._right, self._bottom)],
                        TikZOptions(draw=self._draw, fill=self._fill))
         pic.append(box)

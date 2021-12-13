@@ -1,49 +1,45 @@
-from .textbox import TextBox
-import numpy as np
-from pylatex import (Document, TikZ, TikZNode,
-                     TikZDraw, TikZCoordinate,
-                     TikZUserPath, TikZOptions,
-                     Command, PageStyle)
+from pylatex import Document, TikZ
 from tkinter import filedialog
 from tkinter import *
 import os
-import subprocess
+from .point import Point
 
 
 class Visualization:
 
-    def __init__(self, env, env_id, controller):
-        self.env = env
-        self.env_id = env_id
-        self.controller_stages = controller
-        self.stage_blocks = []
-        self.doc = None
-        self.path = None
-        win = Tk()
-        win.withdraw()
-        self.path = filedialog.asksaveasfilename(initialdir='/',
-                                                 title='Save as',
-                                                 filetypes=(
-                                                 ('Portable Document Format', '*.pdf'), ('All Files', '*.*')),
-                                                 defaultextension='.pdf')
+    def __init__(self, env_id, controller_stages):
+        self._env_id = env_id
+        self._controller_stages = controller_stages
+        self._stage_boxes = []
+        geometry_options = {
+                            'landscape': True,
+                            'includeheadfoot': False,
+                            }
+        self._doc = Document(page_numbers=False, geometry_options=geometry_options)
+        self._filename = None
 
     def build(self):
-        geometry_options = {
-            'landscape': True,
-            'includeheadfoot': False,
-        }
-        self.doc = Document(page_numbers=False, geometry_options=geometry_options)
-        start = (0, 0)
+        start = Point(0, 0)
+        self._stage_boxes, end = self._controller_stages.visualize(start)
 
-        with self.doc.create(TikZ()) as pic:
-            self.stage_blocks = self.controller_stages.visualize(pic, start)
+        with self._doc.create(TikZ()) as pic:
+            for sb in self._stage_boxes:
+                sb.build(pic)
 
+        self._filename = self._get_filename()
 
-        if self.path != '':
-            path = self.path.split('.', 1)[0]
-            self.doc.generate_pdf(path, compiler='pdflatex', clean_tex=True)
-
+        if self._filename != '':
+            name = self._filename.split('.', 1)[0]
+            self._doc.generate_pdf(name, compiler='pdflatex', clean_tex=True)
 
     def show(self):
-        if self.path != '':
-            os.system(self.path)
+        os.system(self._filename)
+
+    def _get_filename(self):
+        win = Tk()
+        win.withdraw()
+        return filedialog.asksaveasfilename(initialdir='/',
+                                            title='Save as',
+                                            filetypes=(('Portable Document Format', '*.pdf'), ('All Files', '*.*')),
+                                            defaultextension='.pdf')
+
