@@ -1,27 +1,31 @@
-from pylatex import (Document, TikZ, TikZNode,
-                     TikZDraw, TikZCoordinate,
-                     TikZUserPath, TikZOptions,
-                     Command, PageStyle)
-
-from .point import Point, Input, Output, Connection
+from .point import Input, Output, Connection
 from .textbox import TextBox
 
 
 class StageBox:
 
-    def __init__(self):
+    @property
+    def output(self):
+        return self._output
+
+    @property
+    def input(self):
+        return self._input
+
+    def __init__(self, stage):
+        self._stage = stage
         self._text_boxes = []
-        self._inputs = []
-        self._outputs = []
+        self._input = None
+        self._output = None
         self._connections = []
 
     def append(self, obj):
         if isinstance(obj, TextBox):
             self._text_boxes.append(obj)
         elif isinstance(obj, Input):
-            self._inputs.append(obj)
+            self._input = obj
         elif isinstance(obj, Output):
-            self._outputs.append(obj)
+            self._output = obj
         elif isinstance(obj, Connection):
             self._connections.append(obj)
 
@@ -31,4 +35,3 @@ class StageBox:
 
         for connection in self._connections:
             connection.build(pic)
-

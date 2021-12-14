@@ -1,24 +1,26 @@
-import matplotlib.pyplot as plt
 import gym_electric_motor as gem
 import gem_controllers as gc
-import time
+import matplotlib
+from gym_electric_motor.visualization import MotorDashboard
 
-env_id = 'Cont-CC-ShuntDc-v0'
+
+matplotlib.use('TkAgg')
+env_id = 'Cont-SC-SeriesDc-v0'
+
 env = gem.make(
-    env_id,
-    #visualization=gem.visualization.MotorDashboard(state_plots=('i', 'torque', 'u'))
-)
+        env_id,
+        visualization=MotorDashboard(state_plots=['torque', 'i', 'u']),
+    )
+
+state, reference = env.reset()
+
 
 c = gc.GemController.make(
     env,
     env_id,
-    a=4,
+    a=5,
     current_safety_margin=0.15,
     visualization=True
-)
-env.reset()
-start = time.time()
-c.control_environment(env, n_steps=50000, render_env=True)
-print(time.time() - start)
+    )
 
-plt.show(block=True)
+c.control_environment(env, n_steps=50001, render_env=True)

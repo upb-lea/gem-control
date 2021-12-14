@@ -29,11 +29,11 @@ class GemController:
         env: gym_electric_motor.core.ElectricMotorEnvironment,
         env_id: str,
         decoupling: bool = True,
-        current_safety_margin:float = 0.2,
+        current_safety_margin: float = 0.2,
         base_current_controller: str = 'PI',
         base_speed_controller: str = 'PI',
         a: int = 4,
-        visualization: bool = False
+        visualization: bool = False,
     ):
         """A factory function that generates (and parameterizes) a matching GemController for a given gym-electric-motor
         environment `env`.
@@ -49,7 +49,7 @@ class GemController:
             base_current_controller('PI'/'PID'/'P'/'ThreePoint'): Selection of the basic control algorithm for the
              current controller.
             a(float): Design parameter of the controller.
-            visualization(bool): Selection whether to save a PDF file with the structure of the controller.
+            visualization(bool): Selection whether to save a PDF or TeX file with the structure of the controller.
         Returns:
             GemController: An initialized (and tuned) instance of a controller that fits to the specified environment.
         """

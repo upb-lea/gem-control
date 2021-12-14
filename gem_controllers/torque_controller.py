@@ -79,12 +79,24 @@ class TorqueController(gc.GemController):
         return reference
 
     def visualize(self, start):
-        stage_box = StageBox()
-        tb = TextBox(start, (3, 2), ['Torque', 'Controller'], fill='white', draw='black')
+        stage_box = StageBox('Torque')
+        input_sb = start.input
+        stage_box.append(input_sb)
+
+        tb = TextBox(start, (2.5, 1.5), ['Torque', 'Controller'], fill='white', draw='black')
         stage_box.append(tb)
-        end = start + Point(5, 0)
-        current_stage_box, end = self._current_controller.visualize(end)
-        return [stage_box] + current_stage_box, end
+
+        tb_2 = TextBox(tb.end, (2.5, 1.5), ['Torque', 'Controller', '2'], fill='white', draw='black')
+        stage_box.append(tb_2)
+
+        connection = TextBox.connect(tb, tb_2)
+        stage_box.append(connection)
+        current_stage_box = self._current_controller.visualize(tb_2.end)
+
+        connection = Connection([tb_2.right, tb_2.end])
+        stage_box.append(connection)
+
+        return [stage_box] + current_stage_box
 
     def reset(self):
         self._current_controller.reset()

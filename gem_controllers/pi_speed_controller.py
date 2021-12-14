@@ -2,6 +2,7 @@ import numpy as np
 
 import gym_electric_motor as gem
 import gem_controllers as gc
+from gem_controllers.visualization import *
 
 
 class PISpeedController(gc.GemController):
@@ -70,6 +71,20 @@ class PISpeedController(gc.GemController):
         reference = self.speed_control(state, reference)
         reference = self._torque_controller.control(state, reference)
         return reference
+
+    def visualize(self, start):
+        stage_box = StageBox('Speed')
+        input_sb = start.input
+        stage_box.append(input_sb)
+
+        tb = TextBox(start, (2.5, 1.5), ['Speed', 'Controller'], fill='white', draw='black')
+        stage_box.append(tb)
+
+        torque_stage_box = self._torque_controller.visualize(tb.end)
+
+        connection = Connection([tb.right, tb.end])
+        stage_box.append(connection)
+        return [stage_box] + torque_stage_box
 
     def reset(self):
         self._torque_controller.reset()
