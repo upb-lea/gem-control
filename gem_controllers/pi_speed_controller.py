@@ -77,13 +77,13 @@ class PISpeedController(gc.GemController):
         input_sb = start.input
         stage_box.append(input_sb)
 
-        tb = TextBox(start, (2.5, 1.5), ['Speed', 'Controller'], fill='white', draw='black')
+        tb = TextBox(start, (2.5, 1.5), Text(['Speed', 'Controller']), fill='white', draw='black')
         stage_box.append(tb)
 
         torque_stage_box = self._torque_controller.visualize(tb.end)
 
-        connection = Connection([tb.right, tb.end])
-        stage_box.append(connection)
+        con = Connection([tb.right, tb.end])
+        stage_box.append(con)
         return [stage_box] + torque_stage_box
 
     def reset(self):

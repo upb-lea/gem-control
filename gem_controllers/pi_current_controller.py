@@ -3,6 +3,7 @@ import numpy as np
 import gem_controllers as gc
 from gem_controllers.visualization import *
 
+
 class PICurrentController(gc.CurrentController):
 
     @property
@@ -111,12 +112,13 @@ class PICurrentController(gc.CurrentController):
 
     def visualize(self, start):
         stage_box = StageBox('Current')
-        tb = TextBox(start, (2.5, 1.5), ['Current', 'Controller'], fill='white', draw='black')
+        tb = TextBox(start, (2.5, 1.5), Text(['Current', 'Controller']), fill='white', draw='black')
         input_sb = start.input
         stage_box.append(input_sb)
         stage_box.append(tb)
         output_sb = tb.end.output
         stage_box.append(output_sb)
+
         return [stage_box]
 
     def reset(self):

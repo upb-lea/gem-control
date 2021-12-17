@@ -83,20 +83,35 @@ class TorqueController(gc.GemController):
         input_sb = start.input
         stage_box.append(input_sb)
 
-        tb = TextBox(start, (2.5, 1.5), ['Torque', 'Controller'], fill='white', draw='black')
+        tb = TextBox(start, (2.5, 1.5), Text(['Torque', 'Controller']), fill='white', draw='black')
         stage_box.append(tb)
 
-        tb_2 = TextBox(tb.end, (2.5, 1.5), ['Torque', 'Controller', '2'], fill='white', draw='black')
+        circle = Circle(tb.end, 0.2)
+        stage_box.append(circle)
+
+        connection = Connection.connect(tb.right, circle.left)
+        connection.add_text(text='test', text_position='middle', text_align='bottom')
+        connection.add_text('+', 'end', 'top_left')
+        stage_box.append(connection)
+
+        tb_2 = TextBox(circle.end.add_y(-0.5), (2.5, 1.5), Text(['Torque', 'Controller', '2']), fill='white', draw='black')
         stage_box.append(tb_2)
 
-        connection = TextBox.connect(tb, tb_2)
-        stage_box.append(connection)
-        current_stage_box = self._current_controller.visualize(tb_2.end)
+        con1 = Connection.connect(circle.right, tb_2.left)
+        stage_box.append(con1)
 
-        connection = Connection([tb_2.right, tb_2.end])
+        con = Connection.connect(tb_2.bottom, circle.bottom)
+        con.add_text(text='-', text_position='end', text_align='right_bottom')
+        con.add_text('$i_{sd}$', text_position='middle', text_align='bottom')
+        stage_box.append(con)
+
+        connection = Connection.connect(tb.top, tb_2.top, arrow=False)
+        connection.add_text(text='Test 2', text_position='middle', text_align='top')
+        stage_box.append(connection)
+        connection = Connection.connect(tb_2.right, tb_2.end)
         stage_box.append(connection)
 
-        return [stage_box] + current_stage_box
+        return [stage_box] + self._current_controller.visualize(tb_2.end)
 
     def reset(self):
         self._current_controller.reset()

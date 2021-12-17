@@ -1,25 +1,26 @@
-from pylatex import (TikZNode, TikZDraw, TikZCoordinate,
-                     TikZUserPath, TikZOptions)
-from .point import Point, Connection
+from pylatex import TikZNode, TikZDraw, TikZCoordinate, TikZOptions
+from .point import Point
+from .connection import Connection
+from .text import Text
 
 
 class TextBox:
 
     @property
     def right(self):
-        return Point(self._right, self._pos_y)
+        return Point(self._right, self._pos_y, 'east')
 
     @property
     def left(self):
-        return Point(self._left, self._pos_y)
+        return Point(self._left, self._pos_y, 'west')
 
     @property
     def top(self):
-        return Point(self._pos_x, self._top)
+        return Point(self._pos_x, self._top, 'north')
 
     @property
     def bottom(self):
-        return Point(self._pos_x, self._bottom)
+        return Point(self._pos_x, self._bottom, 'south')
 
     @property
     def top_left(self):
@@ -31,12 +32,12 @@ class TextBox:
 
     @property
     def end(self):
-        return self.right + Point(self._space, 0)
+        return self.right.add_x(self._space)
 
-    def __init__(self, position, size, text, fill, draw, space=1.5):
+    def __init__(self, position: Point, size: tuple = (2.5, 1.5), text: Text = None, fill: str = 'white',
+                 draw: str = 'black', space: float = 1.5):
         (self._pos_x, self._pos_y) = (position[0] + size[0] / 2, position[1])
         (self._size_x, self._size_y) = size
-        self._text = text
         self._fill = fill
         self._draw = draw
         self._space = space
@@ -46,20 +47,18 @@ class TextBox:
         self._top = self._pos_y + self._size_y / 2
         self._bottom = self._pos_y - self._size_y / 2
 
-        self._len_text = len(self._text)
-        self._node_kwargs = {'align': 'center', 'text width': str(self._size_x) + 'cm'}
-        self._text_pos = [TikZCoordinate(self._pos_x, self._top - (i + 1) / (self._len_text + 1) * self._size_y) for i in
-                          range(self._len_text)]
+        self._text = text
+        self._text.define(position=Point(self._pos_x, self._pos_y), size=size)
 
     def build(self, pic):
-        box = TikZDraw([self.top_left.tikz, 'rectangle', self.bottom_right.tikz], TikZOptions(draw=self._draw, fill=self._fill))
+        box = TikZDraw([self.top_left.tikz, 'rectangle', self.bottom_right.tikz],
+                       TikZOptions(draw=self._draw, fill=self._fill))
         pic.append(box)
-
-        for text, pos in zip(self._text, self._text_pos):
-            pic.append(TikZNode(text=text, at=pos, handle='box', options=TikZOptions(self._node_kwargs)))
+        if self._text is not None:
+            self._text.build(pic)
 
     @staticmethod
-    def connect(box1, box2):
+    def connect(box1, box2) -> Connection:
 
         if box1._right < box2._left:
             start = box1.right
