@@ -5,6 +5,14 @@ from ..base_controllers import PIController
 
 
 class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection):
+    """
+        This class represents the operation point selection of the torque controller for the cascaded control of
+        induction motors. The torque controller uses LUT to find an appropriate operating point for the flux and torque.
+        The flux is limited by a modulation controller. A reference value for the i_sd current is then determined using
+        the operating point of the flux and a PI controller. In addition, a reference for the i_sq current is calculated
+        based on the current flux and the operating point of the torque.
+    """
+
     def __init__(self,  max_modulation_level: float = 2 / np.sqrt(3), modulation_damping: float = 1.2,
                  psi_controller=PIController(control_task='FC')):
         super().__init__(max_modulation_level, modulation_damping)
@@ -18,12 +26,6 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
 
         self.i_sd_count = None
         self.i_sq_count = None
-
-        self.t_minimum = None
-        self.t_maximum = None
-        self.t_max_psi = None
-        self.psi_opt_t = None
-        self.psi_max = None
 
         self.psi_controller = psi_controller
 
@@ -76,6 +78,7 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
 
     def tune(self, env: gem.core.ElectricMotorEnvironment, env_id: str, current_safety_margin: float = 0.2):
         super().tune(env, env_id, current_safety_margin)
+
         self.t_count = 1001
         self.psi_count = 1000
         self.i_sd_count = 500
@@ -93,15 +96,11 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         self.r_s = self.mp['r_s']
         self.p = self.mp['p']
         self.tau = env.physical_system.tau
-        tau_s = self.l_s / self.r_s
-
-        self.psi_controller.tune(env, env_id, 4, tau_s)
+        self.psi_controller.tune(env, env_id, 4, self.l_s / self.r_s)
 
         self.psi_opt_t = self.psi_opt()
         self.psi_max = np.max(self.psi_opt_t[1])
-
         self.t_max_psi = self.t_max()
-
 
         self.i_gain = 1 / (self.l_s / (1.25 * self.r_s)) * (self.alpha - 1) / self.alpha ** 2
         self.k_ = 0.8
@@ -120,54 +119,32 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
 
     def _select_operating_point(self, state, reference):
         psi = state[self.psi_abs_idx]
+
+        # Get the optimal flux
         psi_opt = self.psi_opt_t[1, self.get_psi_opt(reference[0])]
+
+        # Limit the flux by the modulation controller
         psi_max = self.modulation_control(state)
         psi_opt = min(psi_opt, psi_max)
 
+        # Limit the torque
         t_max = self.t_max_psi[0, self.psi_count - self.get_t_max(psi_opt)]
-
         torque = np.clip(reference[0], -np.abs(t_max), np.abs(t_max))
 
+        # Control the i_sd current with a PI-Controller
         i_sd_ = self.psi_controller(np.array([psi]), np.array([psi_opt]))
         i_sd = np.clip(i_sd_, -self.i_sd_limit, self.i_sd_limit)
         if i_sd_ == i_sd:
             self.psi_controller.integrate(np.array([psi]), np.array([psi_opt]))
         i_sd = i_sd[0]
 
+        # Calculate and limit the i_sq current
         i_sq = np.clip(torque / max(psi, 0.001) * 2 / 3 / self.p * self.l_r / self.l_m, -self.i_sq_limit,
                        self.i_sq_limit)
         if self.i_sd_limit < np.sqrt(i_sq ** 2 + i_sd ** 2):
             i_sq = np.sign(i_sq) * np.sqrt(self.i_sd_limit ** 2 - i_sd ** 2)
 
         return np.array([i_sd, i_sq])
-
-    def modulation_control(self, state):
-        # Calculate modulation
-        a = 2 * np.sqrt(state[self.u_sd_idx] ** 2 + state[self.u_sq_idx] ** 2) / self.u_dc
-
-        if a > 1.01 * self.a_max:
-            self.integrated = self.integrated_reset
-
-        a_delta = self.k_ * self.a_max - a
-
-        omega = max(np.abs(state[self.omega_idx]), 0.0001)
-
-        # Calculate i gain
-        k_i = 2 * np.abs(omega) * self.p / self.u_dc
-        i_gain = self.i_gain / k_i
-
-        psi_delta = i_gain * (a_delta * self.tau + self.integrated)     # Calculate Flux delta
-
-        # Check, if limits are violated
-        if self.psi_low <= psi_delta <= self.psi_high:
-            self.integrated += a_delta * self.tau
-        else:
-            psi_delta = np.clip(psi_delta, self.psi_low, self.psi_high)
-
-        psi_max = self.u_dc / (np.sqrt(3) * np.abs(omega) * self.p)
-        psi = max(psi_max + psi_delta, 0)
-
-        return psi
 
     def reset(self):
         super().reset()

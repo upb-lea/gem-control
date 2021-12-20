@@ -3,6 +3,11 @@ import numpy as np
 
 
 class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
+    """
+    This is the base class for all field-oriented operating point controls. It also includes a function for level
+    control.
+    """
+
     def __init__(self, max_modulation_level: float = 2 / np.sqrt(3), modulation_damping: float = 1.2):
         self.mp = None
         self.limit = None
@@ -73,19 +78,26 @@ class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
         information can be found at https://ieeexplore.ieee.org/document/7409195.
         """
 
+        # Calculate modulation
         a = 2 * np.sqrt(state[self.u_sd_idx] ** 2 + state[self.u_sq_idx] ** 2) / self.u_dc
 
+        # Check, if integral part should be reset
         if a > 1.1 * self.a_max:
             self.integrated = self.integrated_reset
 
         a_delta = self.k_ * self.a_max - a
         omega = max(np.abs(state[self.omega_idx]), 0.0001)
-        psi_max_ = self.u_dc / (np.sqrt(3) * omega * self.p)
-        k_i = 2 * omega * self.p / self.u_dc
 
+        # Calculate maximum flux for a given speed
+        psi_max_ = self.u_dc / (np.sqrt(3) * omega * self.p)
+
+        # Calculate gain
+        k_i = 2 * omega * self.p / self.u_dc
         i_gain = self.i_gain / k_i
+
         psi_delta = i_gain * (a_delta * self.tau + self.integrated)
 
+        # Check, if limits are violated
         if self.psi_low <= psi_delta <= self.psi_high:
             if self.limited:
                 self.integrated = self.integrated_reset
@@ -96,6 +108,7 @@ class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
             psi_delta = np.clip(psi_delta, self.psi_low, self.psi_high)
             self.limited = True
 
+        # Calculate output flux of the modulation controller
         psi = psi_max_ + psi_delta
 
         return psi
