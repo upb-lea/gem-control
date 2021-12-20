@@ -2,8 +2,7 @@ import gym_electric_motor as gem
 import gem_controllers as gc
 from gym_electric_motor.visualization import MotorDashboard
 from gym_electric_motor.state_action_processors import FluxObserver
-import matplotlib
-matplotlib.use('TkAgg')
+
 
 env_id = 'AbcCont-TC-SCIM-v0'
 
