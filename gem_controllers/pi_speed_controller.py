@@ -72,7 +72,7 @@ class PISpeedController(gc.GemController):
         reference = self._torque_controller.control(state, reference)
         return reference
 
-    def visualize(self, start):
+    def visualize(self, start: Point = Point(0, 0)):
         stage_box = StageBox('Speed')
         input_sb = start.input
         stage_box.append(input_sb)

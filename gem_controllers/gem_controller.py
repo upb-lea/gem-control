@@ -73,7 +73,7 @@ class GemController:
         controller.tune(env, env_id, **tuner_kwargs)
 
         if visualization:
-            controller.visualize(env_id)
+            controller.get_visualization(env_id)
 
         return controller
 
@@ -97,7 +97,10 @@ class GemController:
     def tune(self, env, env_id, **kwargs):
         pass
 
-    def visualize(self, env_id, controller_stages):
+    def get_visualization(self, env_id, controller_stages):
+        pass
+
+    def visualize(self, start):
         pass
 
     def control_environment(self, env, n_steps, max_episode_length=np.inf, render_env=False):

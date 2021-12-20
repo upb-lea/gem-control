@@ -39,16 +39,16 @@ class Point:
         if isinstance(other, list):
             return [self] + other
 
-        return Point(self.coordinate[0] + other.coordinate[0], self.coordinate[1] + other.coordinate[1])
+        return Point(self.x + other.x, self.y + other.y)
 
     def __sub__(self, other):
-        return Point(self.coordinate[0] - other.coordinate[0], self.coordinate[1] - other.coordinate[1])
+        return Point(self.x - other.x, self.y - other.y)
 
     def __mul__(self, other):
-        return Point(self.coordinate[0] * other, self.coordinate[1] * other)
+        return Point(self.x * other, self.y * other)
 
     def __truediv__(self, other):
-        return Point(self.coordinate[0] / other, self.coordinate[1] / other)
+        return Point(self.x / other, self.y / other)
 
     def __getitem__(self, item):
         return self._coordinate[item]
@@ -56,18 +56,19 @@ class Point:
     def __repr__(self):
         return f'Point({self.x}, {self.y})'
 
-    def add(self, x: float, y: float):
-        return Point(self.x + x, self.y + y)
+    def add(self, x: float, y: float, direction: str = None):
+        return Point(self.x + x, self.y + y, direction)
 
-    def add_x(self, val: float):
-        return Point(self.x + val, self.y)
+    def add_x(self, val: float, direction: str = None):
+        return Point(self.x + val, self.y, direction)
 
-    def add_y(self, val: float):
-        return Point(self.x, self.y + val)
+    def add_y(self, val: float, direction: str = None):
+        return Point(self.x, self.y + val, direction)
 
     @staticmethod
     def get_mid(p1, p2):
         return Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
+
 
 class Input(Point):
     def __init__(self, x: float, y: float):

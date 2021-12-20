@@ -110,7 +110,7 @@ class PICurrentController(gc.CurrentController):
         self._voltage_reference = self.current_control(state, reference)
         return self._voltage_reference
 
-    def visualize(self, start):
+    def visualize(self, start: Point = Point(0, 0)):
         stage_box = StageBox('Current')
         tb = TextBox(start, (2.5, 1.5), Text(['Current', 'Controller']), fill='white', draw='black')
         input_sb = start.input

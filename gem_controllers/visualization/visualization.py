@@ -2,39 +2,30 @@ from pylatex import Document, TikZ
 from tkinter import filedialog
 from tkinter import *
 import os
-from .point import Point
 
 
 class Visualization:
 
-    def __init__(self, env_id, controller_stages, data_type=('pdf',)):
+    def __init__(self, env_id, controller_stages, data_type=('pdf', 'tex')):
         self._env_id = env_id
         self._controller_stages = controller_stages
-        self._stage_boxes = []
         self._data_type = tuple(data_type)
-        geometry_options = {'landscape': True, 'includeheadfoot': False}
-        self._doc = Document(page_numbers=False, geometry_options=geometry_options)
-        self._filenames = None
         self._pdf_name = None
 
     def build(self):
-        start = Point(0, 0)
-        self._stage_boxes = self._controller_stages.visualize(start)
+        stage_boxes = self._controller_stages.visualize()
+        doc = Document(page_numbers=False, geometry_options={'landscape': True, 'includeheadfoot': False})
+        with doc.create(TikZ()) as pic:
+            for stage_box in stage_boxes:
+                stage_box.build(pic)
 
-        with self._doc.create(TikZ()) as pic:
-            for sb in self._stage_boxes:
-                sb.build(pic)
-
-        self._filenames = self._get_filename()
-
-        for filename in self._filenames:
+        for filename in self._get_filename():
             name, data_type = filename.split('.', 1)
-
             if data_type == 'pdf':
-                self._doc.generate_pdf(name, compiler='pdflatex', clean_tex=True)
+                doc.generate_pdf(name, compiler='pdflatex', clean_tex=True)
                 self._pdf_name = filename
             elif data_type == 'tex':
-                self._doc.generate_tex(name)
+                doc.generate_tex(name)
 
     def show(self):
         if self._pdf_name is not None:
@@ -46,10 +37,12 @@ class Visualization:
         for data_type in self._data_type:
             if 'pdf' == data_type:
                 filetypes = (('Portable Document Format (*.pdf)', '*.pdf'), ('All Files', '*.*'))
-                yield filedialog.asksaveasfilename(initialdir='/', title='Save as', filetypes=filetypes, defaultextension='.pdf')
+                yield filedialog.asksaveasfilename(initialdir='/', title='Save as', filetypes=filetypes,
+                                                   defaultextension='.pdf')
             elif 'tex' == data_type:
                 filetypes = (('TeX Document (*.tex)', '*.tex'), ('All Files', '*.*'))
-                yield filedialog.asksaveasfilename(initialdir='/', title='Save as', filetypes=filetypes, defaultextension='.tex')
+                yield filedialog.asksaveasfilename(initialdir='/', title='Save as', filetypes=filetypes,
+                                                   defaultextension='.tex')
             else:
-                raise ValueError()
-
+                raise ValueError(
+                    f'The file type {data_type} is not supported. Use the Portable Document Format (pdf) or Tex Document (tex) file type.')

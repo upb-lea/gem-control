@@ -68,7 +68,7 @@ class GymElectricMotorAdapter(gc.GemController):
         if tune_controller:
             self._controller.tune(env, env_id, **kwargs)
 
-    def visualize(self, env_id):
+    def get_visualization(self, env_id):
         self._visualization = Visualization(env_id, self._controller)
         self._visualization.build()
         self._visualization.show()
