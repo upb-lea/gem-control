@@ -1,46 +1,30 @@
 import gym_electric_motor as gem
 import numpy as np
-import scipy.interpolate as sp_interpolate
-import matplotlib.pyplot as plt
-from .operation_point_selection import OperationPointSelection
+from .foc_operation_point_selection import FieldOrientedControllerOperationPointSelection
 from ..base_controllers import PIController
-from ..anti_windup import AntiWindup
 
 
-class SCIMOperationPointSelection(OperationPointSelection):
+class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection):
     def __init__(self,  max_modulation_level: float = 2 / np.sqrt(3), modulation_damping: float = 1.2,
                  psi_controller=PIController(control_task='FC')):
-        super().__init__()
-        self.mp = None
-        self.limit = None
-        self.nominal_value = None
-        self.i_sd_limit = 0.0
-        self.i_sq_limit = 0.0
-        self.l_m = 0.0
-        self.l_r = 0.0
-        self.l_s = 0.0
-        self.r_r = 0.0
-        self.r_s = 0.0
-        self.p = 0
-        self.tau = 0.0
+        super().__init__(max_modulation_level, modulation_damping)
 
-        self._modulation_damping = modulation_damping
-        self.a_max = max_modulation_level
-        self.k_ = None
+        self.l_m = None
+        self.l_r = None
+        self.l_s = None
+        self.r_r = None
+        self.r_s = None
+        self.psi_abs_idx = None
 
-        self.t_count = 1001
-        self.psi_count = 1000
-        self.i_sd_count = 500
-        self.i_sq_count = 1000
+        self.i_sd_count = None
+        self.i_sq_count = None
 
-        self.omega_idx = None
-        self.u_sd_idx = None
-        self.u_sq_idx = None
-        self.u_a_idx = None
-        self.torque_idx = None
-        self.epsilon_idx = None
-        self.i_sd_idx = None
-        self.i_sq_idx = None
+        self.t_minimum = None
+        self.t_maximum = None
+        self.t_max_psi = None
+        self.psi_opt_t = None
+        self.psi_max = None
+
         self.psi_controller = psi_controller
 
     def psi_opt(self):
@@ -92,24 +76,15 @@ class SCIMOperationPointSelection(OperationPointSelection):
 
     def tune(self, env: gem.core.ElectricMotorEnvironment, env_id: str, current_safety_margin: float = 0.2):
         super().tune(env, env_id, current_safety_margin)
-        self.mp = env.physical_system.electrical_motor.motor_parameter
-        self.limit = env.physical_system.limits
-        self.nominal_value = env.physical_system.nominal_state
-        self.omega_idx = env.state_names.index('omega')
-        self.u_sd_idx = env.state_names.index('u_sd')
-        self.u_sq_idx = env.state_names.index('u_sq')
-        self.u_sa_idx = env.state_names.index('u_sa')
-        self.torque_idx = env.state_names.index('torque')
-        self.epsilon_idx = env.state_names.index('epsilon')
-        self.i_sd_idx = env.state_names.index('i_sd')
-        self.i_sq_idx = env.state_names.index('i_sq')
+        self.t_count = 1001
+        self.psi_count = 1000
+        self.i_sd_count = 500
+        self.i_sq_count = 1000
+
         self.psi_abs_idx = env.state_names.index('psi_abs')
 
         self.t_minimum = -self.limit[self.torque_idx]
         self.t_maximum = self.limit[self.torque_idx]
-
-        self.i_sd_limit = self.limit[self.i_sd_idx] * (1 - current_safety_margin)
-        self.i_sq_limit = self.limit[self.i_sq_idx] * (1 - current_safety_margin)
 
         self.l_m = self.mp['l_m']
         self.l_r = self.l_m + self.mp['l_sigr']
@@ -127,12 +102,9 @@ class SCIMOperationPointSelection(OperationPointSelection):
 
         self.t_max_psi = self.t_max()
 
-        alpha = self._modulation_damping / (self._modulation_damping - np.sqrt(self._modulation_damping ** 2 - 1))
-        self.i_gain = 1 / (self.l_s / (1.25 * self.r_s)) * (alpha - 1) / alpha ** 2
+
+        self.i_gain = 1 / (self.l_s / (1.25 * self.r_s)) * (self.alpha - 1) / self.alpha ** 2
         self.k_ = 0.8
-        self.u_dc = np.sqrt(3) * self.limit[self.u_sa_idx]
-        self.limited = False
-        self.integrated = 0
         self.psi_high = 0.1 * self.psi_max
         self.psi_low = -self.psi_max
         self.integrated_reset = 0.5 * self.psi_low  # Reset value of the modulation controller
@@ -182,7 +154,7 @@ class SCIMOperationPointSelection(OperationPointSelection):
 
         # Calculate i gain
         k_i = 2 * np.abs(omega) * self.p / self.u_dc
-        i_gain = self.i_gain * k_i
+        i_gain = self.i_gain / k_i
 
         psi_delta = i_gain * (a_delta * self.tau + self.integrated)     # Calculate Flux delta
 
@@ -200,4 +172,3 @@ class SCIMOperationPointSelection(OperationPointSelection):
     def reset(self):
         super().reset()
         self.psi_controller.reset()
-        self.integrated = self.integrated_reset

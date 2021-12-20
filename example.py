@@ -1,15 +1,15 @@
 import gym_electric_motor as gem
 import gem_controllers as gc
-import matplotlib
 from gym_electric_motor.visualization import MotorDashboard
+from gym_electric_motor.state_action_processors import FluxObserver
 
 
-matplotlib.use('TkAgg')
-env_id = 'Cont-TC-ShuntDc-v0'
+env_id = 'AbcCont-TC-SCIM-v0'
 
 env = gem.make(
         env_id,
-        #visualization=MotorDashboard(state_plots=['torque', 'i', 'u']),
+        state_action_processors=(FluxObserver(),),
+        visualization=MotorDashboard(state_plots=['torque', 'i_sd', 'i_sq', 'u_sd', 'u_sq', 'psi_abs']),
     )
 
 state, reference = env.reset()
