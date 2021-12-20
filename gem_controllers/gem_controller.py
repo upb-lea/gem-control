@@ -47,7 +47,7 @@ class GemController:
              speed controller.
             base_current_controller('PI'/'PID'/'P'/'ThreePoint'): Selection of the basic control algorithm for the
              current controller.
-            a(float): Design parameter of the controller.
+            a(float): Tuning parameter of the symmetrical optimum.
 
         Returns:
             GemController: An initialized (and tuned) instance of a controller that fits to the specified environment.
