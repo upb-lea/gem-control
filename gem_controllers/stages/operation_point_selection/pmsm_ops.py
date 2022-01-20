@@ -137,7 +137,6 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         self.t_count = 250
         self.psi_count = 250
         self.i_count = 500
-        self.k_ = 0.95
 
         self.l_d = self.mp['l_d']
         self.l_q = self.mp['l_q']
@@ -145,6 +144,7 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         self.psi_p = self.mp.get('psi_p', 0)
         self.invert = -1 if (self.psi_p == 0 and self.l_q < self.l_d) else 1
 
+        self.k_ = 0.953
         self.i_gain = 1 / (self.mp['l_q'] / (1.25 * self.mp['r_s'])) * (self.alpha - 1) / self.alpha ** 2
 
         self.psi_high = 0.2 * np.sqrt(

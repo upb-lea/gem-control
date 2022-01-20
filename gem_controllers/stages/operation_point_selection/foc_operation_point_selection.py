@@ -9,16 +9,23 @@ class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
     """
 
     def __init__(self, max_modulation_level: float = 2 / np.sqrt(3), modulation_damping: float = 1.2):
+        """
+        Operation Point Selection for torque control of synchronous motors
+        Args:
+            max_modulation_level:  Maximum modulation of the modulation controller
+            modulation_damping:    Damping of the modulation controller
+        """
+
+        # motor parameters and limits
         self.mp = None
         self.limit = None
         self.nominal_value = None
         self.i_sq_limit = None
         self.i_sd_limit = None
         self.p = None
+        self.tau = None
 
-        self.t_count = None
-        self.psi_count = None
-
+        # state indices
         self.omega_idx = None
         self.u_sd_idx = None
         self.u_sq_idx = None
@@ -27,26 +34,28 @@ class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
         self.epsilon_idx = None
         self.i_sd_idx = None
         self.i_sq_idx = None
-        self.tau = None
 
+        # size of the characteristic diagrams of the operating point control
+        self.t_count = None
+        self.psi_count = None
+
+        # parameters of the modulation controller
         self.modulation_damping = modulation_damping
         self.a_max = max_modulation_level
-        self.alpha = None
-        self.i_gain = None
-        self.k_ = None
-        self.limited = None
-        self.u_dc = None
-        self.integrated = 0
-        self.psi_high = None
-        self.psi_low = None
-        self.integrated_reset = None
+        self.k_ = None          # Factor for optimum modulation level
+        self.alpha = None       # dynamic distance between outer and inner control loop
+        self.i_gain = None      # constant i_gain of the modulation controller
+        self.limited = None     # check, if flux is limited
+        self.u_dc = None        # supply voltage
+        self.integrated = 0     # integration of the flux
+        self.psi_high = None    # maximum delta flux
+        self.psi_low = None     # minimum delta flux
+        self.integrated_reset = None    # reset value integrated flux
 
     def tune(self, env, env_id, current_safety_margin=0.2):
         super().tune(env, env_id, current_safety_margin)
-        self.mp = env.physical_system.electrical_motor.motor_parameter
-        self.limit = env.physical_system.limits
-        self.nominal_value = env.physical_system.nominal_state
 
+        # set the state indices
         self.omega_idx = env.state_names.index('omega')
         self.u_sd_idx = env.state_names.index('u_sd')
         self.u_sq_idx = env.state_names.index('u_sq')
@@ -57,16 +66,20 @@ class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
         u_a = 'u_a' if 'u_a' in env.state_names else 'u_sa'
         self.u_a_idx = env.state_names.index(u_a)
 
+        # set the motor parameters and limits
+        self.mp = env.physical_system.electrical_motor.motor_parameter
+        self.p = self.mp['p']
+        self.tau = env.physical_system.tau
+        self.limit = env.physical_system.limits
+        self.nominal_value = env.physical_system.nominal_state
         self.i_sd_limit = self.limit[self.i_sd_idx] * (1 - current_safety_margin)
         self.i_sq_limit = self.limit[self.i_sq_idx] * (1 - current_safety_margin)
 
-        self.p = self.mp['p']
-        self.tau = env.physical_system.tau
-
+        # calculate dynamic distance from damping
         self.alpha = self.modulation_damping / (self.modulation_damping - np.sqrt(self.modulation_damping ** 2 - 1))
         self.limited = False
         self.u_dc = np.sqrt(3) * self.limit[self.u_a_idx]
-        self.integrated = 0
+        self.integrated = self.integrated_reset
 
     def _select_operating_point(self, state, reference):
         pass

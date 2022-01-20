@@ -34,6 +34,3 @@ class EMFFeedforwardInd(EMFFeedforward):
         self.l_r = mp['l_sigr'] + self.l_m
         self.i_sq_idx = env.state_names.index('i_sq')
         self.psi_abs_idx = env.state_names.index('psi_abs')
-
-    def reset(self):
-        super().reset()

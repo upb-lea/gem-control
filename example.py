@@ -6,6 +6,7 @@ from gym_electric_motor.state_action_processors import FluxObserver
 
 env_id = 'AbcCont-TC-SCIM-v0'
 
+# Initialize the motor environment. The controller of the induction motor requires a flux observer.
 env = gem.make(
         env_id,
         state_action_processors=(FluxObserver(),),
@@ -14,7 +15,7 @@ env = gem.make(
 
 state, reference = env.reset()
 
-
+# Initialize the controller
 c = gc.GemController.make(
     env,
     env_id,
@@ -22,4 +23,5 @@ c = gc.GemController.make(
     current_safety_margin=0.15,
     )
 
+# Control the motor environment
 c.control_environment(env, n_steps=50001, render_env=True)
