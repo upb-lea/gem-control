@@ -72,7 +72,7 @@ class PICurrentController(gc.CurrentController):
         else:
             self._emf_feedforward = gc.stages.EMFFeedforward()
         if gc.utils.get_motor_type(env_id) in gc.parameter_reader.ac_motors:
-            self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
+            self._clipping_stage = gc.stages.clipping_stages.SquaredClippingStage('CC')
         else:
             self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
         self._anti_windup_stage = gc.stages.AntiWindup('CC')
@@ -81,7 +81,7 @@ class PICurrentController(gc.CurrentController):
     def tune(self, env, env_id, a=4):
         action_type = gc.utils.get_action_type(env_id)
         motor_type = gc.utils.get_motor_type(env_id)
-        if action_type in ['Finite', 'AbcCont'] and motor_type in gc.parameter_reader.ac_motors:
+        if action_type in ['Finite', 'Cont'] and motor_type in gc.parameter_reader.ac_motors:
             self._coordinate_transformation_required = True
         if self._coordinate_transformation_required:
             self._transformation_stage.tune(env, env_id)
