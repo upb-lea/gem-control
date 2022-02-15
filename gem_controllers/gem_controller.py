@@ -32,7 +32,7 @@ class GemController:
         current_safety_margin:float = 0.2,
         base_current_controller: str = 'PI',
         base_speed_controller: str = 'PI',
-        a: int = 4
+        a: int = 4,
     ):
         """A factory function that generates (and parameterizes) a matching GemController for a given gym-electric-motor
         environment `env`.
@@ -47,7 +47,8 @@ class GemController:
              speed controller.
             base_current_controller('PI'/'PID'/'P'/'ThreePoint'): Selection of the basic control algorithm for the
              current controller.
-            a(float):
+            a(float): Tuning parameter of the symmetrical optimum.
+
         Returns:
             GemController: An initialized (and tuned) instance of a controller that fits to the specified environment.
         """
@@ -69,6 +70,7 @@ class GemController:
 
         # Fit the controllers parameters to the environment
         controller.tune(env, env_id, **tuner_kwargs)
+
         return controller
 
     @property

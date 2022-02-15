@@ -8,6 +8,8 @@ class EBaseControllerTask(Enum):
     TorqueControl = 'TC'
     SC = 'SC'
     SpeedControl = 'SC'
+    FC = 'FC'
+    FluxControl = 'FC'
 
     @staticmethod
     def equals(value, base_controller_task):

@@ -3,6 +3,7 @@ from .i_controller import IController
 from ... import parameter_reader as reader
 from .e_base_controller_task import EBaseControllerTask
 import gem_controllers as gc
+import numpy as np
 
 
 class PIController(PController, IController):
@@ -22,6 +23,8 @@ class PIController(PController, IController):
             self._tune_current_controller(env, env_id, a)
         elif self._control_task == EBaseControllerTask.SC:
             self._tune_speed_controller(env, env_id, a, t_n)
+        elif self._control_task == EBaseControllerTask.FC:
+            self._tune_flux_controller(env, env_id, a, t_n)
         else:
             raise Exception(f'No tuning method available.')
 
@@ -52,3 +55,9 @@ class PIController(PController, IController):
         self.tau = env.physical_system.tau
         speed_index = env.state_names.index('omega')
         self.state_indices = [speed_index]
+
+    def _tune_flux_controller(self, env, env_id, a=4, t_n=None):
+        self.tau = env.physical_system.tau
+        self.p_gain = np.array([a * t_n ** 2])
+        self.i_gain = self.p_gain / self.tau
+        self.state_indices = [0]

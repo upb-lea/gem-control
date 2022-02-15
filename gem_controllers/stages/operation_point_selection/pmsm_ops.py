@@ -2,49 +2,36 @@ import gym_electric_motor as gem
 import numpy as np
 import scipy.interpolate as sp_interpolate
 
-from .operation_point_selection import OperationPointSelection
+from .foc_operation_point_selection import FieldOrientedControllerOperationPointSelection
 
 
-class PMSMOperationPointSelection(OperationPointSelection):
+class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection):
+    """
+        This class represents the operation point selection of the torque controller for cascaded control of synchronous
+        motors.  For low speeds only the current limitation of the motor is important. The current vector to set a
+        desired torque is selected so that the  amount of the current vector is minimum (Maximum Torque per Current).
+        For higher speeds, the voltage limitation of the synchronous motor or the actuator must also be taken into
+        account. This is done by converting the available voltage to a speed-dependent maximum flux. An additional
+        modulation controller is used for the flux control. By limiting the flux and the maximum torque per flux (MTPF),
+        an operating point for the flux and the torque is obtained. This is then converted into a current operating
+        point. The conversion can be done by different methods (parameter torque_control). On the one hand, maps can be
+        determined in advance by interpolation or analytically, or the analytical determination can be done online.
+    """
 
     def __init__(
             self, torque_control='online', max_modulation_level: float = 2 / np.sqrt(3),
             modulation_damping: float = 1.2
     ):
-        super().__init__()
+        super().__init__(max_modulation_level, modulation_damping)
         self.torque_control_type = torque_control
-        self.mp = None
-        self.limit = None
-        self.i_sq_limit = 0.0
-        self.i_sd_limit = 0.0
-        self._modulation_damping = modulation_damping
-        self.l_d = 0.0
-        self.l_q = 0.0
-        self.p = 0
-        self.psi_p = 0.0
         self.a_max = max_modulation_level
-        self.k_ = 0.95
-
-        self.t_count = 250
-        self.psi_count = 250
-        self.i_count = 500
-
-        self.torque_list = []
-        self.psi_list = []
-        self.k_list = []
-        self.i_d_list = []
-        self.i_q_list = []
-
-        self.omega_idx = None
-        self.u_sd_idx = None
-        self.u_sq_idx = None
-        self.torque_idx = None
-        self.epsilon_idx = None
-        self.i_sd_idx = None
-        self.i_sq_idx = None
+        self.i_count = None
         self.max_torque = None
         self.invert = None
-        self.tau = None
+
+        self.l_d = None
+        self.l_q = None
+        self.psi_p = None
 
     def _get_mtpc_lookup_table(self):
 
@@ -146,31 +133,20 @@ class PMSMOperationPointSelection(OperationPointSelection):
 
     def tune(self, env: gem.core.ElectricMotorEnvironment, env_id: str, current_safety_margin: float = 0.2):
         super().tune(env, env_id, current_safety_margin)
-        self.mp = env.physical_system.electrical_motor.motor_parameter
-        self.limit = env.physical_system.limits
-        self.omega_idx = env.state_names.index('omega')
-        self.u_sd_idx = env.state_names.index('u_sd')
-        self.u_sq_idx = env.state_names.index('u_sq')
-        self.torque_idx = env.state_names.index('torque')
-        self.epsilon_idx = env.state_names.index('epsilon')
-        self.i_sd_idx = env.state_names.index('i_sd')
-        self.i_sq_idx = env.state_names.index('i_sq')
 
-        self.i_sd_limit = self.limit[self.i_sd_idx] * (1 - current_safety_margin)
-        self.i_sq_limit = self.limit[self.i_sq_idx] * (1 - current_safety_margin)
+        self.t_count = 250
+        self.psi_count = 250
+        self.i_count = 500
+
         self.l_d = self.mp['l_d']
         self.l_q = self.mp['l_q']
-        self.p = self.mp['p']
+
         self.psi_p = self.mp.get('psi_p', 0)
         self.invert = -1 if (self.psi_p == 0 and self.l_q < self.l_d) else 1
-        self.tau = env.physical_system.tau
 
-        alpha = self._modulation_damping / (self._modulation_damping - np.sqrt(self._modulation_damping ** 2 - 1))
-        self.i_gain = 1 / (self.mp['l_q'] / (1.25 * self.mp['r_s'])) * (alpha - 1) / alpha ** 2
-        self.u_a_idx = env.state_names.index('u_a')
-        self.u_dc = np.sqrt(3) * self.limit[self.u_a_idx]
-        self.limited = False
-        self.integrated = 0
+        self.k_ = 0.953
+        self.i_gain = 1 / (self.mp['l_q'] / (1.25 * self.mp['r_s'])) * (self.alpha - 1) / self.alpha ** 2
+
         self.psi_high = 0.2 * np.sqrt(
             (self.psi_p + self.l_d * self.i_sd_limit) ** 2
             + (self.l_q * self.i_sq_limit) ** 2
@@ -199,7 +175,7 @@ class PMSMOperationPointSelection(OperationPointSelection):
         )
 
         self.i_d_max = -np.sqrt(self.i_sq_limit ** 2 - np.power(self.i_q_max, 2))
-        i_count_mgrid = 200j
+        i_count_mgrid = self.i_count * 1j
         i_d, i_q = np.mgrid[
             -self.limit[self.i_sd_idx]: 0: i_count_mgrid,
             -self.limit[self.i_sq_idx]: self.limit[self.i_sq_idx]: i_count_mgrid / 2
@@ -249,8 +225,6 @@ class PMSMOperationPointSelection(OperationPointSelection):
 
         elif self.torque_control_type != 'online':
             raise NotImplementedError
-
-        self.k = 0
 
     def solve_analytical(self, torque, psi):
         """
@@ -361,46 +335,7 @@ class PMSMOperationPointSelection(OperationPointSelection):
         # invert the i_q if necessary
         i_q = self.invert * i_q
 
-        self.k += 1
-
         return np.array([i_d, i_q])
 
-    def modulation_control(self, state):
-        """
-            To ensure the functionality of the current control, a small dynamic manipulated variable reserve to the
-            voltage limitation must be kept available. This control is performed by this modulation controller. Further
-            information can be found at https://ieeexplore.ieee.org/document/7409195.
-        """
-
-        a = 2 * np.sqrt(
-            (state[self.u_sd_idx] * self.limit[self.u_sd_idx]) ** 2
-            + (state[self.u_sq_idx] * self.limit[self.u_sq_idx]) ** 2
-        ) / self.u_dc
-
-        if a > 1.1 * self.a_max:
-            self.integrated = self.integrated_reset
-
-        a_delta = self.k_ * self.a_max - a
-        omega = max(np.abs(state[self.omega_idx]) * self.limit[self.omega_idx], 0.0001)
-        psi_max_ = self.u_dc / (np.sqrt(3) * omega * self.p)
-        k_i = 2 * omega * self.p / self.u_dc
-
-        i_gain = self.i_gain / k_i
-        psi_delta = i_gain * (a_delta * self.tau + self.integrated)
-
-        if self.psi_low <= psi_delta <= self.psi_high:
-            if self.limited:
-                self.integrated = self.integrated_reset
-                self.limited = False
-            self.integrated += a_delta * self.tau
-
-        else:
-            psi_delta = np.clip(psi_delta, self.psi_low, self.psi_high)
-            self.limited = True
-
-        psi = psi_max_ + psi_delta
-
-        return psi
-
     def reset(self):
-        self.integrated = self.integrated_reset
+        super().reset()
