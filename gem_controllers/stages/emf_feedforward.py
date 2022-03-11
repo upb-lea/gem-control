@@ -43,7 +43,6 @@ class EMFFeedforward(Stage):
     def action_range(self):
         return self._action_range
 
-
     def omega_el(self, state):
         return state[self._omega_idx] * self._p
 
