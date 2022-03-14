@@ -4,7 +4,7 @@ import gem_controllers as gc
 
 if __name__ == '__main__':
 
-    env_id = 'Cont-TC-PermExDc-v0'
+    env_id = 'Cont-SC-ExtExDc-v0'
     env = gem.make(
             env_id
         )
