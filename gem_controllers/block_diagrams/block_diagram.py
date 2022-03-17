@@ -3,7 +3,7 @@ from control_block_diagram.components import Point, Connection
 from .stage_blocks import ext_ex_dc_cc, ext_ex_dc_ops, ext_ex_dc_output, perm_ex_dc_cc, perm_ex_dc_ops,\
     perm_ex_dc_output, pi_current_controller, pi_speed_controller, pmsm_cc, pmsm_ops, pmsm_output, scim_cc, scim_ops,\
     scim_output, series_dc_cc, series_dc_ops, series_dc_output, shunt_dc_cc, shunt_dc_ops, shunt_dc_output,\
-    torque_controller
+    torque_controller, pmsm_speed_controller
 import gem_controllers as gc
 
 
@@ -45,7 +45,10 @@ def get_stages(controller, motor_type):
     motor_check = motor_type in ['PMSM', 'SCIM', 'ShuntDc', 'SeriesDc', 'PermExDc', 'ExtExDc']
     stages = []
     if isinstance(controller, gc.PISpeedController):
-        stages.append(build_functions['PI_Speed_Controller'])
+        if motor_type == 'PMSM':
+            stages.append(build_functions['PMSM_Speed_Controller'])
+        else:
+            stages.append(build_functions['PI_Speed_Controller'])
         controller = controller.torque_controller
 
     if isinstance(controller, gc.torque_controller.TorqueController):
@@ -69,6 +72,7 @@ def get_stages(controller, motor_type):
 
 build_functions = {
     'PI_Speed_Controller': pi_speed_controller,
+    'PMSM_Speed_Controller': pmsm_speed_controller,
     'Torque_Controller': torque_controller,
     'PI_Current_Controller': pi_current_controller,
     'PMSM_OPS': pmsm_ops,

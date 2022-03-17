@@ -1,11 +1,11 @@
-from control_block_diagram.components import Point, Box, Connection
+from control_block_diagram.components import Point, Box, Connection, Circle
 from control_block_diagram.predefined_components import DqToAlphaBetaTransformation,\
      AbcToAlphaBetaTransformation, AlphaBetaToDqTransformation, Add, PIController, Multiply
 
 
 def pmsm_cc(emf_feedforward):
     def cc_pmsm(start, control_task):
-        space = 1 if control_task == 'CC' else 3
+        space = 1 if control_task == 'CC' else 1.5
         add_i_sd = Add(start.add_x(space))
         add_i_sq = Add(add_i_sd.position.sub(0.5, 1))
 
@@ -15,7 +15,8 @@ def pmsm_cc(emf_feedforward):
             Connection.connect(add_i_sq.input_left[0].sub_x(space - 0.5), add_i_sq.input_left[0],
                                text=r'$i^{*}_{\mathrm{sq}}$', text_position='start', text_align='left')
 
-        pi_i_sd = PIController(add_i_sd.position.add_x(1.2), size=(1, 0.8), input_number=1, output_number=1)
+        pi_i_sd = PIController(add_i_sd.position.add_x(1.2), size=(1, 0.8), input_number=1, output_number=1,
+                               text='Current\nController')
         pi_i_sq = PIController(Point.merge(pi_i_sd.position, add_i_sq.position), size=(1, 0.8), input_number=1,
                                output_number=1)
 
@@ -86,8 +87,12 @@ def pmsm_cc(emf_feedforward):
         box_d_dt = Box(Point.merge(alpha_beta_to_dq.position, start.sub_y(6.57020066645696)).sub_x(2), size=(1, 0.8),
                        text=r'$\mathrm{d} / \mathrm{d}t$', inputs=dict(right=1), outputs=dict(left=1))
 
-        Connection.connect(box_d_dt.output_left, multiply_u_sq.input_left, space_y=1, text=r'$\omega_{\mathrm{el}}$',
-                           move_text=(0, 2), text_align='left', distance_x=0.3)
+        con_omega = Connection.connect(box_d_dt.output_left, multiply_u_sq.input_left, space_y=1,
+                                       text=r'$\omega_{\mathrm{el}}$', move_text=(0, 2), text_align='left',
+                                       distance_x=0.3)
+
+        if control_task == 'SC':
+            Circle(con_omega[0].points[1], radius=0.05, fill='black')
 
         Connection.connect(abc_to_alpha_beta.output, alpha_beta_to_dq.input_right,
                            text=[r'$i_{\mathrm{s} \upalpha}$', r'$i_{\mathrm{s} \upbeta}$'])
@@ -103,20 +108,21 @@ def pmsm_cc(emf_feedforward):
                       outputs=dict(left=1))
 
         Connection.connect(box_t_a.output, add.input_right, text=r'$\Delta \varepsilon$')
-        Connection.connect(box_t_a.input[0].add_x(0.5), box_t_a.input[0], text=r'$\omega_{\mathrm{el}}$',
+        Connection.connect(box_t_a.input[0].add_x(0.5), box_t_a.input[0], text=r'$\omega_{el}$',
                            text_position='start', text_align='right', distance_x=0.3)
 
         start = pwm.position
-        inputs = dict(i_sd=[add_i_sd.input_left[0], dict(text=r'$i^{*}_{\mathrm{sd}}$')],
-                      i_sq=[add_i_sq.input_left[0], dict(text=r'$i^{*}_{\mathrm{sq}}$')],
+        inputs = dict(i_d_ref=[add_i_sd.input_left[0], dict(text=r'$i^{*}_{\mathrm{sd}}$', distance_y=0.25)],
+                      i_q_ref=[add_i_sq.input_left[0], dict(text=r'$i^{*}_{\mathrm{sq}}$', distance_y=0.25)],
                       epsilon=[box_d_dt.input_right[0], dict()])
 
-        outputs = dict(S=pwm.output_right)
+        outputs = dict(S=pwm.output_right, omega=con_omega[0].points[1])
         connect_to_line = dict(epsilon=[alpha_beta_to_dq.input_bottom[0], dict(text=r'$\varepsilon_{\mathrm{el}}$',
                                                                                text_position='middle',
                                                                                text_align='right')],
                                i=[abc_to_alpha_beta.input_right, dict(draw=0.1, fill=False,
-                                                                      text=[r'$\mathbf{i}_{\mathrm{s a,b,c}}$', '', ''])])
+                                                                      text=[r'$\mathbf{i}_{\mathrm{s a,b,c}}$', '',
+                                                                            ''])])
         connections = dict()
 
         return start, inputs, outputs, connect_to_line, connections
