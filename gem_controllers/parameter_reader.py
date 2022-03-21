@@ -29,6 +29,7 @@ p_reader = {
     'PermExDc': lambda env: 0,
     'PMSM': lambda env: env.physical_system.electrical_motor.motor_parameter['p'],
     'SynRM': lambda env: env.physical_system.electrical_motor.motor_parameter['p'],
+    'SCIM': lambda env: env.physical_system.electrical_motor.motor_parameter['p'],
 }
 
 l_reader = {

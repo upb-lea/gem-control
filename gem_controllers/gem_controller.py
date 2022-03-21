@@ -102,7 +102,8 @@ class GemController:
 
     def control_environment(self, env, n_steps, max_episode_length=np.inf, render_env=False):
         state, reference = env.reset()
-        self.block_diagram.open()
+        if self.block_diagram:
+            self.block_diagram.open()
         self.reset()
         current_episode_length = 0
         for _ in range(n_steps):
@@ -115,4 +116,5 @@ class GemController:
                 self.reset()
                 current_episode_length = 0
             current_episode_length = current_episode_length + 1
-        self.block_diagram.close()
+        if self.block_diagram:
+            self.block_diagram.close()
