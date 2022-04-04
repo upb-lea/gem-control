@@ -19,4 +19,5 @@ from .shunt_dc_cc import shunt_dc_cc
 from .shunt_dc_ops import shunt_dc_ops
 from .shunt_dc_output import shunt_dc_output
 from .torque_controller import torque_controller
-from .pmsm_speed_controller import pmsm_speed_controller
+from .pmsm_sc import pmsm_speed_controller
+from .scim_sc import scim_speed_controller

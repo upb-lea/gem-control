@@ -1,11 +1,14 @@
 from control_block_diagram.components import Box, Connection
-from control_block_diagram.predefined_components import DcPermExMotor, DcConverter
+from control_block_diagram.predefined_components import DcPermExMotor, DcConverter, Limit
 
 
 def perm_ex_dc_output(emf_feedforward):
     def _perm_ex_dc_output(start, control_task):
         space = 1.5 if emf_feedforward else 2
-        pwm = Box(start.add_x(space), size=(1, 0.8), text='PWM')
+        limit = Limit(start.add_x(space), size=(1, 1))
+        pwm = Box(limit.output_right[0].add_x(1.5), size=(1, 0.8), text='PWM')
+        Connection.connect(limit.output_right, pwm.input_left)
+
         converter = DcConverter(pwm.position.add_x(2), size=1.2, input_number=1)
         Connection.connect(pwm.output_right, converter.input_left, text='$S$')
 
@@ -18,7 +21,7 @@ def perm_ex_dc_output(emf_feedforward):
                                            draw=0.1)
 
         start = converter.position
-        inputs = dict(u=[pwm.input_left[0], dict(text=r'$u^{*}$')])
+        inputs = dict(u=[limit.input_left[0], dict(text=r'$u^{*}$')])
         outputs = dict(i=con_i.end)
         connect_to_lines = dict()
         connections = dict()

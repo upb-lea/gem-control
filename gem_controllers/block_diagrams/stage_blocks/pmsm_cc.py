@@ -1,6 +1,6 @@
 from control_block_diagram.components import Point, Box, Connection, Circle
 from control_block_diagram.predefined_components import DqToAlphaBetaTransformation,\
-     AbcToAlphaBetaTransformation, AlphaBetaToDqTransformation, Add, PIController, Multiply
+     AbcToAlphaBetaTransformation, AlphaBetaToDqTransformation, Add, PIController, Multiply, Limit
 
 
 def pmsm_cc(emf_feedforward):
@@ -39,14 +39,19 @@ def pmsm_cc(emf_feedforward):
         Connection.connect(add_u_sq.output_right[0], dq_to_alpha_beta.input_left[1], text=r'$u^{*}_{\mathrm{sq}}$',
                            distance_y=0.28, move_text=(0.4, 0))
 
-        pwm = Box(dq_to_alpha_beta.position.add_x(2.5), size=(1.5, 1.2), text='PWM',
+        limit = Limit(dq_to_alpha_beta.position.add_x(1.8), size=(1, 1.2), inputs=dict(left=2, left_space=0.6),
+                      outputs=dict(right=2, right_space=0.6))
+
+        Connection.connect(dq_to_alpha_beta.output_right, limit.input_left)
+
+        pwm = Box(limit.position.add_x(2.5), size=(1.5, 1.2), text='PWM',
                   inputs=dict(left=2, left_space=0.6),
                   outputs=dict(right=3, right_space=0.3))
 
-        Connection.connect(dq_to_alpha_beta.output_right, pwm.input_left,
+        Connection.connect(limit.output_right, pwm.input_left,
                            text=[r'$u^*_{\mathrm{s} \upalpha}$', r'$u^*_{\mathrm{s} \upbeta}$'], distance_y=0.25)
 
-        abc_to_alpha_beta = AbcToAlphaBetaTransformation(pwm.position.sub_y(3.5), input='right', output='left')
+        abc_to_alpha_beta = AbcToAlphaBetaTransformation(pwm.position.sub(1, 3.5), input='right', output='left')
 
         alpha_beta_to_dq = AlphaBetaToDqTransformation(
             Point.merge(dq_to_alpha_beta.position, abc_to_alpha_beta.position), input='right', output='left')

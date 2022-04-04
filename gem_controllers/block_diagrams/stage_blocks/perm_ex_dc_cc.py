@@ -24,7 +24,7 @@ def perm_ex_dc_cc(emf_feedforward):
             add_emf = Add(pi_current.position.add_x(2))
             Connection.connect(pi_current.output_right, add_emf.input_left, text=r'$\Delta u^{*}$')
 
-            box_psi = Box(add_emf.position.sub_y(2.5), size=(0.7, 0.7), text=r"$\Psi'_{\mathrm{E}}$", inputs=dict(bottom=1),
+            box_psi = Box(add_emf.position.sub_y(2.5), size=(0.8, 0.8), text=r"$\Psi'_{\mathrm{e}}$", inputs=dict(bottom=1),
                           outputs=dict(top=1))
             Connection.connect(box_psi.output_top, add_emf.input_bottom, text=r'$u^{0}$', text_position='end',
                                text_align='right', move_text=(-0.1, -0.2))

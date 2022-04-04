@@ -1,5 +1,5 @@
 from control_block_diagram.components import Box, Connection
-from control_block_diagram.predefined_components import Add, PIController
+from control_block_diagram.predefined_components import Add, PIController, Limit
 
 
 def pmsm_speed_controller(start, control_task):
@@ -12,10 +12,12 @@ def pmsm_speed_controller(start, control_task):
                            text_position='start')
     pi_omega = PIController(add_omega.position.add_x(1.5), text='Speed\nController')
     Connection.connect(add_omega.output_right, pi_omega.input_left)
+    limit = Limit(pi_omega.output_right[0].add_x(1.5), size=(1, 1))
+    Connection.connect(pi_omega.output_right[0], limit.input_left[0])
 
-    start = pi_omega.output_right[0]
+    start = limit.output_right[0]
     inputs = dict(omega_ref=[add_omega.input_left[0], dict(text=r'$\omega^{*}$')])
-    outputs = dict(t_ref=pi_omega.output_right[0])
+    outputs = dict(t_ref=limit.output_right[0])
     connect_to_lines = dict()
     connections = dict()
 
