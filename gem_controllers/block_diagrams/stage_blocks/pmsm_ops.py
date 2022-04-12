@@ -94,7 +94,7 @@ def pmsm_ops(start, control_task):
     Connection.connect(box_f_psi_t.output_right, limit.input_left)
 
     # In-/ Outputs
-    inputs = dict(t_ref=[con_torque.begin, dict(arrow=False, text=r'$T^{*}$')],
+    inputs = dict(t_ref=[con_torque.start, dict(arrow=False, text=r'$T^{*}$')],
                   omega=[div_psi.input_bottom[1], dict(text=r'$\omega_{\mathrm{el}}$', move_text=(3, 0))])
     outputs = dict(i_d_ref=limit.output_right[0], i_q_ref=limit.output_right[1])
     connect_to_lines = dict()
