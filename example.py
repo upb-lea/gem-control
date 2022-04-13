@@ -18,6 +18,7 @@ if __name__ == '__main__':
         a=5,
         block_diagram=True,
         current_safety_margin=0.15,
+        save_block_diagram_as='pdf'
     )
 
     # Control the motor environment

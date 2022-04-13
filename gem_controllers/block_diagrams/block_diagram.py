@@ -7,13 +7,10 @@ from .stage_blocks import ext_ex_dc_cc, ext_ex_dc_ops, ext_ex_dc_output, perm_ex
 import gem_controllers as gc
 
 
-def build_block_diagram(controller, env_id, save_block_diagram):
+def build_block_diagram(controller, env_id, save_block_diagram_as):
     motor_type = gc.utils.get_motor_type(env_id)
     control_task = gc.utils.get_control_task(env_id)
-    if save_block_diagram is not None:
-        doc = ControllerDiagram(save_block_diagram)
-    else:
-        doc = ControllerDiagram()
+    doc = ControllerDiagram()
     stages = get_stages(controller.controller, motor_type)
     start = Point(0, 0)
 
@@ -37,7 +34,10 @@ def build_block_diagram(controller, env_id, save_block_diagram):
         if key in connections.keys():
             Connection.connect_to_line(connections[key], connect_to_lines[key][0], **connect_to_lines[key][1])
 
-    doc.build()
+    if save_block_diagram_as is not None:
+        save_block_diagram_as = list(save_block_diagram_as) if isinstance(save_block_diagram_as, (tuple, list)) else [
+            save_block_diagram_as]
+        doc.save(*save_block_diagram_as)
     return doc
 
 
