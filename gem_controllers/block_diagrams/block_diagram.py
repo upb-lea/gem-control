@@ -8,24 +8,41 @@ import gem_controllers as gc
 
 
 def build_block_diagram(controller, env_id, save_block_diagram_as):
+    """
+    Creates a block diagram of the controller
+
+    Args:
+        controller:             GEM Control Controller
+        env_id:                 GEM environment id
+        save_block_diagram_as:  string or tuple of strings of the data types to be saved
+
+    Returns:    Control Block Diagram
+
+    """
+    # Get the block building function for all stages
     motor_type = gc.utils.get_motor_type(env_id)
     control_task = gc.utils.get_control_task(env_id)
-    doc = ControllerDiagram()
     stages = get_stages(controller.controller, motor_type)
-    start = Point(0, 0)
 
+    # Create a new block diagram
+    doc = ControllerDiagram()
+
+    # Help parameter
+    start = Point(0, 0)
     inputs = dict()
     outputs = dict()
     connections = dict()
     connect_to_lines = dict()
 
-    for idx, stage in enumerate(stages):
+    # Build the stage blocks
+    for stage in stages:
         start, inputs_, outputs_, connect_to_lines_, connections_ = stage(start, control_task)
         inputs = {**inputs, **inputs_}
         outputs = {**outputs, **outputs_}
         connect_to_lines = {**connect_to_lines, **connect_to_lines_}
         connections = {**connections, **connections_}
 
+    # Connect the different blocks
     for key in inputs.keys():
         if key in outputs.keys():
             connections[key] = Connection.connect(outputs[key], inputs[key][0], **inputs[key][1])
@@ -34,16 +51,31 @@ def build_block_diagram(controller, env_id, save_block_diagram_as):
         if key in connections.keys():
             Connection.connect_to_line(connections[key], connect_to_lines[key][0], **connect_to_lines[key][1])
 
+    # Save the block diagram
     if save_block_diagram_as is not None:
         save_block_diagram_as = list(save_block_diagram_as) if isinstance(save_block_diagram_as, (tuple, list)) else [
             save_block_diagram_as]
         doc.save(*save_block_diagram_as)
+
     return doc
 
 
 def get_stages(controller, motor_type):
+    """
+    Function to get all block building functions
+
+    Args:
+        controller: GEM Control Controller
+        motor_type: type of the motor
+
+    Returns:        list of all block building functions
+
+    """
+
     motor_check = motor_type in ['PMSM', 'SCIM', 'ShuntDc', 'SeriesDc', 'PermExDc', 'ExtExDc']
     stages = []
+
+    # Add the speed controller block function
     if isinstance(controller, gc.PISpeedController):
         if motor_type in ['PMSM', 'SCIM']:
             stages.append(build_functions[motor_type + '_Speed_Controller'])
@@ -51,6 +83,7 @@ def get_stages(controller, motor_type):
             stages.append(build_functions['PI_Speed_Controller'])
         controller = controller.torque_controller
 
+    # add the torque controller block function
     if isinstance(controller, gc.torque_controller.TorqueController):
         if motor_check:
             stages.append(build_functions[motor_type + '_OPS'])
@@ -58,6 +91,7 @@ def get_stages(controller, motor_type):
             stages.append(build_functions['Torque_Controller'])
         controller = controller.current_controller
 
+    # add the current controller block function
     if isinstance(controller, gc.PICurrentController):
         emf_feedforward = controller.emf_feedforward is not None
         if motor_check:
@@ -65,11 +99,13 @@ def get_stages(controller, motor_type):
         else:
             stages.append(build_functions['PI_Current_Controller'](emf_feedforward))
 
-        stages.append((build_functions[motor_type + '_Output'](controller.emf_feedforward is not None)))
+    # add the output block function
+    stages.append((build_functions[motor_type + '_Output'](controller.emf_feedforward is not None)))
 
     return stages
 
 
+# dictonary of all block building functions
 build_functions = {
     'PI_Speed_Controller': pi_speed_controller,
     'PMSM_Speed_Controller': pmsm_speed_controller,
