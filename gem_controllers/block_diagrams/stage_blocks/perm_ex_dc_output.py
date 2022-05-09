@@ -18,7 +18,7 @@ def perm_ex_dc_output(emf_feedforward):
                                         text_align='right', arrow=False)
 
         con_i = Connection.connect_to_line(conv_motor[0], pwm.position.sub_y(1.5), text=r'$i$', arrow=False, fill=False,
-                                           draw=0.1)
+                                           radius=0.1)
 
         start = converter.position
         inputs = dict(u=[limit.input_left[0], dict(text=r'$u^{*}$')])

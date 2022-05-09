@@ -14,9 +14,9 @@ def ext_ex_dc_output(emf_feedforward):
         con_conv_e = Connection.connect(converter.output_bottom[2], dc_ext_ex.input_top[2], arrow=False)
         Connection.connect(converter.output_bottom[3], dc_ext_ex.input_top[3], arrow=False)
 
-        con_e = Connection.connect_to_line(con_conv_e, start.sub_y(2), arrow=False, draw=0.1, fill=False,
+        con_e = Connection.connect_to_line(con_conv_e, start.sub_y(2), arrow=False, radius=0.1, fill=False,
                                            text=r'$i_{\mathrm{e}}$', distance_y=0.25)
-        con_a = Connection.connect_to_line(con_conv_a, start.sub_y(2.5), arrow=False, draw=0.1, fill=False,
+        con_a = Connection.connect_to_line(con_conv_a, start.sub_y(2.5), arrow=False, radius=0.1, fill=False,
                                            text=r'$i_{\mathrm{a}}$', distance_y=0.25, text_align='bottom',
                                            move_text=(0.25, 0))
 

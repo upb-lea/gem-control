@@ -109,7 +109,7 @@ def scim_cc(emf_feedforward):
                       omega=[con_omega_2.start, dict(arrow=False)])
 
         outputs = dict(S=pwm.output_right, psi_r=con_psi_r.points[1], omega_me=con_omega_2.points[1])
-        connect_to_line = dict(i=[abc_to_alpha_beta.input_right, dict(draw=0.1, fill=False,
+        connect_to_line = dict(i=[abc_to_alpha_beta.input_right, dict(radius=0.1, fill=False,
                                                                       text=[r'$\mathbf{i}_{\mathrm{s a,b,c}}$', '',
                                                                             ''])])
         connections = dict()

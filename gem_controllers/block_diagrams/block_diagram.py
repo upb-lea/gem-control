@@ -19,6 +19,7 @@ def build_block_diagram(controller, env_id, save_block_diagram_as):
     Returns:    Control Block Diagram
 
     """
+    
     # Get the block building function for all stages
     motor_type = gc.utils.get_motor_type(env_id)
     control_task = gc.utils.get_control_task(env_id)
@@ -28,6 +29,7 @@ def build_block_diagram(controller, env_id, save_block_diagram_as):
     doc = ControllerDiagram()
 
     # Help parameter
+
     start = Point(0, 0)
     inputs = dict()
     outputs = dict()

@@ -125,7 +125,7 @@ def pmsm_cc(emf_feedforward):
         connect_to_line = dict(epsilon=[alpha_beta_to_dq.input_bottom[0], dict(text=r'$\varepsilon_{\mathrm{el}}$',
                                                                                text_position='middle',
                                                                                text_align='right')],
-                               i=[abc_to_alpha_beta.input_right, dict(draw=0.1, fill=False,
+                               i=[abc_to_alpha_beta.input_right, dict(radius=0.1, fill=False,
                                                                       text=[r'$\mathbf{i}_{\mathrm{s a,b,c}}$', '',
                                                                             ''])])
         connections = dict()
