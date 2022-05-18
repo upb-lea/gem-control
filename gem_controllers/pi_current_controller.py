@@ -69,6 +69,8 @@ class PICurrentController(gc.CurrentController):
         self._transformation_stage = gc.stages.AbcTransformation()
         if gc.utils.get_motor_type(env_id) in gc.parameter_reader.induction_motors:
             self._emf_feedforward = gc.stages.EMFFeedforwardInd()
+        elif gc.utils.get_motor_type(env_id) == 'EESM':
+            self._emf_feedforward = gc.stages.EMFFeedforwardEESM()
         else:
             self._emf_feedforward = gc.stages.EMFFeedforward()
         if gc.utils.get_motor_type(env_id) in gc.parameter_reader.ac_motors:
@@ -111,7 +113,6 @@ class PICurrentController(gc.CurrentController):
     def control(self, state, reference):
         self._voltage_reference = self.current_control(state, reference)
         return self._voltage_reference
-
 
     def reset(self):
         for stage in self.stages:

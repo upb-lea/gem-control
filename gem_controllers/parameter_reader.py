@@ -3,7 +3,7 @@ from gym_electric_motor.physical_systems import converters as cv
 import numpy as np
 
 dc_motors = ['SeriesDc', 'ShuntDc', 'PermExDc', 'ExtExDc']
-synchronous_motors = ['PMSM', 'SynRM']
+synchronous_motors = ['PMSM', 'SynRM', 'EESM']
 induction_motors = ['DFIM', 'SCIM']
 ac_motors = synchronous_motors + induction_motors
 
@@ -20,6 +20,7 @@ psi_reader = {
     'PMSM': lambda env: np.array([0.0, env.physical_system.electrical_motor.motor_parameter['psi_p']]),
     'SynRM': lambda env: np.array([0.0, 0.0]),
     'SCIM': lambda env: np.array([0.0, 0.0]),
+    'EESM': lambda env: np.array([0.0, 0.0, 0.0]),
 }
 
 p_reader = {
@@ -30,6 +31,7 @@ p_reader = {
     'PMSM': lambda env: env.physical_system.electrical_motor.motor_parameter['p'],
     'SynRM': lambda env: env.physical_system.electrical_motor.motor_parameter['p'],
     'SCIM': lambda env: env.physical_system.electrical_motor.motor_parameter['p'],
+    'EESM': lambda env: env.physical_system.electrical_motor.motor_parameter['p'],
 }
 
 l_reader = {
@@ -62,7 +64,12 @@ l_reader = {
         (env.physical_system.electrical_motor.motor_parameter['l_sigr'] +
          env.physical_system.electrical_motor.motor_parameter['l_m']) /
         env.physical_system.electrical_motor.motor_parameter['r_r'],
-        ]),
+    ]),
+    'EESM': lambda env: np.array([
+        env.physical_system.electrical_motor.motor_parameter['l_d'],
+        env.physical_system.electrical_motor.motor_parameter['l_q'],
+        env.physical_system.electrical_motor.motor_parameter['l_e']
+    ]),
 }
 
 l_emf_reader = {
@@ -102,8 +109,12 @@ l_emf_reader = {
          env.physical_system.electrical_motor.motor_parameter['l_m']) /
         (env.physical_system.electrical_motor.motor_parameter['l_sigr'] +
             env.physical_system.electrical_motor.motor_parameter['l_m'])
-        ]
-    ),
+    ]),
+    'EESM': lambda env: np.array([
+        - env.physical_system.electrical_motor.motor_parameter['l_q'],
+        env.physical_system.electrical_motor.motor_parameter['l_d'],
+        0
+    ]),
 }
 
 tau_current_loop_reader = {
@@ -147,6 +158,14 @@ tau_current_loop_reader = {
         env.physical_system.electrical_motor.motor_parameter['l_sigr']
         / env.physical_system.electrical_motor.motor_parameter['r_r'],
     ]),
+    'EESM': lambda env: np.array([
+        env.physical_system.electrical_motor.motor_parameter['l_q']
+        / env.physical_system.electrical_motor.motor_parameter['r_s'],
+        env.physical_system.electrical_motor.motor_parameter['l_d']
+        / env.physical_system.electrical_motor.motor_parameter['r_s'],
+        env.physical_system.electrical_motor.motor_parameter['l_e']
+        / env.physical_system.electrical_motor.motor_parameter['r_e']
+    ]),
 }
 
 r_reader = {
@@ -175,6 +194,11 @@ r_reader = {
     'SCIM': lambda env: np.array([
         env.physical_system.electrical_motor.motor_parameter['r_s'],
         env.physical_system.electrical_motor.motor_parameter['r_r']
+    ]),
+    'EESM': lambda env: np.array([
+        env.physical_system.electrical_motor.motor_parameter['r_s'],
+        env.physical_system.electrical_motor.motor_parameter['r_s'],
+        env.physical_system.electrical_motor.motor_parameter['r_e']
     ]),
 }
 
@@ -217,6 +241,14 @@ tau_n_reader = {
         env.physical_system.electrical_motor.motor_parameter['r_r']
         / env.physical_system.electrical_motor.motor_parameter['l_sigr']
     ]),
+    'EESM': lambda env: np.array([
+        env.physical_system.electrical_motor.motor_parameter['r_s']
+        / env.physical_system.electrical_motor.motor_parameter['l_d'],
+        env.physical_system.electrical_motor.motor_parameter['r_s']
+        / env.physical_system.electrical_motor.motor_parameter['l_q'],
+        env.physical_system.electrical_motor.motor_parameter['r_e']
+        / env.physical_system.electrical_motor.motor_parameter['l_e']
+    ]),
 }
 
 currents = {
@@ -227,6 +259,7 @@ currents = {
     'PMSM': ['i_sd', 'i_sq'],
     'SynRM': ['i_sd', 'i_sq'],
     'SCIM': ['i_sd', 'i_sq'],
+    'EESM': ['i_sd', 'i_sq', 'i_e'],
 }
 emf_currents = {
     'SeriesDc': ['i'],
@@ -236,6 +269,7 @@ emf_currents = {
     'PMSM': ['i_sq', 'i_sd'],
     'SynRM': ['i_sq', 'i_sd'],
     'SCIM': ['i_sq', 'i_sd'],
+    'EESM': ['i_sq', 'i_sd', 'i_e'],
 }
 
 
@@ -247,6 +281,7 @@ voltages = {
     'PMSM': ['u_sd', 'u_sq'],
     'SynRM': ['u_sd', 'u_sq'],
     'SCIM': ['u_sd', 'u_sq'],
+    'EESM': ['u_sd', 'u_sq', 'u_e'],
 }
 
 
@@ -255,6 +290,8 @@ def get_output_voltages(motor_type, action_type):
         return voltages[motor_type]
     elif motor_type in induction_motors:
         return ['u_sa', 'u_sb', 'u_sc']
+    elif motor_type == 'EESM':
+        return ['u_a', 'u_b', 'u_c', 'u_e']
     else:
         return ['u_a', 'u_b', 'u_c']
 
@@ -276,6 +313,7 @@ l_prime_reader = {
         env.physical_system.electrical_motor.motor_parameter['l_sd']
     ]),
     'SCIM': lambda env: np.array([0, 0]),
+    'EESM': lambda env: np.array([0.0, 0.0, 0.0]),
 }
 
 converter_high_idle_low_action = {
