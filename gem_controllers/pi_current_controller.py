@@ -112,7 +112,6 @@ class PICurrentController(gc.CurrentController):
         self._voltage_reference = self.current_control(state, reference)
         return self._voltage_reference
 
-
     def reset(self):
         for stage in self.stages:
             stage.reset()
