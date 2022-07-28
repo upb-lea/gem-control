@@ -46,7 +46,7 @@ class PController(BaseController):
     def control(self, state, reference):
         return self._control(state[self._state_indices], reference)
 
-    def tune(self, env, env_id, a=4):
+    def tune(self, env, env_id, a=4, **_):
         if self._control_task == EBaseControllerTask.CurrentControl:
             self._tune_current_controller(env, env_id, a)
         elif self._control_task == EBaseControllerTask.SpeedControl:

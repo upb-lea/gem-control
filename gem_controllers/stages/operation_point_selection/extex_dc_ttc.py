@@ -59,7 +59,7 @@ class ExtExDcOperationPointSelection(OperationPointSelection):
         i_a_ref = reference[0] / self._cross_inductance[0] / max(state[self._i_e_idx], 1e-4)
         return np.array([i_a_ref, i_e_ref])
 
-    def tune(self, env, env_id, current_safety_margin=0.2):
+    def tune(self, env, env_id, current_safety_margin=0.2, **_):
         super().tune(env, env_id, current_safety_margin)
         motor_type = gc.utils.get_motor_type(env_id)
         self._i_e_idx = env.state_names.index('i_e')

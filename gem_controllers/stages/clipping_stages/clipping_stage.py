@@ -17,5 +17,5 @@ class ClippingStage(Stage):
     def __call__(self, state: np.ndarray, reference: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
-    def tune(self, env: gym_electric_motor.core.ElectricMotorEnvironment, env_id: str, margin: float = 0.0):
+    def tune(self, env: gym_electric_motor.core.ElectricMotorEnvironment, env_id: str, margin: float = 0.0, **_):
         pass

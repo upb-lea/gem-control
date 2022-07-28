@@ -55,7 +55,7 @@ class PermExDcOperationPointSelection(OperationPointSelection):
     def _max_current_per_speed(self, state):
         return self._voltage_limit / (self._resistance + self._magnetic_flux * abs(state[self._omega_index]))
 
-    def tune(self, env, env_id, current_safety_margin=0.2):
+    def tune(self, env, env_id, current_safety_margin=0.2, **_):
         super().tune(env, env_id, current_safety_margin=current_safety_margin)
         motor = gc.utils.get_motor_type(env_id)
         self._magnetic_flux = reader.psi_reader[motor](env)

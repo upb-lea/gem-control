@@ -76,8 +76,8 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
 
         return np.array([t_val, psi, i_sd_val, i_sq_val])
 
-    def tune(self, env: gem.core.ElectricMotorEnvironment, env_id: str, current_safety_margin: float = 0.2):
-        super().tune(env, env_id, current_safety_margin)
+    def tune(self, env: gem.core.ElectricMotorEnvironment, env_id: str, current_safety_margin: float = 0.2, **kwargs):
+        super().tune(env, env_id, current_safety_margin, **kwargs)
 
         self.t_count = 1001
         self.psi_count = 1000

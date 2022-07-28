@@ -33,6 +33,7 @@ class GemController:
         base_current_controller: str = 'PI',
         base_speed_controller: str = 'PI',
         a: int = 4,
+        plot_references: bool = True,
     ):
         """A factory function that generates (and parameterizes) a matching GemController for a given gym-electric-motor
         environment `env`.
@@ -58,6 +59,7 @@ class GemController:
             env, env_id, base_current_controller=base_current_controller, decoupling=decoupling
         )
         tuner_kwargs['a'] = a
+        tuner_kwargs['plot_references'] = plot_references
         if control_task in ['TC', 'SC']:
             controller = gc.TorqueController(env, env_id, current_controller=controller)
             tuner_kwargs['current_safety_margin'] = current_safety_margin
