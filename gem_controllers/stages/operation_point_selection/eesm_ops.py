@@ -1,8 +1,6 @@
 import numpy as np
 import scipy.interpolate as sp_interpolate
 from .foc_operation_point_selection import FieldOrientedControllerOperationPointSelection
-from matplotlib import pyplot as plt
-from matplotlib import cm
 
 
 class EESMOperationPointSelection(FieldOrientedControllerOperationPointSelection):
@@ -153,28 +151,6 @@ class EESMOperationPointSelection(FieldOrientedControllerOperationPointSelection
                                                  (self.t_grid, self.psi_grid), method='linear')
         self.i_e_inter = sp_interpolate.griddata((best_params_psi[:, 0], best_params_psi[:, 1]), best_params_psi[:, 4],
                                                  (self.t_grid, self.psi_grid), method='linear')
-
-        fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-        i_d_plot = ax.plot_surface(self.t_grid, self.psi_grid, self.i_d_inter, cmap=cm.jet)
-        ax.set_title(r'$i_{sd}(T, \Psi)$')
-        ax.set_xlabel('T / Nm')
-        ax.set_ylabel(r'$\Psi$ / Vs')
-        ax.set_zlabel(r'$i_{sd}$ / A')
-
-        fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-        i_q_plot = ax.plot_surface(self.t_grid, self.psi_grid, self.i_q_inter, cmap=cm.jet)
-        ax.set_title(r'$i_{sq}(T, \Psi)$')
-        ax.set_xlabel('T / Nm')
-        ax.set_ylabel(r'$\Psi$ / Vs')
-        ax.set_zlabel(r'$i_{sq}$ / A')
-
-        fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-        i_e_plot = ax.plot_surface(self.t_grid, self.psi_grid, self.i_e_inter, cmap=cm.jet)
-        ax.set_title(r'$i_{e}(T, \Psi)$')
-        ax.set_xlabel('T / Nm')
-        ax.set_ylabel(r'$\Psi$ / Vs')
-        ax.set_zlabel(r'$i_{e}$ / A')
-        plt.show(block=True)
 
     def get_psi_idx(self, psi):
         psi = np.clip(psi, 0, self.psi_max)
