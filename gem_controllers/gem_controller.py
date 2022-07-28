@@ -29,7 +29,7 @@ class GemController:
         env: gym_electric_motor.core.ElectricMotorEnvironment,
         env_id: str,
         decoupling: bool = True,
-        current_safety_margin:float = 0.2,
+        current_safety_margin: float = 0.2,
         base_current_controller: str = 'PI',
         base_speed_controller: str = 'PI',
         a: int = 4,

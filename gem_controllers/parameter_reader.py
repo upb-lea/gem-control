@@ -113,7 +113,9 @@ l_emf_reader = {
     'EESM': lambda env: np.array([
         - env.physical_system.electrical_motor.motor_parameter['l_q'],
         env.physical_system.electrical_motor.motor_parameter['l_d'],
-        0
+        env.physical_system.electrical_motor.motor_parameter['l_m'] *
+        env.physical_system.electrical_motor.motor_parameter['l_q'] /
+        env.physical_system.electrical_motor.motor_parameter['l_d'],
     ]),
 }
 
@@ -269,7 +271,7 @@ emf_currents = {
     'PMSM': ['i_sq', 'i_sd'],
     'SynRM': ['i_sq', 'i_sd'],
     'SCIM': ['i_sq', 'i_sd'],
-    'EESM': ['i_sq', 'i_sd', 'i_e'],
+    'EESM': ['i_sq', 'i_sd', 'i_sq'],
 }
 
 
@@ -286,12 +288,12 @@ voltages = {
 
 
 def get_output_voltages(motor_type, action_type):
-    if action_type != 'Cont':
+    if motor_type in dc_motors:
         return voltages[motor_type]
     elif motor_type in induction_motors:
         return ['u_sa', 'u_sb', 'u_sc']
     elif motor_type == 'EESM':
-        return ['u_a', 'u_b', 'u_c', 'u_e']
+        return ['u_a', 'u_b', 'u_c', 'u_sup']
     else:
         return ['u_a', 'u_b', 'u_c']
 

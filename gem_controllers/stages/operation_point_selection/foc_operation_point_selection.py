@@ -127,4 +127,5 @@ class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
         return psi
 
     def reset(self):
+        super().reset()
         self.integrated = self.integrated_reset
