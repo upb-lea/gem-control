@@ -49,6 +49,7 @@ class GemController:
             base_current_controller('PI'/'PID'/'P'/'ThreePoint'): Selection of the basic control algorithm for the
              current controller.
             a(float): Tuning parameter of the symmetrical optimum.
+            plot_references(bool): Flag, if the reference values of the underlying control circuits should be plotted
 
         Returns:
             GemController: An initialized (and tuned) instance of a controller that fits to the specified environment.
