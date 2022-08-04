@@ -12,7 +12,7 @@ def disc_converter_actions(converter):
     of the converters output voltages.
 
     Args:
-        Converter(PowerElectronicConverter): The converter to read the switching levels from.
+        converter(PowerElectronicConverter): The converter to read the switching levels from.
     Returns:
         high_action(np.ndarray): The high switching actions
         idle_action(np.ndarray): The idle switching actions

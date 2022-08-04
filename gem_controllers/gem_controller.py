@@ -29,7 +29,7 @@ class GemController:
         env: gym_electric_motor.core.ElectricMotorEnvironment,
         env_id: str,
         decoupling: bool = True,
-        current_safety_margin:float = 0.2,
+        current_safety_margin: float = 0.2,
         base_current_controller: str = 'PI',
         base_speed_controller: str = 'PI',
         a: int = 4,
@@ -54,14 +54,18 @@ class GemController:
         """
         control_task = gc.utils.get_control_task(env_id)
         tuner_kwargs = dict()
+
+        # Initialize the current control stage
         controller = gc.PICurrentController(
             env, env_id, base_current_controller=base_current_controller, decoupling=decoupling
         )
         tuner_kwargs['a'] = a
         if control_task in ['TC', 'SC']:
+            # Initilize the operation point selection
             controller = gc.TorqueController(env, env_id, current_controller=controller)
             tuner_kwargs['current_safety_margin'] = current_safety_margin
         if control_task == 'SC':
+            # Initilize the speed control stage
             controller = gc.PISpeedController(
                 env, env_id, torque_controller=controller, base_speed_controller=base_speed_controller
             )
@@ -87,6 +91,7 @@ class GemController:
         raise NotImplementedError
 
     def reset(self):
+        """Reset all stages of the controller"""
         for stage in self._stages:
             stage.reset()
 
@@ -94,15 +99,26 @@ class GemController:
         pass
 
     def control_environment(self, env, n_steps, max_episode_length=np.inf, render_env=False):
+        """
+        Function to control an environment with the GemController
+        Args:
+            env(ElectricMotorEnvironment): The GEM-Environment that the controller should control.
+            n_steps(int): Number of iteration steps.
+            max_episode_length(int): Maximum length of an epsiode, after which the environment and controller should be
+             reset.
+            render_env(bool): Flag, if the states of the environment should be plotted.
+        """
+
         state, reference = env.reset()
         self.reset()
         current_episode_length = 0
-        for _ in range(n_steps):
+        for _ in range(n_steps):    # Simulate the environment and controller for n steps
             if render_env:
-                env.render()
-            action = self.control(state, reference)
-            (state, reference), _, done, _ = env.step(action)
+                env.render()    # Plot the states
+            action = self.control(state, reference)     # Calculate the action
+            (state, reference), _, done, _ = env.step(action)   # Simulate one step of the environment
             if done or current_episode_length >= max_episode_length:
+                # Reset the environment and controller
                 state, reference = env.reset()
                 self.reset()
                 current_episode_length = 0
