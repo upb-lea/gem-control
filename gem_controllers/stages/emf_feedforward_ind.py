@@ -27,6 +27,13 @@ class EMFFeedforwardInd(EMFFeedforward):
         return action
 
     def tune(self, env, env_id, **_):
+        """
+        Set all needed motor parameters for the decoupling.
+        Args:
+            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
+            env_id(str): The corresponding environment-id to specify the concrete environment.
+        """
+
         super().tune(env, env_id, **_)
         mp = env.physical_system.electrical_motor.motor_parameter
         self.r_r = mp['r_r']

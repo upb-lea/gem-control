@@ -4,6 +4,11 @@ import gem_controllers as gc
 
 
 class AntiWindup:
+    """This class should prevent a Windup of a the intgration part of the controller. A windup arises when a reference
+    variable is in the limit and the I-controller is still integrated, so that it takes more time for the controlled
+    variable to go under the limit again. To prevent this, only the I-controllers whose controlled variable is below the
+    limits are integrated.
+    """
 
     def __init__(self, control_task='CC'):
         self._control_task = control_task
@@ -30,7 +35,8 @@ class AntiWindup:
         Args:
              state(np.ndarray): The state of the environment.
              reference(np.ndarray): The reference that was input into the controller to limit.
-             clipping_difference(np.ndarray): The amount of clipping that was put on the output action of the controller
+             clipping_difference(np.ndarray): The amount of clipping that was put on the output action of the
+              controller.
 
         Returns:
              np.ndarray: The amount how much the integrator-value is altered.

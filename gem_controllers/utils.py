@@ -24,8 +24,8 @@ def disc_converter_actions(converter):
         idle_actions = []
         low_actions = []
         for subconverter in converter.subconverters:
-            #cv_actions =
             high_actions.append(_converter_actions[subconverter])
+
 
 _converter_actions = {
     cv.FiniteOneQuadrantConverter: np.array([[1], [0], [0]]),

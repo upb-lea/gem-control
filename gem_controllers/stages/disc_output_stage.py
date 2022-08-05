@@ -9,6 +9,9 @@ import gem_controllers as gc
 
 
 class DiscOutputStage(Stage):
+    """This class maps the discrete input voltages, calculated by the controller, to the scalar inputs of the used
+    converter.
+    """
 
     @property
     def output_stage(self):
@@ -29,6 +32,15 @@ class DiscOutputStage(Stage):
         self._output_stage = non_parameterized
 
     def __call__(self, state, reference):
+        """
+        Maps the input voltages to the scalar inputs of the converter
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference voltages.
+
+        Returns:
+            action(int): scalar action of the environment
+        """
         return self._output_stage(self.to_action(state, reference))
 
     @staticmethod
@@ -44,10 +56,26 @@ class DiscOutputStage(Stage):
         return multi_discrete_action
 
     def to_action(self, _state, reference):
+        """
+        Map the voltages to a voltage level
+        Args:
+             _state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference voltages.
+
+        Returns:
+            action(np.ndarray): volatge vector
+        """
         conditions = [reference <= self.low_level, reference >= self.high_level]
         return np.select(conditions, [self.low_action, self.high_action], default=self.idle_action)
 
     def tune(self, env, env_id, **__):
+        """
+        Set the values for the low, idle and high action.
+        Args:
+            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
+            env_id(str): The corresponding environment-id to specify the concrete environment.
+        """
+
         action_type, _, motor_type = gc.utils.split_env_id(env_id)
         voltages = reader.get_output_voltages(motor_type, action_type)
         voltage_indices = [env.state_names.index(voltage) for voltage in voltages]
