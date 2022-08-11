@@ -41,6 +41,7 @@ class AntiWindup:
         Returns:
              np.ndarray: The amount how much the integrator-value is altered.
         """
+
         # np.ndarray(bool): Indicates which actions have been clipped
         non_clipped = clipping_difference == 0
         error = reference - state[self._state_indices]

@@ -6,6 +6,7 @@ import gem_controllers as gc
 
 
 class ExtExDcOperationPointSelection(OperationPointSelection):
+    """This class comutes the current operation point of a ExtExDc Motor for a given torque reference value."""
 
     @property
     def cross_inductance(self):
@@ -55,11 +56,15 @@ class ExtExDcOperationPointSelection(OperationPointSelection):
         return np.sqrt(self._r_a_sqrt * abs(reference[0]) / (self._r_e_sqrt * self._l_e_prime))
 
     def _select_operating_point(self, state, reference):
+        # Select the i_e reference
         i_e_ref = self._i_e_policy(state, reference)
+
+        # Calculate the i_a reference
         i_a_ref = reference[0] / self._cross_inductance[0] / max(state[self._i_e_idx], 1e-4)
         return np.array([i_a_ref, i_e_ref])
 
     def tune(self, env, env_id, current_safety_margin=0.2):
+        """Set the motor parameters and indices"""
         super().tune(env, env_id, current_safety_margin)
         motor_type = gc.utils.get_motor_type(env_id)
         self._i_e_idx = env.state_names.index('i_e')

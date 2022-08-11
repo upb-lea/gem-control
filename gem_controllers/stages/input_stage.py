@@ -28,12 +28,12 @@ class InputStage(Stage):
         self._reference_limits = np.array([])
 
     def __call__(self, state, reference):
-        # Denormalize state and reference
+        """Denormalize state and reference"""
         state[:] = state * self._state_limits
         return reference * self._reference_limits
 
     def tune(self, env, env_id, **__):
-        # Set the limits of the state and the reference
+        """Set the limits of the state and the reference"""
         self._state_limits = env.limits
         reference_indices = [env.state_names.index(reference) for reference in env.reference_names]
         self.reference_limits = env.limits[reference_indices]

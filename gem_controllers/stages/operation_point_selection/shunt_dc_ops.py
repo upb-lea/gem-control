@@ -5,6 +5,7 @@ from ... import parameter_reader as reader
 
 
 class ShuntDcOperationPointSelection(OperationPointSelection):
+    """This class computes the current operation point of a ShuntDc Motor for a given torque reference value."""
 
     @property
     def cross_inductance(self):
@@ -73,6 +74,7 @@ class ShuntDcOperationPointSelection(OperationPointSelection):
         return reference / self._cross_inductance / i_e
 
     def tune(self, env, env_id, current_safety_margin=0.2):
+        """Set the indices, limits and motor parameters for the operation point selection."""
         super().tune(env, env_id, current_safety_margin)
         self._cross_inductance = reader.l_prime_reader['ShuntDc'](env)
         self._i_e_idx = env.state_names.index('i_e')

@@ -34,6 +34,7 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         self.psi_p = None
 
     def _get_mtpc_lookup_table(self):
+        """Calculate the lookup tables, that maps a pair of torque and flux on a current operation point."""
 
         def i_q_(i_d__, torque_, controller):
             return torque_ / (i_d__ * (controller.l_d - controller.l_q) + controller.psi_p) / (1.5 * controller.p)
@@ -79,6 +80,8 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         return np.array(characteristic)
 
     def get_mtpf_lookup_table(self):
+        """Calculate the lookup table that maps a flux on a maximum torque."""
+
         # maximum flux is calculated
         self.psi_max_mtpf = np.sqrt(
             (self.psi_p + self.l_d * self.i_sd_limit) ** 2
@@ -132,21 +135,22 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         return np.array(psi_i_d_q)
 
     def tune(self, env: gem.core.ElectricMotorEnvironment, env_id: str, current_safety_margin: float = 0.2):
+        """Calculate the lookup tables, set the indices and limits, initialize the modulation controller"""
+
         super().tune(env, env_id, current_safety_margin)
 
-        self.t_count = 250
-        self.psi_count = 250
-        self.i_count = 500
+        self.t_count = 250      # number of torque values in the lookup tables
+        self.psi_count = 250    # number of flux values in the lookup tables
+        self.i_count = 500      # number of current values in the lookup tables
 
         self.l_d = self.mp['l_d']
         self.l_q = self.mp['l_q']
-
         self.psi_p = self.mp.get('psi_p', 0)
         self.invert = -1 if (self.psi_p == 0 and self.l_q < self.l_d) else 1
 
+        # Set the parameters of the modulation controller
         self.k_ = 0.953
         self.i_gain = 1 / (self.mp['l_q'] / (1.25 * self.mp['r_s'])) * (self.alpha - 1) / self.alpha ** 2
-
         self.psi_high = 0.2 * np.sqrt(
             (self.psi_p + self.l_d * self.i_sd_limit) ** 2
             + (self.l_q * self.i_sq_limit) ** 2
@@ -155,25 +159,18 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         self.integrated_reset = 0.01 * self.psi_low  # Reset value of the modulation controller
         self.max_torque = max(
             1.5 * self.p * (self.psi_p + (self.l_d - self.l_q) * (-self.limit[self.i_sd_idx]))
-            * self.i_sq_limit,
-            self.limit[self.torque_idx]
-        )
+            * self.i_sq_limit,  self.limit[self.torque_idx])
+
+        # Calculate the mtpc and mtpf lookup tables
         self.psi_max_mtpf = 0.0
         self.mtpc = self._get_mtpc_lookup_table()
         self.mtpf = self.get_mtpf_lookup_table()
-
         self.psi_t = np.sqrt(
-            np.power(self.psi_p + self.l_d * self.mtpc[:, 1], 2) + np.power(self.l_q * self.mtpc[:, 2], 2)
-        )
-
+            np.power(self.psi_p + self.l_d * self.mtpc[:, 1], 2) + np.power(self.l_q * self.mtpc[:, 2], 2))
         self.psi_t = np.array([self.mtpc[:, 0], self.psi_t])
 
-        self.i_q_max = np.linspace(
-            -self.i_sq_limit,
-            self.i_sq_limit,
-            self.i_count
-        )
-
+        # Define the grid for the currents
+        self.i_q_max = np.linspace(-self.i_sq_limit, self.i_sq_limit, self.i_count)
         self.i_d_max = -np.sqrt(self.i_sq_limit ** 2 - np.power(self.i_q_max, 2))
         i_count_mgrid = self.i_count * 1j
         i_d, i_q = np.mgrid[
@@ -182,6 +179,8 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         ]
         i_d = i_d.flatten()
         i_q = i_q.flatten()
+
+        # Calculate the possible combinations of i_sd and i_sq
         if self.l_d != self.l_q:
             idx = np.where(
                 np.sign(self.psi_p + i_d * self.l_d) * np.power(self.psi_p + i_d * self.l_d, 2)
@@ -193,15 +192,19 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         i_d = i_d[idx]
         i_q = i_q[idx]
 
+        # Calculate the corresponding torques and fluxes
         t = self.p * 1.5 * (self.psi_p + (self.l_d - self.l_q) * i_d) * i_q
         psi = np.sqrt(np.power(self.l_d * i_d + self.psi_p, 2) + np.power(self.l_q * i_q, 2))
         self.t_min = np.amin(t)
         self.t_max = np.amax(t)
-
         self.psi_min = np.amin(psi)
         self.psi_max = np.amax(psi)
 
+        # Calculate the lookup table that maps the torque and flux on a current operation point
         if self.torque_control_type == 'analytical':
+            # Calculate the lookup table by solving the equations analyticaly
+
+            # Solve the equations for every point in the grid of torques and fluxes
             res = []
             for psi in np.linspace(self.psi_min, self.psi_max, self.psi_count):
                 ret = []
@@ -216,10 +219,13 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
             self.i_q_inter = res[:, :, 3].T
 
         elif self.torque_control_type == 'interpolate':
-            self.t_grid, self.psi_grid = np.mgrid[
-                np.amin(t): np.amax(t): np.complex(0, self.t_count),
-                self.psi_min: self.psi_max: np.complex(self.psi_count)
-            ]
+            # Calculate the lookup table by interpolation
+
+            # Define the grid for the torque and fluxes
+            self.t_grid, self.psi_grid = np.mgrid[np.amin(t): np.amax(t): np.complex(0, self.t_count),
+                                                  self.psi_min: self.psi_max: np.complex(self.psi_count)]
+
+            # Interpolate the functions
             self.i_q_inter = sp_interpolate.griddata((t, psi), i_q, (self.t_grid, self.psi_grid), method='linear')
             self.i_d_inter = sp_interpolate.griddata((t, psi), i_d, (self.t_grid, self.psi_grid), method='linear')
 
@@ -253,9 +259,9 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
             + (self.l_q * 2 * torque / (3 * self.p)) ** 2
         ]
 
-        sol = np.roots(poly)
-        i_d = np.real(sol[-1])
-        i_q = 2 * torque / (3 * self.p * (self.psi_p + (self.l_d - self.l_q) * i_d))
+        sol = np.roots(poly)    # Solve the equation
+        i_d = np.real(sol[-1])  # Select the correct solution for the i_sd current
+        i_q = 2 * torque / (3 * self.p * (self.psi_p + (self.l_d - self.l_q) * i_d))    # Calculate the i_sq current
         return i_d, i_q
 
     def get_i_d_q(self, torque, psi, psi_idx):
@@ -266,26 +272,24 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         return i_d, i_q
 
     def get_t_idx(self, torque):
+        """Get the index of the torque."""
         torque = np.clip(torque, self.t_min, self.t_max)
         return int(round((torque[0] - self.t_min) / (self.t_max - self.t_min) * (self.t_count - 1)))
 
     def get_psi_idx(self, psi):
+        """Get the index of the flux."""
         psi = np.clip(psi, self.psi_min, self.psi_max)
         return int(round((psi - self.psi_min) / (self.psi_max - self.psi_min) * (self.psi_count - 1)))
 
     def get_psi_idx_mtpf(self, psi):
+        """Get the index of the flux of the mtpf lookup table."""
         return np.clip(
-            int((self.psi_count - 1) - round(psi / self.psi_max_mtpf * (self.psi_count - 1))),
-            0,
-            self.psi_count
-        )
+            int((self.psi_count - 1) - round(psi / self.psi_max_mtpf * (self.psi_count - 1))), 0, self.psi_count)
 
     def get_t_idx_mtpc(self, torque):
+        """Get the index of the torque of the mtpc lookup table."""
         return np.clip(
-            int(round((torque[0] + self.max_torque) / (2 * self.max_torque) * (self.t_count - 1))),
-            0,
-            self.t_count
-        )
+            int(round((torque[0] + self.max_torque) / (2 * self.max_torque) * (self.t_count - 1))), 0, self.t_count)
 
     def _select_operating_point(self, state, reference):
         """

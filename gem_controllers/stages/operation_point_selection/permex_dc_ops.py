@@ -6,6 +6,7 @@ from ... import parameter_reader as reader
 
 
 class PermExDcOperationPointSelection(OperationPointSelection):
+    """This class computes the current operation point of a PermExDx Motor for a given torque reference value."""
 
     @property
     def magnetic_flux(self):
@@ -47,15 +48,18 @@ class PermExDcOperationPointSelection(OperationPointSelection):
         self._omega_index = 0
 
     def _select_operating_point(self, state, reference):
+        """Calculate the current reference for a given torque reference and limit it."""
         if state[self._omega_index] > 0:
             return min(reference / self._magnetic_flux, self._max_current_per_speed(state))
         else:
             return max(reference / self._magnetic_flux, -self._max_current_per_speed(state))
 
     def _max_current_per_speed(self, state):
+        """Calculate the maximum current for a given speed."""
         return self._voltage_limit / (self._resistance + self._magnetic_flux * abs(state[self._omega_index]))
 
     def tune(self, env, env_id, current_safety_margin=0.2):
+        """Set the indices, limits and motor parameters for the operation point selection."""
         super().tune(env, env_id, current_safety_margin=current_safety_margin)
         motor = gc.utils.get_motor_type(env_id)
         self._magnetic_flux = reader.psi_reader[motor](env)

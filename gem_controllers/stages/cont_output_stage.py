@@ -21,7 +21,7 @@ class ContOutputStage(Stage):
         self._voltage_limit = np.array([])
 
     def __call__(self, state, reference):
-        # Divide the input voltages by the limits
+        """"Divide the input voltages by the limits"""
         return reference / self.voltage_limit
 
     def tune(self, env, env_id, **_):

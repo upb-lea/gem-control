@@ -4,17 +4,16 @@ from gym_electric_motor.visualization import MotorDashboard
 from gym_electric_motor.physical_system_wrappers import FluxObserver
 
 
-env_id = 'Cont-CC-SCIM-v0'
+env_id = 'Cont-TC-SCIM-v0'
 
 # Initialize the motor environment. The controller of the induction motor requires a flux observer.
 env = gem.make(
         env_id,
-        state_action_processors=(FluxObserver(),),
+        physical_system_wrappers=(FluxObserver(),),
         visualization=MotorDashboard(
             state_plots=['omega', 'torque', 'i_sd', 'i_sq', 'u_sd', 'u_sq', 'psi_angle', 'psi_abs']),
     )
 
-state, reference = env.reset()
 
 # Initialize the controller
 c = gc.GemController.make(
