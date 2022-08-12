@@ -4,6 +4,9 @@ from ..base_controllers import BaseController
 
 
 class IController(BaseController):
+    """This class represents an integration controller, which can be combined e.g. with a proportional controller to a
+    PI controller.
+    """
 
     # (float): Additional term to avoid division by zero
     epsilon = 1e-6
@@ -63,16 +66,24 @@ class IController(BaseController):
         return self.control(state, reference)
 
     def _control(self, _state, _reference):
+        """Calculate the reference for the underlying stage"""
         return self._i_gain * self._integrator
 
     def control(self, state, reference):
         return self._control(state[self._state_indices], reference)
 
     def integrate(self, state, reference):
+        """
+        Integrates the control error.
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference of the state.
+        """
         error = reference - state
         self._integrator = self._integrator + (error * self._tau * ~self._clipped)
 
     def reset(self):
+        """Reset the integrated values"""
         super().reset()
         self._integrator = np.zeros_like(self._i_gain)
         self._clipped = np.zeros_like(self._i_gain, dtype=bool)

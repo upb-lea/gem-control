@@ -4,6 +4,7 @@ import gem_controllers as gc
 
 
 class PICurrentController(gc.CurrentController):
+    """This class forms the PI Current controller, for any motor."""
 
     @property
     def signal_names(self):
@@ -58,6 +59,15 @@ class PICurrentController(gc.CurrentController):
             return self._tau_current_loop
 
     def __init__(self, env, env_id, base_current_controller='PI', decoupling=True):
+        """
+        Initilizes a PI current control stage
+        Args:
+            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
+            env_id(str): The corresponding environment-id to specify the concrete environment.
+            base_current_controller(str): Selection which base controller should be used for the current control stage.
+            decoupling(bool): Flag, if a EMF-Feedforward correction stage should be used in the pi current controller.
+        """
+
         super().__init__()
         self._current_base_controller = None
         self._emf_feedforward = None
@@ -67,18 +77,33 @@ class PICurrentController(gc.CurrentController):
         self._decoupling = decoupling
         self._voltage_reference = np.array([])
         self._transformation_stage = gc.stages.AbcTransformation()
-        self._emf_feedforward = gc.stages.EMFFeedforward()
+
+        # Choose the emf feedforward function
+        if gc.utils.get_motor_type(env_id) in gc.parameter_reader.induction_motors:
+            self._emf_feedforward = gc.stages.EMFFeedforwardInd()
+        else:
+            self._emf_feedforward = gc.stages.EMFFeedforward()
+
+        # Choose the clipping function
         if gc.utils.get_motor_type(env_id) in gc.parameter_reader.ac_motors:
-            self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
+            self._clipping_stage = gc.stages.clipping_stages.SquaredClippingStage('CC')
         else:
             self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
         self._anti_windup_stage = gc.stages.AntiWindup('CC')
         self._current_base_controller = gc.stages.base_controllers.get(base_current_controller)('CC')
 
     def tune(self, env, env_id, a=4):
+        """
+        Tune the components of the current control stage
+        Args:
+            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
+            env_id(str): The corresponding environment-id to specify the concrete environment.
+            a(float): Design parameter of the symmetric optimum for the base controllers
+        """
+
         action_type = gc.utils.get_action_type(env_id)
         motor_type = gc.utils.get_motor_type(env_id)
-        if action_type in ['Finite', 'AbcCont'] and motor_type in gc.parameter_reader.ac_motors:
+        if action_type in ['Finite', 'Cont'] and motor_type in gc.parameter_reader.ac_motors:
             self._coordinate_transformation_required = True
         if self._coordinate_transformation_required:
             self._transformation_stage.tune(env, env_id)
@@ -92,23 +117,45 @@ class PICurrentController(gc.CurrentController):
         self._tau_current_loop = gc.parameter_reader.tau_current_loop_reader[motor_type](env)
 
     def current_control(self, state, current_reference):
+        """
+        Calculate the input voltages
+        Args:
+            state(np.array): actual state of the environment
+            current_reference(np.array): actual current references
+
+        Returns:
+            voltage_reference(np.array)
+        """
+
+        # Calculate the voltage reference by the base controllers
         voltage_reference = self._current_base_controller(state, current_reference)
+
+        # Decouple the voltage components
         if self._decoupling:
             voltage_reference = self._emf_feedforward(state, voltage_reference)
+
+        # Clip the voltage inputs to the action space
         self._voltage_reference = self._clipping_stage(state, voltage_reference)
+
+        # Transform the voltages in the correct coordinate system
         if self._coordinate_transformation_required:
             voltage_reference = self._transformation_stage(state, voltage_reference)
+
+        # Integrate the I-Controllers
         if hasattr(self._current_base_controller, 'integrator'):
-            delta = self._anti_windup_stage.__call__(
+            delta = self._anti_windup_stage(
                 state, current_reference, self._clipping_stage.clipping_difference
             )
             self._current_base_controller.integrator += delta
+
         return voltage_reference
 
     def control(self, state, reference):
+        """Claculate the input voltages"""
         self._voltage_reference = self.current_control(state, reference)
         return self._voltage_reference
 
     def reset(self):
+        """Reset all components of the stage"""
         for stage in self.stages:
             stage.reset()

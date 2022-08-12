@@ -6,6 +6,7 @@ from . import ClippingStage
 
 
 class AbsoluteClippingStage(ClippingStage):
+    """This class clips a reference absolute to the limit of the corresponding limit of the state"""
 
     @property
     def clipping_difference(self) -> np.ndarray:
@@ -21,11 +22,29 @@ class AbsoluteClippingStage(ClippingStage):
         self._control_task = control_task
 
     def __call__(self, state, reference):
+        """
+        Clips a reference to the limits.
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference of the state.
+
+        Returns:
+            clipped_reference(np.ndarray): The reference of a controller stage clipped to the limit.
+        """
+
         clipped = np.clip(reference, self._action_range[0], self._action_range[1])
         self._clipping_difference = reference - clipped
         return clipped
 
     def tune(self, env, env_id, margin=0.0):
+        """
+        Set the limits for the clipped states.
+        Args:
+            env(gym_electric_motor.ElectricMotorEnvironment): The environment to be controlled.
+            env_id(str): The id of the environment.
+            margin(float): Percentage, how far the value should be clipped below the limit.
+        """
+
         motor_type = gc.utils.get_motor_type(env_id)
         if self._control_task == 'CC':
             action_names = gc.parameter_reader.voltages[motor_type]
