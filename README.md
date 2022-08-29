@@ -16,6 +16,7 @@ The following motors are supported:
     
 - Three Phase Motors:
     - Permanent Magnet Synchronous Motor
+    - Synchronous Reluctance Motor
     - Externally Exited Synchronous Motor
     - Squirrel Cage Induction Motor
 
