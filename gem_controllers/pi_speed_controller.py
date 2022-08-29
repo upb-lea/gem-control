@@ -9,6 +9,7 @@ class PISpeedController(gc.GemController):
 
     @property
     def speed_control_stage(self) -> gc.stages.BaseController:
+        """Base controller of the speed controller stage"""
         return self._speed_control_stage
 
     @speed_control_stage.setter
@@ -17,6 +18,7 @@ class PISpeedController(gc.GemController):
 
     @property
     def torque_controller(self) -> gc.TorqueController:
+        """Subordinated torque controller stage"""
         return self._torque_controller
 
     @torque_controller.setter
@@ -25,14 +27,17 @@ class PISpeedController(gc.GemController):
 
     @property
     def torque_reference(self) -> np.ndarray:
+        """Reference values of the torque controller stage"""
         return self._torque_reference
 
     @property
     def anti_windup_stage(self):
+        """Anti windup stage of the speed controller"""
         return self._anti_windup_stage
 
     @property
     def clipping_stage(self):
+        """Clipping stage of the speed controller"""
         return self._clipping_stage
 
     def __init__(
@@ -43,7 +48,8 @@ class PISpeedController(gc.GemController):
             base_speed_controller: str = 'PI'
     ):
         """
-        Initilizes a PI speed control stage
+        Initilizes a PI speed control stage.
+
         Args:
             _env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
@@ -62,7 +68,8 @@ class PISpeedController(gc.GemController):
 
     def tune(self, env, env_id, tune_torque_controller=True, a=4, **kwargs):
         """
-        Tune the components of the current control stage
+        Tune the components of the current control stage.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
@@ -79,7 +86,8 @@ class PISpeedController(gc.GemController):
 
     def speed_control(self, state, reference):
         """
-        Calculate the torque reference
+        Calculate the torque reference.
+
         Args:
             state(np.array): actual state of the environment
             reference(np.array): actual speed references
@@ -100,7 +108,16 @@ class PISpeedController(gc.GemController):
         return self._torque_reference
 
     def control(self, state, reference):
-        """Calculate the voltage reference"""
+        """
+        Claculate the reference values for the input voltages.
+
+        Args:
+            state(np.array): actual state of the environment
+            reference(np.array): speed references
+
+        Returns:
+            np.ndarray: voltage reference
+        """
 
         # Calculate the torque reference
         reference = self.speed_control(state, reference)

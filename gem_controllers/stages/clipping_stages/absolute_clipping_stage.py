@@ -10,13 +10,19 @@ class AbsoluteClippingStage(ClippingStage):
 
     @property
     def clipping_difference(self) -> np.ndarray:
+        """Difference between the reference and the clipped reference"""
         return self._clipping_difference
 
     @property
     def action_range(self) -> Tuple[np.ndarray, np.ndarray]:
+        """Action range of the controller stage"""
         return self._action_range
 
     def __init__(self, control_task='CC'):
+        """
+        Args:
+            control_task(str): Control task of the controller stage.
+        """
         self._action_range = np.array([]), np.array([])
         self._clipping_difference = np.array([])
         self._control_task = control_task
@@ -24,6 +30,7 @@ class AbsoluteClippingStage(ClippingStage):
     def __call__(self, state, reference):
         """
         Clips a reference to the limits.
+
         Args:
              state(np.ndarray): The state of the environment.
              reference(np.ndarray): The reference of the state.
@@ -39,6 +46,7 @@ class AbsoluteClippingStage(ClippingStage):
     def tune(self, env, env_id, margin=0.0):
         """
         Set the limits for the clipped states.
+
         Args:
             env(gym_electric_motor.ElectricMotorEnvironment): The environment to be controlled.
             env_id(str): The id of the environment.
@@ -63,4 +71,5 @@ class AbsoluteClippingStage(ClippingStage):
         self._clipping_difference = np.zeros_like(lower_action_limit)
 
     def reset(self):
+        """Reset the absolute clipping stage"""
         self._clipping_difference = np.zeros_like(self._action_range[0])

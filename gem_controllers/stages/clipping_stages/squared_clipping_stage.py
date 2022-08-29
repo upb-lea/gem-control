@@ -10,17 +10,25 @@ class SquaredClippingStage(ClippingStage):
 
     @property
     def clipping_difference(self) -> np.ndarray:
+        """Difference between the reference and the clipped reference"""
         return self._clipping_difference
 
     @property
     def limits(self):
+        """Limits of the controlled states"""
         return self._limits
 
     @property
     def margin(self):
+        """Margin of the controlled states"""
         return self._margin
 
     def __init__(self, control_task='CC'):
+        """
+        Args:
+            control_task(str): Control task of the controller stage.
+        """
+
         self._clipping_difference = np.array([])
         self._margin = 0.0
         self._limits = np.array([])
@@ -29,6 +37,7 @@ class SquaredClippingStage(ClippingStage):
     def __call__(self, state, reference):
         """
         Clips a reference to the limits.
+
         Args:
              state(np.ndarray): The state of the environment.
              reference(np.ndarray): The reference of the state.
@@ -48,6 +57,7 @@ class SquaredClippingStage(ClippingStage):
     def tune(self, env, env_id, margin=0.0):
         """
         Set the limits for the clipped states.
+
         Args:
             env(gym_electric_motor.ElectricMotorEnvironment): The environment to be controlled.
             env_id(str): The id of the environment.
@@ -66,4 +76,5 @@ class SquaredClippingStage(ClippingStage):
         self._limits = env.limits[state_indices]
 
     def reset(self):
+        """Reset the squared clipping stage"""
         self._clipping_difference = np.zeros_like(self._limits)

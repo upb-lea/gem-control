@@ -22,6 +22,13 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
             self, torque_control='online', max_modulation_level: float = 2 / np.sqrt(3),
             modulation_damping: float = 1.2
     ):
+        """
+        Args:
+            torque_control(str): Methode for the operation point selection.
+            max_modulation_level(float): Maximum value for the modulation controller.
+            modulation_damping(float): Damping of the gain of the modulation controller.
+        """
+
         super().__init__(max_modulation_level, modulation_damping)
         self.torque_control_type = torque_control
         self.a_max = max_modulation_level
@@ -79,7 +86,7 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
             characteristic.append([t, i_d_ret, i_q_ret, psi])
         return np.array(characteristic)
 
-    def get_mtpf_lookup_table(self):
+    def _get_mtpf_lookup_table(self):
         """Calculate the lookup table that maps a flux on a maximum torque."""
 
         # maximum flux is calculated
@@ -135,7 +142,14 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         return np.array(psi_i_d_q)
 
     def tune(self, env: gem.core.ElectricMotorEnvironment, env_id: str, current_safety_margin: float = 0.2):
-        """Calculate the lookup tables, set the indices and limits, initialize the modulation controller"""
+        """
+        Tune the operation point selcetion stage.
+
+        Args:
+            env(gym_electric_motor.ElectricMotorEnvironment): The environment to be controlled.
+            env_id(str): The id of the environment.
+            current_safety_margin(float): Percentage of the current margin to the current limit.
+        """
 
         super().tune(env, env_id, current_safety_margin)
 
@@ -164,7 +178,7 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         # Calculate the mtpc and mtpf lookup tables
         self.psi_max_mtpf = 0.0
         self.mtpc = self._get_mtpc_lookup_table()
-        self.mtpf = self.get_mtpf_lookup_table()
+        self.mtpf = self._get_mtpf_lookup_table()
         self.psi_t = np.sqrt(
             np.power(self.psi_p + self.l_d * self.mtpc[:, 1], 2) + np.power(self.l_q * self.mtpc[:, 2], 2))
         self.psi_t = np.array([self.mtpc[:, 0], self.psi_t])
@@ -264,29 +278,31 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         i_q = 2 * torque / (3 * self.p * (self.psi_p + (self.l_d - self.l_q) * i_d))    # Calculate the i_sq current
         return i_d, i_q
 
-    def get_i_d_q(self, torque, psi, psi_idx):
+    def _get_i_d_q(self, torque, psi, psi_idx):
+        """Get the i_d and i_q current from the mtpc lut"""
+
         i_d, i_q = self.solve_analytical(torque, psi)
         if i_d > self.mtpc[psi_idx, 1]:
             i_d = self.mtpc[psi_idx, 1]
             i_q = self.mtpc[psi_idx, 2]
         return i_d, i_q
 
-    def get_t_idx(self, torque):
+    def _get_t_idx(self, torque):
         """Get the index of the torque."""
         torque = np.clip(torque, self.t_min, self.t_max)
         return int(round((torque[0] - self.t_min) / (self.t_max - self.t_min) * (self.t_count - 1)))
 
-    def get_psi_idx(self, psi):
+    def _get_psi_idx(self, psi):
         """Get the index of the flux."""
         psi = np.clip(psi, self.psi_min, self.psi_max)
         return int(round((psi - self.psi_min) / (self.psi_max - self.psi_min) * (self.psi_count - 1)))
 
-    def get_psi_idx_mtpf(self, psi):
+    def _get_psi_idx_mtpf(self, psi):
         """Get the index of the flux of the mtpf lookup table."""
         return np.clip(
             int((self.psi_count - 1) - round(psi / self.psi_max_mtpf * (self.psi_count - 1))), 0, self.psi_count)
 
-    def get_t_idx_mtpc(self, torque):
+    def _get_t_idx_mtpc(self, torque):
         """Get the index of the torque of the mtpc lookup table."""
         return np.clip(
             int(round((torque[0] + self.max_torque) / (2 * self.max_torque) * (self.t_count - 1))), 0, self.t_count)
@@ -298,7 +314,7 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         """
 
         # get the optimal psi for a given reference from the mtpc characteristic
-        psi_idx_ = self.get_t_idx_mtpc(reference)
+        psi_idx_ = self._get_t_idx_mtpc(reference)
         psi_opt = self.mtpc[psi_idx_, 3]
 
         # limit the flux to keep the voltage limit using the modulation controller
@@ -306,19 +322,19 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         psi_max = min(psi_opt, psi_max_)
 
         # get the maximum reference for a given flux from the mtpf characteristic
-        psi_max_idx = self.get_psi_idx_mtpf(psi_max)
+        psi_max_idx = self._get_psi_idx_mtpf(psi_max)
         t_max = np.abs(self.mtpf[psi_max_idx, 1])
         if np.abs(reference) > t_max:
             reference = np.sign(reference) * t_max
 
         # calculate the currents online
         if self.torque_control_type == 'online':
-            i_d, i_q = self.get_i_d_q(reference[0], psi_max, psi_idx_)
+            i_d, i_q = self._get_i_d_q(reference[0], psi_max, psi_idx_)
 
         # get the currents from a LUT
         else:
-            t_idx = self.get_t_idx(reference)
-            psi_idx = self.get_psi_idx(psi_max)
+            t_idx = self._get_t_idx(reference)
+            psi_idx = self._get_psi_idx(psi_max)
 
             if self.i_d_inter[t_idx, psi_idx] <= self.mtpf[psi_max_idx, 2]:
                 i_d = self.mtpf[psi_max_idx, 2]
@@ -342,4 +358,5 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         return np.array([i_d, i_q])
 
     def reset(self):
+        """Reset the PMSM operation point selection"""
         super().reset()

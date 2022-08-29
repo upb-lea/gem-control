@@ -15,6 +15,7 @@ class DiscOutputStage(Stage):
 
     @property
     def output_stage(self):
+        """Output stage of the controller"""
         return self._output_stage
 
     @output_stage.setter
@@ -33,7 +34,8 @@ class DiscOutputStage(Stage):
 
     def __call__(self, state, reference):
         """
-        Maps the input voltages to the scalar inputs of the converter
+        Maps the input voltages to the scalar inputs of the converter.
+
         Args:
              state(np.ndarray): The state of the environment.
              reference(np.ndarray): The reference voltages.
@@ -45,19 +47,32 @@ class DiscOutputStage(Stage):
 
     @staticmethod
     def to_discrete(multi_discrete_action):
+        """
+        Transform multi discrete action to a discrete action.
+        Args:
+            multi_discrete_action(np.array): Array of multi discrete actions
+
+        Returns:
+            int: discrete action
+        """
         return multi_discrete_action[0]
 
     @staticmethod
     def to_b6_discrete(multi_discrete_action):
+        """Returns the multi discrete action for a B6 brigde converter."""
         raise NotImplementedError
 
     @staticmethod
     def to_multi_discrete(multi_discrete_action):
+        """
+        Returns the multi discrete action.
+        """
         return multi_discrete_action
 
     def to_action(self, _state, reference):
         """
-        Map the voltages to a voltage level
+        Map the voltages to a voltage level.
+
         Args:
              _state(np.ndarray): The state of the environment.
              reference(np.ndarray): The reference voltages.
@@ -71,6 +86,7 @@ class DiscOutputStage(Stage):
     def tune(self, env, env_id, **__):
         """
         Set the values for the low, idle and high action.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.

@@ -10,6 +10,7 @@ class ContOutputStage(Stage):
 
     @property
     def voltage_limit(self):
+        """Voltage limit of the motor"""
         return self._voltage_limit
 
     @voltage_limit.setter

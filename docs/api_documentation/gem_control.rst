@@ -1,2 +1,0 @@
-GEM Control API Documentation
-_____________________________

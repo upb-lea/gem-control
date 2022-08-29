@@ -11,11 +11,22 @@ class AntiWindup:
     """
 
     def __init__(self, control_task='CC'):
+        """
+        Args:
+            control_task(str): Control task of the controller.
+        """
         self._control_task = control_task
         self._state_indices = []
         self._tau = 0.0
 
     def tune(self, env, env_id):
+        """
+        Tune the anti windup stage.
+
+        Args:
+            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
+            env_id(str): The corresponding environment-id to specify the concrete environment.
+        """
         self._tau = env.physical_system.tau
         motor_type = gc.utils.get_motor_type(env_id)
         states = []

@@ -10,12 +10,17 @@ class PIController(PController, IController):
     """This class combines the proportional controller and the integration controller to a PI-Controller"""
 
     def __init__(self, control_task):
+        """
+        Args:
+            control_task(str): Control task of the PI controller
+        """
         PController.__init__(self, control_task=control_task)
         IController.__init__(self, control_task=control_task)
 
     def control(self, state, reference):
         """
-        Calculate the reference of the underlying stage by adding the P- and I-component
+        Calculate the reference of the underlying stage by adding the P- and I-component.
+
         Args:
              state(np.ndarray): The state of the environment.
              reference(np.ndarray): The reference of the state.
@@ -32,6 +37,7 @@ class PIController(PController, IController):
     def tune(self, env, env_id, a=4, t_n=None):
         """
         Tune the components of the controller for the desired task.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
@@ -51,6 +57,7 @@ class PIController(PController, IController):
     def _tune_current_controller(self, env, env_id, a=4):
         """
         Tune the P-controller and I-controller for the current control by the symmetrical optimum.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
@@ -79,6 +86,7 @@ class PIController(PController, IController):
     def _tune_speed_controller(self, env, env_id, a=4, t_n=None):
         """
         Tune the P-controller and I-controller for the speed control by the symmetrical optimum.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
@@ -95,6 +103,7 @@ class PIController(PController, IController):
     def _tune_flux_controller(self, env, env_id, a=4, t_n=None):
         """
         Tune the P-controller and I-controller for the flux control by the symmetrical optimum.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.

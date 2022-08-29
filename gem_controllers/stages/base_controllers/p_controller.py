@@ -11,6 +11,7 @@ class PController(BaseController):
     """
     @property
     def p_gain(self):
+        """P gain of the P controller"""
         return self._p_gain
 
     @p_gain.setter
@@ -19,6 +20,7 @@ class PController(BaseController):
 
     @property
     def state_indices(self):
+        """Indices of the controlled states"""
         return self._state_indices
 
     @state_indices.setter
@@ -27,6 +29,7 @@ class PController(BaseController):
 
     @property
     def action_range(self):
+        """Action range of the base controller"""
         return self._action_range
 
     @action_range.setter
@@ -34,9 +37,25 @@ class PController(BaseController):
         self._action_range = value
 
     def __call__(self, state, reference):
+        """
+        Calculate the reference for the underlying stage
+
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference of the state.
+
+        Returns:
+             np.array: reference values of the next stage
+        """
         return self.control(state, reference)
 
     def __init__(self, control_task, p_gain=np.array([0.0]), action_range=(np.array([0.0]), np.array([0.0]))):
+        """
+        Args:
+            control_task(str): Control task of the P controller.
+            p_gain(np.array): Array of p gains of the P controller.
+            action_range(np.array): Action range of the stage.
+        """
         BaseController.__init__(self, control_task)
         self._p_gain = p_gain
         self._action_range = action_range
@@ -47,11 +66,22 @@ class PController(BaseController):
         return self._p_gain * (reference - state)
 
     def control(self, state, reference):
+        """
+        Calculate the reference for the underlying stage
+
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference of the state.
+
+        Returns:
+             np.array: reference values of the next stage
+        """
         return self._control(state[self._state_indices], reference)
 
     def tune(self, env, env_id, a=4):
         """
         Tune the controller for the desired control task.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
@@ -68,6 +98,7 @@ class PController(BaseController):
     def _tune_current_controller(self, env, env_id, a):
         """
         Tune the P-controller for the current control by the symmetrical optimum.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
@@ -93,6 +124,7 @@ class PController(BaseController):
     def _tune_speed_controller(self, env, env_id, a=4, t_n=None):
         """
         Tune the P-controller for the speed control by the symmetrical optimum.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.

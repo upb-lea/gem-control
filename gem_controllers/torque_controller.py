@@ -6,8 +6,10 @@ import gem_controllers as gc
 
 class TorqueController(gc.GemController):
     """This class forms the torque controller, for any motor."""
+
     @property
     def torque_to_current_stage(self) -> gc.stages.OperationPointSelection:
+        """Operation point selection stage"""
         return self._operation_point_selection
 
     @torque_to_current_stage.setter
@@ -16,6 +18,7 @@ class TorqueController(gc.GemController):
 
     @property
     def current_controller(self) -> gc.CurrentController:
+        """Subordinated current controller stage"""
         return self._current_controller
 
     @current_controller.setter
@@ -24,10 +27,12 @@ class TorqueController(gc.GemController):
 
     @property
     def current_reference(self) -> np.ndarray:
+        """Reference values of the current controller stage"""
         return self._current_reference
 
     @property
     def clipping_stage(self) -> gc.stages.clipping_stages.ClippingStage:
+        """Clipping stage of the torque controller stage"""
         return self._clipping_stage
 
     @clipping_stage.setter
@@ -36,6 +41,7 @@ class TorqueController(gc.GemController):
 
     @property
     def t_n(self):
+        """Time constant of the current controller stage"""
         return self._current_controller.t_n
 
     def __init__(
@@ -47,7 +53,8 @@ class TorqueController(gc.GemController):
             clipping_stage: (gc.stages.clipping_stages.ClippingStage, None) = None
     ):
         """
-        Initilizes a torque control stage
+        Initilizes a torque control stage.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
@@ -74,7 +81,8 @@ class TorqueController(gc.GemController):
 
     def tune(self, env, env_id, current_safety_margin=0.2, tune_current_controller=True, **kwargs):
         """
-        Tune the components of the current control stage
+        Tune the components of the current control stage.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
@@ -89,7 +97,8 @@ class TorqueController(gc.GemController):
 
     def torque_control(self, state, reference):
         """
-        Calculate the current refrences
+        Calculate the current refrences.
+
         Args:
             state(np.array): actual state of the environment
             reference(np.array): actual torque references
@@ -102,7 +111,16 @@ class TorqueController(gc.GemController):
         return self._current_reference
 
     def control(self, state, reference):
-        """Calculate the voltage reference"""
+        """
+        Claculate the reference values for the input voltages.
+
+        Args:
+            state(np.array): state of the environment
+            reference(np.array): torque references
+
+        Returns:
+            np.ndarray: voltage reference
+        """
 
         # Calculate the current references
         self._current_reference = self.torque_control(state, reference)

@@ -11,6 +11,7 @@ class AbcTransformation(Stage):
 
     @property
     def advance_factor(self):
+        """Advance factor of the angle."""
         return self._advance_factor
 
     @advance_factor.setter
@@ -19,6 +20,7 @@ class AbcTransformation(Stage):
 
     @property
     def tau(self):
+        """Sampling time of the system."""
         return self._tau
 
     @tau.setter
@@ -33,16 +35,26 @@ class AbcTransformation(Stage):
         self.angle_idx = None
 
     def __call__(self, state, reference):
+        """
+        Args:
+            state(np.array): state of the environment
+            reference(np.array): voltage reference values
+
+        Returns:
+            np.array: reference values for the input voltages
+        """
+
         epsilon_adv = self._angle_advance(state)    # calculate the advance angle
         return SynchronousMotor.t_32(SynchronousMotor.q(reference, epsilon_adv))
 
     def _angle_advance(self, state):
-        # multiply the advance factor with the speed and the sampling time to calculate the advance angle
+        """Multiply the advance factor with the speed and the sampling time to calculate the advance angle"""
         return state[self.angle_idx] + self._advance_factor * self.tau * state[self.omega_idx]
 
     def tune(self, env, env_id, **_):
         """
-        Tune the advance factor of the transformation
+        Tune the advance factor of the transformation.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.

@@ -13,7 +13,9 @@ Contents
 ________
 
 .. toctree::
+   :maxdepth: 1
 
-   getting_started
-   usage_guide/usage_guides
-   api_documentation/gem_control
+   parts/read_me
+   parts/getting_started
+   parts/usage_guide/usage_guides
+   parts/api_documentation/gem_control

@@ -10,6 +10,7 @@ class EMFFeedforward(Stage):
 
     @property
     def inductance(self):
+        """Inductances of the motor"""
         return self._inductance
 
     @inductance.setter
@@ -18,6 +19,7 @@ class EMFFeedforward(Stage):
 
     @property
     def psi(self):
+        """Permanent magnet flux of the motor"""
         return self._psi
 
     @psi.setter
@@ -26,6 +28,7 @@ class EMFFeedforward(Stage):
 
     @property
     def current_indices(self):
+        """Indices of the currents"""
         return self._current_indices
 
     @current_indices.setter
@@ -34,6 +37,7 @@ class EMFFeedforward(Stage):
 
     @property
     def omega_idx(self):
+        """Index of the rotational speed omega"""
         return self._omega_idx
 
     @omega_idx.setter
@@ -42,9 +46,19 @@ class EMFFeedforward(Stage):
 
     @property
     def action_range(self):
+        """Action range of the motor"""
         return self._action_range
 
     def omega_el(self, state):
+        """
+        Calculate the electrical speed.
+
+        Args:
+            state(np.array): state of the environment
+
+        Returns:
+            float: electrical speed
+        """
         return state[self._omega_idx] * self._p
 
     def __init__(self):
@@ -58,7 +72,8 @@ class EMFFeedforward(Stage):
 
     def __call__(self, state, reference):
         """
-        Calculate the emf feedforward voltages and add them to the actions of the current controller
+        Calculate the emf feedforward voltages and add them to the actions of the current controller.
+
         Args:
              state(np.ndarray): The state of the environment.
              reference(np.ndarray): The reference voltages.
@@ -72,6 +87,7 @@ class EMFFeedforward(Stage):
     def tune(self, env, env_id, **_):
         """
         Set all needed motor parameters for the decoupling.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.

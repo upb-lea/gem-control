@@ -19,8 +19,8 @@ sys.setrecursionlimit(1500)
 # -- Project information -----------------------------------------------------
 
 project = 'gem-control'
-copyright = '2021, Felix Book, Wilhelm Kirchgässner, Maximilian Schenke, Arne Traue, Oliver Wallscheid'
-author = 'Felix Book, Wilhelm Kirchgässner, Maximilian Schenke, Arne Traue, Oliver Wallscheid'
+copyright = '2021, Felix Book,  Barnabas Haucke-Korber, Maximilian Schenke, Arne Traue, Oliver Wallscheid'
+author = 'Felix Book, Barnabas Haucke-Korber, Maximilian Schenke, Arne Traue, Oliver Wallscheid'
 
 # The short X.Y version
 version = ''
@@ -44,6 +44,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
+    'sphinx_mdinclude',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -52,7 +53,7 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_suffix = ['.rst']
+source_suffix = ['.rst', '.md']
 # source_suffix = '.rst'
 
 # The master toctree document.
@@ -66,7 +67,7 @@ autoclass_content = 'both'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -137,7 +138,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'GEM-Control.tex', 'GEM-Control Documentation',
-     'Arne Traue, Felix Book, Wilhelm Kirchgässner, Maximilian Schenke, Oliver Wallscheid', 'manual'),
+     'Arne Traue, Felix Book, Barnabas Haucke-Korber, Maximilian Schenke, Oliver Wallscheid', 'manual'),
 ]
 
 

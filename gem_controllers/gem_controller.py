@@ -11,16 +11,18 @@ class GemController:
     to current set point mapping or input and output processing.
 
     Furthermore, the GemController has got a `GemController.make` factory function that automatically designs and tunes
-     a classical cascaded motor controller based on classic control techniques like th e proportional-integral (PI)
-      controller to control a gym-electric-motor environment.
+    a classical cascaded motor controller based on classic control techniques like the proportional-integral (PI)
+    controller to control a gym-electric-motor environment.
     """
 
     @property
     def signals(self):
+        """Input signals of the controller"""
         return []
 
     @property
     def signal_names(self):
+        """Signal names of the controller"""
         return []
 
     @classmethod
@@ -79,15 +81,37 @@ class GemController:
 
     @property
     def stages(self):
+        """Stages of the GEM Controller"""
         return self._stages
 
     def __init__(self):
         self._stages = []
 
     def get_signal_value(self, signal_name):
+        """
+        Get the value of a signal calling by the signal name.
+
+        Args:
+            signal_name(str): Name of a signal of the state
+
+        Returns:
+            float
+
+        """
+
         return self.signals[self.signal_names.index(signal_name)]
 
     def control(self, state, reference):
+        """
+        Calculate the voltage reference.
+
+        Args:
+            state(np.array): state of the environment
+            reference(np.array): speed references
+
+        Returns:
+            np.array: reference voltage
+        """
         raise NotImplementedError
 
     def reset(self):
@@ -100,7 +124,8 @@ class GemController:
 
     def control_environment(self, env, n_steps, max_episode_length=np.inf, render_env=False):
         """
-        Function to control an environment with the GemController
+        Function to control an environment with the GemController.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller should control.
             n_steps(int): Number of iteration steps.

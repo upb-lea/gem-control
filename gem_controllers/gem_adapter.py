@@ -9,6 +9,7 @@ class GymElectricMotorAdapter(gc.GemController):
 
     @property
     def input_stage(self):
+        """Input stage of the controller"""
         return self._input_stage
 
     @input_stage.setter
@@ -17,6 +18,7 @@ class GymElectricMotorAdapter(gc.GemController):
 
     @property
     def output_stage(self):
+        """Output stage of the controller"""
         return self._output_stage
 
     @output_stage.setter
@@ -25,6 +27,7 @@ class GymElectricMotorAdapter(gc.GemController):
 
     @property
     def controller(self):
+        """Wrapped GemController"""
         return self._controller
 
     @controller.setter
@@ -37,6 +40,13 @@ class GymElectricMotorAdapter(gc.GemController):
         env_id: (str, None) = None,
         controller: (gc.GemController, None) = None
     ):
+        """
+        Args:
+            _env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
+            env_id(str): The corresponding environment-id to specify the concrete environment.
+            controller(gc.GemController): The GemController that should be wrapped.
+        """
+
         super().__init__()
         self._input_stage = None
         self._output_stage = None
@@ -51,11 +61,11 @@ class GymElectricMotorAdapter(gc.GemController):
 
     def control(self, state, reference):
         """
-        Function to calculate the action of the controller for the environment
+        Function to calculate the action of the controller for the environment.
 
         Args:
-            state(np.array): Array of the actual state of the environment
-            reference(np.array): Array of the actual references of the referenced states
+            state(np.array): Array of the state of the environment.
+            reference(np.array): Array of the references of the referenced states.
 
         Returns:
             action
@@ -76,12 +86,12 @@ class GymElectricMotorAdapter(gc.GemController):
 
     def tune(self, env, env_id, tune_controller=True, **kwargs):
         """
-        Function to set the parameters of the controller stages
+        Function to set the parameters of the controller stages.
 
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be tuned for.
-            env_id(str): ID of the ElectricMotorEnvironment
-            tune_controller(bool): Flag, if the controller should be tuned
+            env_id(str): ID of the ElectricMotorEnvironment.
+            tune_controller(bool): Flag, if the controller should be tuned.
         """
 
         self._input_stage.tune(env, env_id)
@@ -90,6 +100,7 @@ class GymElectricMotorAdapter(gc.GemController):
             self._controller.tune(env, env_id, **kwargs)
 
     def reset(self):
+        """Reset all stages of the controller."""
         self._input_stage.reset()
         self._controller.reset()
         self._output_stage.reset()

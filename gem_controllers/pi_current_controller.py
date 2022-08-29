@@ -8,14 +8,17 @@ class PICurrentController(gc.CurrentController):
 
     @property
     def signal_names(self):
+        """Signal names of the calculated values."""
         return ['u_PI', 'u_ff', 'u_out']
 
     @property
     def transformation_stage(self):
+        """Coordinate transformation stage at the output"""
         return self._transformation_stage
 
     @property
     def current_base_controller(self) -> gc.stages.BaseController:
+        """Base controller for the current control"""
         return self._current_base_controller
 
     @current_base_controller.setter
@@ -25,6 +28,7 @@ class PICurrentController(gc.CurrentController):
 
     @property
     def emf_feedforward(self) -> gc.stages.EMFFeedforward:
+        """EMF feedforward stage of the current controller"""
         return self._emf_feedforward
 
     @emf_feedforward.setter
@@ -34,6 +38,7 @@ class PICurrentController(gc.CurrentController):
 
     @property
     def stages(self):
+        """List of the stages up to the current controller"""
         stages_ = [self._current_base_controller]
         if self._decoupling:
             stages_.append(self._emf_feedforward)
@@ -44,14 +49,17 @@ class PICurrentController(gc.CurrentController):
 
     @property
     def voltage_reference(self) -> np.ndarray:
+        """Reference values for the input voltages"""
         return self._voltage_reference
 
     @property
     def clipping_stage(self):
+        """Clipping stage of the current controller"""
         return self._clipping_stage
 
     @property
     def t_n(self):
+        """Time constant of the current controller"""
         if hasattr(self._current_base_controller, 'p_gain') \
           and hasattr(self._current_base_controller, 'i_gain'):
             return self._current_base_controller.p_gain / self._current_base_controller.i_gain
@@ -60,7 +68,8 @@ class PICurrentController(gc.CurrentController):
 
     def __init__(self, env, env_id, base_current_controller='PI', decoupling=True):
         """
-        Initilizes a PI current control stage
+        Initilizes a PI current control stage.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
@@ -94,7 +103,8 @@ class PICurrentController(gc.CurrentController):
 
     def tune(self, env, env_id, a=4):
         """
-        Tune the components of the current control stage
+        Tune the components of the current control stage.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
@@ -118,13 +128,14 @@ class PICurrentController(gc.CurrentController):
 
     def current_control(self, state, current_reference):
         """
-        Calculate the input voltages
+        Calculate the input voltages.
+
         Args:
-            state(np.array): actual state of the environment
-            current_reference(np.array): actual current references
+            state(np.array): state of the environment
+            current_reference(np.array): current references
 
         Returns:
-            voltage_reference(np.array)
+            np.array: voltage references
         """
 
         # Calculate the voltage reference by the base controllers
@@ -151,7 +162,17 @@ class PICurrentController(gc.CurrentController):
         return voltage_reference
 
     def control(self, state, reference):
-        """Claculate the input voltages"""
+        """
+        Claculate the reference values for the input voltages.
+
+        Args:
+            state(np.array): actual state of the environment
+            reference(np.array): current references
+
+        Returns:
+            np.ndarray: voltage references
+        """
+
         self._voltage_reference = self.current_control(state, reference)
         return self._voltage_reference
 

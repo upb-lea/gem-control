@@ -6,7 +6,8 @@ class CascadedController(gc.GemController):
 
     def control(self, state, reference):
         """
-        The function iterates through all the stages to calculate the action
+        The function iterates through all the stages to calculate the action.
+
         Args:
             state(np.array): Array that contains the actual state of the environment
             reference(np.array): Array that contains the actual references of the referenced states
