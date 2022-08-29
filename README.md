@@ -1,8 +1,7 @@
 # GEM Control
 
 [**Overview**](#overview)
-| [**Quickstart**](#getting-started)
-| [**Examples**](#examples)
+| [**Getting Started**](#getting-started)
 | [**Installation**](#installation)
 
 ## Overview
