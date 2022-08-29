@@ -1,5 +1,10 @@
 # GEM Control
 
+[**Overview**](#overview)
+| [**Quickstart**](#getting-started)
+| [**Examples**](#examples)
+| [**Installation**](#installation)
+
 ## Overview
 This repository will contain controllers for the [gym-electric-motor](https://upb-lea.github.io/gym-electric-motor/) environments.
 The following motors are supported:
