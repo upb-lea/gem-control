@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gem_controllers.utils &mdash; gem-control 2021 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> gem-control
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../parts/read_me.html">Readme File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parts/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parts/usage_guide/usage_guides.html">Usage Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parts/api_documentation/gem_control.html">GEM Control API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gem-control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>gem_controllers.utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gem_controllers.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">gym_electric_motor.physical_systems.converters</span> <span class="k">as</span> <span class="nn">cv</span>
+
+
+<span class="k">def</span> <span class="nf">non_parameterized</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Component not parameterized. Call the tune() function before the first control cycle.&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="disc_converter_actions"><a class="viewcode-back" href="../../parts/api_documentation/utils.html#gem_controllers.utils.disc_converter_actions">[docs]</a><span class="k">def</span> <span class="nf">disc_converter_actions</span><span class="p">(</span><span class="n">converter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates the high, idle and low switching actions for each from a given finite converter for each</span>
+<span class="sd">    of the converters output voltages.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        converter(PowerElectronicConverter): The converter to read the switching levels from.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        high_action(np.ndarray): The high switching actions</span>
+<span class="sd">        idle_action(np.ndarray): The idle switching actions</span>
+<span class="sd">        low_action(np.ndarray): The low switching actions</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">converter</span><span class="p">)</span> <span class="ow">is</span> <span class="n">cv</span><span class="o">.</span><span class="n">FiniteMultiConverter</span><span class="p">:</span>
+        <span class="n">high_actions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">idle_actions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">low_actions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">subconverter</span> <span class="ow">in</span> <span class="n">converter</span><span class="o">.</span><span class="n">subconverters</span><span class="p">:</span>
+            <span class="n">high_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_converter_actions</span><span class="p">[</span><span class="n">subconverter</span><span class="p">])</span></div>
+
+
+<span class="n">_converter_actions</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">cv</span><span class="o">.</span><span class="n">FiniteOneQuadrantConverter</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]]),</span>
+    <span class="n">cv</span><span class="o">.</span><span class="n">FiniteTwoQuadrantConverter</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">]]),</span>
+    <span class="n">cv</span><span class="o">.</span><span class="n">FiniteFourQuadrantConverter</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">]]),</span>
+    <span class="n">cv</span><span class="o">.</span><span class="n">FiniteB6BridgeConverter</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">split_env_id</span><span class="p">(</span><span class="n">env_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">env_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">get_action_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">split_env_id</span><span class="p">(</span><span class="n">env_id</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">get_control_task</span><span class="p">(</span><span class="n">env_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">split_env_id</span><span class="p">(</span><span class="n">env_id</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">split_env_id</span><span class="p">(</span><span class="n">env_id</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Felix Book,  Barnabas Haucke-Korber, Maximilian Schenke, Arne Traue, Oliver Wallscheid.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

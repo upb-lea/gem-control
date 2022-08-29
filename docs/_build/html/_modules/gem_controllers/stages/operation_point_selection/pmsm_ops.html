@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gem_controllers.stages.operation_point_selection.pmsm_ops &mdash; gem-control 2021 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> gem-control
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../parts/read_me.html">Readme File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../parts/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../parts/usage_guide/usage_guides.html">Usage Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../parts/api_documentation/gem_control.html">GEM Control API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">gem-control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>gem_controllers.stages.operation_point_selection.pmsm_ops</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gem_controllers.stages.operation_point_selection.pmsm_ops</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">gym_electric_motor</span> <span class="k">as</span> <span class="nn">gem</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.interpolate</span> <span class="k">as</span> <span class="nn">sp_interpolate</span>
+
+<span class="kn">from</span> <span class="nn">.foc_operation_point_selection</span> <span class="kn">import</span> <span class="n">FieldOrientedControllerOperationPointSelection</span>
+
+
+<div class="viewcode-block" id="PMSMOperationPointSelection"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection">[docs]</a><span class="k">class</span> <span class="nc">PMSMOperationPointSelection</span><span class="p">(</span><span class="n">FieldOrientedControllerOperationPointSelection</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This class represents the operation point selection of the torque controller for cascaded control of synchronous</span>
+<span class="sd">        motors.  For low speeds only the current limitation of the motor is important. The current vector to set a</span>
+<span class="sd">        desired torque is selected so that the  amount of the current vector is minimum (Maximum Torque per Current).</span>
+<span class="sd">        For higher speeds, the voltage limitation of the synchronous motor or the actuator must also be taken into</span>
+<span class="sd">        account. This is done by converting the available voltage to a speed-dependent maximum flux. An additional</span>
+<span class="sd">        modulation controller is used for the flux control. By limiting the flux and the maximum torque per flux (MTPF),</span>
+<span class="sd">        an operating point for the flux and the torque is obtained. This is then converted into a current operating</span>
+<span class="sd">        point. The conversion can be done by different methods (parameter torque_control). On the one hand, maps can be</span>
+<span class="sd">        determined in advance by interpolation or analytically, or the analytical determination can be done online.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">torque_control</span><span class="o">=</span><span class="s1">&#39;online&#39;</span><span class="p">,</span> <span class="n">max_modulation_level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+            <span class="n">modulation_damping</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.2</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            torque_control(str): Methode for the operation point selection.</span>
+<span class="sd">            max_modulation_level(float): Maximum value for the modulation controller.</span>
+<span class="sd">            modulation_damping(float): Damping of the gain of the modulation controller.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">max_modulation_level</span><span class="p">,</span> <span class="n">modulation_damping</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">torque_control_type</span> <span class="o">=</span> <span class="n">torque_control</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_max</span> <span class="o">=</span> <span class="n">max_modulation_level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i_count</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_torque</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invert</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="PMSMOperationPointSelection._get_mtpc_lookup_table"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection._get_mtpc_lookup_table">[docs]</a>    <span class="k">def</span> <span class="nf">_get_mtpc_lookup_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the lookup tables, that maps a pair of torque and flux on a current operation point.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">i_q_</span><span class="p">(</span><span class="n">i_d__</span><span class="p">,</span> <span class="n">torque_</span><span class="p">,</span> <span class="n">controller</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">torque_</span> <span class="o">/</span> <span class="p">(</span><span class="n">i_d__</span> <span class="o">*</span> <span class="p">(</span><span class="n">controller</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="n">controller</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">+</span> <span class="n">controller</span><span class="o">.</span><span class="n">psi_p</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.5</span> <span class="o">*</span> <span class="n">controller</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">i_d_</span><span class="p">(</span><span class="n">i_q__</span><span class="p">,</span> <span class="n">torque_</span><span class="p">,</span> <span class="n">controller</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">torque_</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.5</span> <span class="o">*</span> <span class="n">controller</span><span class="o">.</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">controller</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="n">controller</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">*</span> <span class="n">i_q__</span><span class="p">))</span>
+
+        <span class="c1"># calculate the maximum reference</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_torque</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="mf">1.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">i_sd_limit</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_sq_limit</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">torque_idx</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">torque</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">max_torque</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_torque</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_count</span><span class="p">)</span>
+        <span class="n">characteristic</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">torque</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">:</span>
+                    <span class="n">i_d</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">i_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">i_sd_idx</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_count</span><span class="p">)</span>
+                <span class="n">i_q</span> <span class="o">=</span> <span class="n">i_q_</span><span class="p">(</span><span class="n">i_d</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">i_sq_idx</span><span class="p">],</span> <span class="mf">2.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">i_sq_idx</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_count</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">:</span>
+                    <span class="n">i_d</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">i_d</span> <span class="o">=</span> <span class="n">i_d_</span><span class="p">(</span><span class="n">i_q</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+            <span class="c1"># Different current vectors are determined for each reference and the smallest magnitude is selected</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">i_d</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">i_q</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">min_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">i</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">:</span>
+                <span class="n">i_q_ret</span> <span class="o">=</span> <span class="n">i_q</span>
+                <span class="n">i_d_ret</span> <span class="o">=</span> <span class="n">i_d</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i_q_ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">i_q</span><span class="p">[</span><span class="n">min_idx</span><span class="p">])</span>
+                <span class="n">i_d_ret</span> <span class="o">=</span> <span class="n">i_d</span><span class="p">[</span><span class="n">min_idx</span><span class="p">]</span>
+
+            <span class="c1"># The flow is finally calculated from the currents</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">*</span> <span class="n">i_d_ret</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">*</span> <span class="n">i_q_ret</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">characteristic</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">t</span><span class="p">,</span> <span class="n">i_d_ret</span><span class="p">,</span> <span class="n">i_q_ret</span><span class="p">,</span> <span class="n">psi</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">characteristic</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PMSMOperationPointSelection._get_mtpf_lookup_table"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection._get_mtpf_lookup_table">[docs]</a>    <span class="k">def</span> <span class="nf">_get_mtpf_lookup_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the lookup table that maps a flux on a maximum torque.&quot;&quot;&quot;</span>
+
+        <span class="c1"># maximum flux is calculated</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_max_mtpf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_sd_limit</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_sq_limit</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_max_mtpf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_count</span><span class="p">)</span>
+        <span class="n">i_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">i_sd_limit</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_count</span><span class="p">)</span>
+        <span class="n">i_d_best</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">i_q_best</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">psi_i_d_q</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Iterates through all flux values to determine the maximum reference</span>
+        <span class="k">for</span> <span class="n">psi_</span> <span class="ow">in</span> <span class="n">psi</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">psi_</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">i_d_</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span>
+                <span class="n">i_q</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">psi_i_d_q</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">psi_</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">i_d_</span><span class="p">,</span> <span class="n">i_q</span><span class="p">])</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">i_q_best</span> <span class="o">=</span> <span class="n">psi_</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="n">i_d_best</span> <span class="o">=</span> <span class="o">-</span><span class="n">i_q_best</span>
+                    <span class="n">t</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">*</span> <span class="n">i_d_best</span><span class="p">)</span> <span class="o">*</span> <span class="n">i_q_best</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">i_d_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">psi_</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">*</span> <span class="n">i_d</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="n">i_d_</span> <span class="o">=</span> <span class="n">i_d</span><span class="p">[</span><span class="n">i_d_idx</span><span class="p">]</span>
+
+                    <span class="c1"># calculate all possible i_q currents for i_d currents</span>
+                    <span class="n">i_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">psi_</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">*</span> <span class="n">i_d_</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span>
+                    <span class="n">i_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">i_q</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_sq_limit</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span>
+                        <span class="n">i_d_</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_sd_limit</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">i_d_</span> <span class="o">=</span> <span class="n">i_d_</span><span class="p">[</span><span class="n">i_idx</span><span class="p">]</span>
+                    <span class="n">i_q</span> <span class="o">=</span> <span class="n">i_q</span><span class="p">[</span><span class="n">i_idx</span><span class="p">]</span>
+                    <span class="n">torque</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">*</span> <span class="n">i_d_</span><span class="p">)</span> <span class="o">*</span> <span class="n">i_q</span>
+
+                    <span class="c1"># choose the maximum reference</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">torque</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">torque</span><span class="p">)</span>
+                        <span class="n">i_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">torque</span> <span class="o">==</span> <span class="n">t</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">i_d_best</span> <span class="o">=</span> <span class="n">i_d_</span><span class="p">[</span><span class="n">i_idx</span><span class="p">]</span>
+                        <span class="n">i_q_best</span> <span class="o">=</span> <span class="n">i_q</span><span class="p">[</span><span class="n">i_idx</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">i_d_best</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">i_q_best</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_sq_limit</span><span class="p">:</span>
+                    <span class="n">psi_i_d_q</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">psi_</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">i_d_best</span><span class="p">,</span> <span class="n">i_q_best</span><span class="p">])</span>
+
+        <span class="n">psi_i_d_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi_i_d_q</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_max_mtpf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">psi_i_d_q</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">psi_i_d_q_neg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">psi_i_d_q</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">psi_i_d_q</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">psi_i_d_q</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="o">-</span><span class="n">psi_i_d_q</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]]))</span>
+        <span class="n">psi_i_d_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">psi_i_d_q_neg</span><span class="p">,</span> <span class="n">psi_i_d_q</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi_i_d_q</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PMSMOperationPointSelection.tune"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection.tune">[docs]</a>    <span class="k">def</span> <span class="nf">tune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">gem</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">ElectricMotorEnvironment</span><span class="p">,</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current_safety_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tune the operation point selcetion stage.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            env(gym_electric_motor.ElectricMotorEnvironment): The environment to be controlled.</span>
+<span class="sd">            env_id(str): The id of the environment.</span>
+<span class="sd">            current_safety_margin(float): Percentage of the current margin to the current limit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">current_safety_margin</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_count</span> <span class="o">=</span> <span class="mi">250</span>      <span class="c1"># number of torque values in the lookup tables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_count</span> <span class="o">=</span> <span class="mi">250</span>    <span class="c1"># number of flux values in the lookup tables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i_count</span> <span class="o">=</span> <span class="mi">500</span>      <span class="c1"># number of current values in the lookup tables</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mp</span><span class="p">[</span><span class="s1">&#39;l_d&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mp</span><span class="p">[</span><span class="s1">&#39;l_q&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;psi_p&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invert</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
+
+        <span class="c1"># Set the parameters of the modulation controller</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_</span> <span class="o">=</span> <span class="mf">0.953</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i_gain</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mp</span><span class="p">[</span><span class="s1">&#39;l_q&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.25</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mp</span><span class="p">[</span><span class="s1">&#39;r_s&#39;</span><span class="p">]))</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_high</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_sd_limit</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_sq_limit</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_low</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_high</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrated_reset</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_low</span>  <span class="c1"># Reset value of the modulation controller</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_torque</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="mf">1.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">i_sd_idx</span><span class="p">]))</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_sq_limit</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">torque_idx</span><span class="p">])</span>
+
+        <span class="c1"># Calculate the mtpc and mtpf lookup tables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_max_mtpf</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_mtpc_lookup_table</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mtpf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_mtpf_lookup_table</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_t</span><span class="p">])</span>
+
+        <span class="c1"># Define the grid for the currents</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i_q_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">i_sq_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_sq_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_count</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i_d_max</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i_sq_limit</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i_q_max</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">i_count_mgrid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_count</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span>
+        <span class="n">i_d</span><span class="p">,</span> <span class="n">i_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span>
+            <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">i_sd_idx</span><span class="p">]:</span> <span class="mi">0</span><span class="p">:</span> <span class="n">i_count_mgrid</span><span class="p">,</span>
+            <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">i_sq_idx</span><span class="p">]:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">i_sq_idx</span><span class="p">]:</span> <span class="n">i_count_mgrid</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="p">]</span>
+        <span class="n">i_d</span> <span class="o">=</span> <span class="n">i_d</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">i_q</span> <span class="o">=</span> <span class="n">i_q</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="c1"># Calculate the possible combinations of i_sd and i_sq</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="n">i_d</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="n">i_d</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">i_q</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="n">i_d</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">i_d</span> <span class="o">=</span> <span class="n">i_d</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">i_q</span> <span class="o">=</span> <span class="n">i_q</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="c1"># Calculate the corresponding torques and fluxes</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">*</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">*</span> <span class="n">i_d</span><span class="p">)</span> <span class="o">*</span> <span class="n">i_q</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">*</span> <span class="n">i_d</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">*</span> <span class="n">i_q</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+
+        <span class="c1"># Calculate the lookup table that maps the torque and flux on a current operation point</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">torque_control_type</span> <span class="o">==</span> <span class="s1">&#39;analytical&#39;</span><span class="p">:</span>
+            <span class="c1"># Calculate the lookup table by solving the equations analyticaly</span>
+
+            <span class="c1"># Solve the equations for every point in the grid of torques and fluxes</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">psi</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_count</span><span class="p">):</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">T</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_count</span><span class="p">):</span>
+                    <span class="n">i_d_</span><span class="p">,</span> <span class="n">i_q_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_analytical</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">psi</span><span class="p">)</span>
+                    <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">T</span><span class="p">,</span> <span class="n">psi</span><span class="p">,</span> <span class="n">i_d_</span><span class="p">,</span> <span class="n">i_q_</span><span class="p">])</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_grid</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">psi_grid</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">i_d_inter</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">i_q_inter</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">torque_control_type</span> <span class="o">==</span> <span class="s1">&#39;interpolate&#39;</span><span class="p">:</span>
+            <span class="c1"># Calculate the lookup table by interpolation</span>
+
+            <span class="c1"># Define the grid for the torque and fluxes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_grid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">t</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">t</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_count</span><span class="p">),</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">psi_min</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_max</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_count</span><span class="p">)]</span>
+
+            <span class="c1"># Interpolate the functions</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">i_q_inter</span> <span class="o">=</span> <span class="n">sp_interpolate</span><span class="o">.</span><span class="n">griddata</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">psi</span><span class="p">),</span> <span class="n">i_q</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_grid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_grid</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">i_d_inter</span> <span class="o">=</span> <span class="n">sp_interpolate</span><span class="o">.</span><span class="n">griddata</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">psi</span><span class="p">),</span> <span class="n">i_d</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_grid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_grid</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">torque_control_type</span> <span class="o">!=</span> <span class="s1">&#39;online&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="PMSMOperationPointSelection.solve_analytical"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection.solve_analytical">[docs]</a>    <span class="k">def</span> <span class="nf">solve_analytical</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">torque</span><span class="p">,</span> <span class="n">psi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">           Assuming linear magnetization characteristics, the optimal currents for given reference and flux can be obtained</span>
+<span class="sd">           by solving the reference and flux equations. These lead to a fourth degree polynomial which can be solved</span>
+<span class="sd">           analytically.  There are two ways to use this analytical solution for control. On the one hand, the currents</span>
+<span class="sd">           can be determined in advance as in the case of interpolation for different torques and fluxes and stored in a</span>
+<span class="sd">           LUT (torque_control=&#39;analytical&#39;). On the other hand, the solution can be calculated at runtime with the</span>
+<span class="sd">           given reference and flux (torque_control=&#39;online&#39;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">poly</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
+
+            <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span>
+            <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span>
+            <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">psi</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
+
+            <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">**</span> <span class="mi">3</span>
+            <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">psi</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">),</span>
+
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">psi</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_q</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">torque</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">]</span>
+
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roots</span><span class="p">(</span><span class="n">poly</span><span class="p">)</span>    <span class="c1"># Solve the equation</span>
+        <span class="n">i_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># Select the correct solution for the i_sd current</span>
+        <span class="n">i_q</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">torque</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_p</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_q</span><span class="p">)</span> <span class="o">*</span> <span class="n">i_d</span><span class="p">))</span>    <span class="c1"># Calculate the i_sq current</span>
+        <span class="k">return</span> <span class="n">i_d</span><span class="p">,</span> <span class="n">i_q</span></div>
+
+<div class="viewcode-block" id="PMSMOperationPointSelection._get_i_d_q"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection._get_i_d_q">[docs]</a>    <span class="k">def</span> <span class="nf">_get_i_d_q</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">torque</span><span class="p">,</span> <span class="n">psi</span><span class="p">,</span> <span class="n">psi_idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the i_d and i_q current from the mtpc lut&quot;&quot;&quot;</span>
+
+        <span class="n">i_d</span><span class="p">,</span> <span class="n">i_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_analytical</span><span class="p">(</span><span class="n">torque</span><span class="p">,</span> <span class="n">psi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i_d</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span><span class="p">[</span><span class="n">psi_idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="n">i_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span><span class="p">[</span><span class="n">psi_idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">i_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span><span class="p">[</span><span class="n">psi_idx</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">i_d</span><span class="p">,</span> <span class="n">i_q</span></div>
+
+<div class="viewcode-block" id="PMSMOperationPointSelection._get_t_idx"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection._get_t_idx">[docs]</a>    <span class="k">def</span> <span class="nf">_get_t_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">torque</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the index of the torque.&quot;&quot;&quot;</span>
+        <span class="n">torque</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">torque</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_max</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="n">torque</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_min</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="PMSMOperationPointSelection._get_psi_idx"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection._get_psi_idx">[docs]</a>    <span class="k">def</span> <span class="nf">_get_psi_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">psi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the index of the flux.&quot;&quot;&quot;</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">psi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_max</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="n">psi</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_min</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="PMSMOperationPointSelection._get_psi_idx_mtpf"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection._get_psi_idx_mtpf">[docs]</a>    <span class="k">def</span> <span class="nf">_get_psi_idx_mtpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">psi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the index of the flux of the mtpf lookup table.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="nb">round</span><span class="p">(</span><span class="n">psi</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_max_mtpf</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))),</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi_count</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PMSMOperationPointSelection._get_t_idx_mtpc"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection._get_t_idx_mtpc">[docs]</a>    <span class="k">def</span> <span class="nf">_get_t_idx_mtpc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">torque</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the index of the torque of the mtpc lookup table.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="n">torque</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_torque</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_torque</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))),</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_count</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PMSMOperationPointSelection._select_operating_point"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection._select_operating_point">[docs]</a>    <span class="k">def</span> <span class="nf">_select_operating_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            This main method is called by the CascadedFieldOrientedController to calculate reference values for the i_d</span>
+<span class="sd">            and i_q currents from a given reference reference.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># get the optimal psi for a given reference from the mtpc characteristic</span>
+        <span class="n">psi_idx_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_t_idx_mtpc</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>
+        <span class="n">psi_opt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span><span class="p">[</span><span class="n">psi_idx_</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+
+        <span class="c1"># limit the flux to keep the voltage limit using the modulation controller</span>
+        <span class="n">psi_max_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulation_control</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">psi_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">psi_opt</span><span class="p">,</span> <span class="n">psi_max_</span><span class="p">)</span>
+
+        <span class="c1"># get the maximum reference for a given flux from the mtpf characteristic</span>
+        <span class="n">psi_max_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_psi_idx_mtpf</span><span class="p">(</span><span class="n">psi_max</span><span class="p">)</span>
+        <span class="n">t_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mtpf</span><span class="p">[</span><span class="n">psi_max_idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">t_max</span><span class="p">:</span>
+            <span class="n">reference</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span> <span class="o">*</span> <span class="n">t_max</span>
+
+        <span class="c1"># calculate the currents online</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">torque_control_type</span> <span class="o">==</span> <span class="s1">&#39;online&#39;</span><span class="p">:</span>
+            <span class="n">i_d</span><span class="p">,</span> <span class="n">i_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_i_d_q</span><span class="p">(</span><span class="n">reference</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">psi_max</span><span class="p">,</span> <span class="n">psi_idx_</span><span class="p">)</span>
+
+        <span class="c1"># get the currents from a LUT</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">t_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_t_idx</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>
+            <span class="n">psi_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_psi_idx</span><span class="p">(</span><span class="n">psi_max</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_d_inter</span><span class="p">[</span><span class="n">t_idx</span><span class="p">,</span> <span class="n">psi_idx</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpf</span><span class="p">[</span><span class="n">psi_max_idx</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+                <span class="n">i_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpf</span><span class="p">[</span><span class="n">psi_max_idx</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+                <span class="n">i_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">reference</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mtpf</span><span class="p">[</span><span class="n">psi_max_idx</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+                <span class="n">reference</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">reference</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">t_max</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_d_inter</span><span class="p">[</span><span class="n">t_idx</span><span class="p">,</span> <span class="n">psi_idx</span><span class="p">]</span>
+                <span class="n">i_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_q_inter</span><span class="p">[</span><span class="n">t_idx</span><span class="p">,</span> <span class="n">psi_idx</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">i_d</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span><span class="p">[</span><span class="n">psi_idx_</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">i_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span><span class="p">[</span><span class="n">psi_idx_</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="n">i_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">reference</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span><span class="p">[</span><span class="n">psi_idx_</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+
+        <span class="c1"># ensure that the mtpf characteristic curve is observed</span>
+        <span class="k">if</span> <span class="n">i_d</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpf</span><span class="p">[</span><span class="n">psi_max_idx</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+            <span class="n">i_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpf</span><span class="p">[</span><span class="n">psi_max_idx</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+            <span class="n">i_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">reference</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mtpf</span><span class="p">[</span><span class="n">psi_max_idx</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+        <span class="c1"># invert the i_q if necessary</span>
+        <span class="n">i_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">invert</span> <span class="o">*</span> <span class="n">i_q</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i_d</span><span class="p">,</span> <span class="n">i_q</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="PMSMOperationPointSelection.reset"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset the PMSM operation point selection&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Felix Book,  Barnabas Haucke-Korber, Maximilian Schenke, Arne Traue, Oliver Wallscheid.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

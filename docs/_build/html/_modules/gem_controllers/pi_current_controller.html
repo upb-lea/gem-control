@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gem_controllers.pi_current_controller &mdash; gem-control 2021 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> gem-control
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../parts/read_me.html">Readme File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parts/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parts/usage_guide/usage_guides.html">Usage Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parts/api_documentation/gem_control.html">GEM Control API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gem-control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>gem_controllers.pi_current_controller</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gem_controllers.pi_current_controller</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">gem_controllers</span> <span class="k">as</span> <span class="nn">gc</span>
+
+
+<div class="viewcode-block" id="PICurrentController"><a class="viewcode-back" href="../../parts/api_documentation/pi_current_controller.html#gem_controllers.pi_current_controller.PICurrentController">[docs]</a><span class="k">class</span> <span class="nc">PICurrentController</span><span class="p">(</span><span class="n">gc</span><span class="o">.</span><span class="n">CurrentController</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class forms the PI Current controller, for any motor.&quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">signal_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Signal names of the calculated values.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;u_PI&#39;</span><span class="p">,</span> <span class="s1">&#39;u_ff&#39;</span><span class="p">,</span> <span class="s1">&#39;u_out&#39;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transformation_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Coordinate transformation stage at the output&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transformation_stage</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_base_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">BaseController</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Base controller for the current control&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span>
+
+    <span class="nd">@current_base_controller</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">current_base_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">BaseController</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">BaseController</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">emf_feedforward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">EMFFeedforward</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;EMF feedforward stage of the current controller&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emf_feedforward</span>
+
+    <span class="nd">@emf_feedforward</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">emf_feedforward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">EMFFeedforward</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">EMFFeedforward</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emf_feedforward</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List of the stages up to the current controller&quot;&quot;&quot;</span>
+        <span class="n">stages_</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decoupling</span><span class="p">:</span>
+            <span class="n">stages_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_emf_feedforward</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_transformation_required</span><span class="p">:</span>
+            <span class="n">stages_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transformation_stage</span><span class="p">)</span>
+        <span class="n">stages_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">stages_</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">voltage_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reference values for the input voltages&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_voltage_reference</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">clipping_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clipping stage of the current controller&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">t_n</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Time constant of the current controller&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span><span class="p">,</span> <span class="s1">&#39;p_gain&#39;</span><span class="p">)</span> \
+          <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span><span class="p">,</span> <span class="s1">&#39;i_gain&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span><span class="o">.</span><span class="n">p_gain</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span><span class="o">.</span><span class="n">i_gain</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tau_current_loop</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">base_current_controller</span><span class="o">=</span><span class="s1">&#39;PI&#39;</span><span class="p">,</span> <span class="n">decoupling</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initilizes a PI current control stage.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>
+<span class="sd">            env_id(str): The corresponding environment-id to specify the concrete environment.</span>
+<span class="sd">            base_current_controller(str): Selection which base controller should be used for the current control stage.</span>
+<span class="sd">            decoupling(bool): Flag, if a EMF-Feedforward correction stage should be used in the pi current controller.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emf_feedforward</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transformation_stage</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tau_current_loop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_transformation_required</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_decoupling</span> <span class="o">=</span> <span class="n">decoupling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_voltage_reference</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transformation_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">AbcTransformation</span><span class="p">()</span>
+
+        <span class="c1"># Choose the emf feedforward function</span>
+        <span class="k">if</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">gc</span><span class="o">.</span><span class="n">parameter_reader</span><span class="o">.</span><span class="n">induction_motors</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_emf_feedforward</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">EMFFeedforwardInd</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_emf_feedforward</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">EMFFeedforward</span><span class="p">()</span>
+
+        <span class="c1"># Choose the clipping function</span>
+        <span class="k">if</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">gc</span><span class="o">.</span><span class="n">parameter_reader</span><span class="o">.</span><span class="n">ac_motors</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">clipping_stages</span><span class="o">.</span><span class="n">SquaredClippingStage</span><span class="p">(</span><span class="s1">&#39;CC&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">clipping_stages</span><span class="o">.</span><span class="n">AbsoluteClippingStage</span><span class="p">(</span><span class="s1">&#39;CC&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_anti_windup_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">AntiWindup</span><span class="p">(</span><span class="s1">&#39;CC&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">base_controllers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">base_current_controller</span><span class="p">)(</span><span class="s1">&#39;CC&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PICurrentController.tune"><a class="viewcode-back" href="../../parts/api_documentation/pi_current_controller.html#gem_controllers.pi_current_controller.PICurrentController.tune">[docs]</a>    <span class="k">def</span> <span class="nf">tune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tune the components of the current control stage.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>
+<span class="sd">            env_id(str): The corresponding environment-id to specify the concrete environment.</span>
+<span class="sd">            a(float): Design parameter of the symmetric optimum for the base controllers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">action_type</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_action_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span>
+        <span class="n">motor_type</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">action_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Finite&#39;</span><span class="p">,</span> <span class="s1">&#39;Cont&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">motor_type</span> <span class="ow">in</span> <span class="n">gc</span><span class="o">.</span><span class="n">parameter_reader</span><span class="o">.</span><span class="n">ac_motors</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_transformation_required</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_transformation_required</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_transformation_stage</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emf_feedforward</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_anti_windup_stage</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_voltage_reference</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">gc</span><span class="o">.</span><span class="n">parameter_reader</span><span class="o">.</span><span class="n">voltages</span><span class="p">[</span><span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)]),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tau_current_loop</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">parameter_reader</span><span class="o">.</span><span class="n">tau_current_loop_reader</span><span class="p">[</span><span class="n">motor_type</span><span class="p">](</span><span class="n">env</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PICurrentController.current_control"><a class="viewcode-back" href="../../parts/api_documentation/pi_current_controller.html#gem_controllers.pi_current_controller.PICurrentController.current_control">[docs]</a>    <span class="k">def</span> <span class="nf">current_control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">current_reference</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the input voltages.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state(np.array): state of the environment</span>
+<span class="sd">            current_reference(np.array): current references</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.array: voltage references</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Calculate the voltage reference by the base controllers</span>
+        <span class="n">voltage_reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">current_reference</span><span class="p">)</span>
+
+        <span class="c1"># Decouple the voltage components</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decoupling</span><span class="p">:</span>
+            <span class="n">voltage_reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emf_feedforward</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">voltage_reference</span><span class="p">)</span>
+
+        <span class="c1"># Clip the voltage inputs to the action space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_voltage_reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">voltage_reference</span><span class="p">)</span>
+
+        <span class="c1"># Transform the voltages in the correct coordinate system</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_transformation_required</span><span class="p">:</span>
+            <span class="n">voltage_reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transformation_stage</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">voltage_reference</span><span class="p">)</span>
+
+        <span class="c1"># Integrate the I-Controllers</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span><span class="p">,</span> <span class="s1">&#39;integrator&#39;</span><span class="p">):</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_anti_windup_stage</span><span class="p">(</span>
+                <span class="n">state</span><span class="p">,</span> <span class="n">current_reference</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span><span class="o">.</span><span class="n">clipping_difference</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span><span class="o">.</span><span class="n">integrator</span> <span class="o">+=</span> <span class="n">delta</span>
+
+        <span class="k">return</span> <span class="n">voltage_reference</span></div>
+
+<div class="viewcode-block" id="PICurrentController.control"><a class="viewcode-back" href="../../parts/api_documentation/pi_current_controller.html#gem_controllers.pi_current_controller.PICurrentController.control">[docs]</a>    <span class="k">def</span> <span class="nf">control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Claculate the reference values for the input voltages.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state(np.array): actual state of the environment</span>
+<span class="sd">            reference(np.array): current references</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: voltage references</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_voltage_reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_control</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_voltage_reference</span></div>
+
+<div class="viewcode-block" id="PICurrentController.reset"><a class="viewcode-back" href="../../parts/api_documentation/pi_current_controller.html#gem_controllers.pi_current_controller.PICurrentController.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset all components of the stage&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stages</span><span class="p">:</span>
+            <span class="n">stage</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Felix Book,  Barnabas Haucke-Korber, Maximilian Schenke, Arne Traue, Oliver Wallscheid.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
