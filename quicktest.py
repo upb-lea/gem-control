@@ -1,7 +1,7 @@
 import gym_electric_motor as gem
 import gem_controllers as gc
 ode_solver = gem.physical_systems.ScipyOde(integrator='dopri5', atol=0.01)
-env_id = 'AbcCont-CC-SynRM-v0'
+env_id = 'Cont-CC-PMSM-v0'
 env = gem.make(env_id, ode_solver=ode_solver)
 c = gc.GemController.make(
     env,
