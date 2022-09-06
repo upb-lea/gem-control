@@ -1,9 +1,9 @@
 from control_block_diagram import ControllerDiagram
 from control_block_diagram.components import Point, Connection
 from .stage_blocks import ext_ex_dc_cc, ext_ex_dc_ops, ext_ex_dc_output, perm_ex_dc_cc, perm_ex_dc_ops,\
-    perm_ex_dc_output, pi_current_controller, pi_speed_controller, pmsm_cc, pmsm_ops, pmsm_output, scim_cc, scim_ops,\
+    perm_ex_dc_output, pi_speed_controller, pmsm_cc, pmsm_ops, pmsm_output, scim_cc, scim_ops,\
     scim_output, series_dc_cc, series_dc_ops, series_dc_output, shunt_dc_cc, shunt_dc_ops, shunt_dc_output,\
-    torque_controller, pmsm_speed_controller, scim_speed_controller
+    pmsm_speed_controller, scim_speed_controller
 import gem_controllers as gc
 
 
@@ -112,8 +112,6 @@ build_functions = {
     'PI_Speed_Controller': pi_speed_controller,
     'PMSM_Speed_Controller': pmsm_speed_controller,
     'SCIM_Speed_Controller': scim_speed_controller,
-    'Torque_Controller': torque_controller,
-    'PI_Current_Controller': pi_current_controller,
     'PMSM_OPS': pmsm_ops,
     'SCIM_OPS': scim_ops,
     'SeriesDc_OPS': series_dc_ops,
