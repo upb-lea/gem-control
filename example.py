@@ -1,12 +1,14 @@
 import gym_electric_motor as gem
 import gem_controllers as gc
+from gym_electric_motor.physical_system_wrappers import FluxObserver
 
 
 if __name__ == '__main__':
 
-    env_id = 'Cont-CC-ExtExDc-v0'
+    env_id = 'Cont-TC-SCIM-v0'
     env = gem.make(
             env_id,
+            physical_system_wrappers=(FluxObserver(),)
         )
 
     state, reference = env.reset()

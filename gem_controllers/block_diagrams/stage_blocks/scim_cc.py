@@ -1,5 +1,5 @@
 from control_block_diagram.components import Box, Connection, Text, Point, Circle
-from control_block_diagram.predefined_components import Add, PIController, Limit, DqToAlphaBetaTransformation,\
+from control_block_diagram.predefined_components import Add, PIController, Limit, DqToAbcTransformation,\
     AbcToAlphaBetaTransformation, AlphaBetaToDqTransformation
 
 
@@ -57,30 +57,30 @@ def scim_cc(emf_feedforward):
         Connection.connect(pi_i_sq.output_right[0], add_u_sq.input_left[0], text=r'$\Delta u^{*}_{\mathrm{sq}}$',
                            distance_y=0.4, move_text=(0.25, 0))
 
-        # Coordinate transformation from DQ to AlphaBeta coordinates
-        dq_to_alpha_beta = DqToAlphaBetaTransformation(Point.get_mid(add_u_sd.position, add_u_sq.position).add_x(2),
-                                                       input_space=1)
+        # Coordinate transformation from DQ to Abc coordinates
+        dq_to_abc = DqToAbcTransformation(Point.get_mid(add_u_sd.position, add_u_sq.position).add_x(2),
+                                          input_space=1)
 
         # Connections between the add blocks and the coordinate transformation
-        Connection.connect(add_u_sd.output_right[0], dq_to_alpha_beta.input_left[0], text=r'$u^{*}_{\mathrm{sd}}$',
+        Connection.connect(add_u_sd.output_right[0], dq_to_abc.input_left[0], text=r'$u^{*}_{\mathrm{sd}}$',
                            distance_y=0.28)
-        Connection.connect(add_u_sq.output_right[0], dq_to_alpha_beta.input_left[1], text=r'$u^{*}_{\mathrm{sq}}$',
+        Connection.connect(add_u_sq.output_right[0], dq_to_abc.input_left[1], text=r'$u^{*}_{\mathrm{sq}}$',
                            distance_y=0.28, move_text=(0.4, 0))
 
         # Limit of the input voltages
-        limit = Limit(dq_to_alpha_beta.position.add_x(2.5), size=(1.5, 1.5), inputs=dict(left=2, left_space=0.6),
-                      outputs=dict(right=2, right_space=0.6))
+        limit = Limit(dq_to_abc.position.add_x(2.2), size=(1.5, 1.5), inputs=dict(left=3, left_space=0.3),
+                      outputs=dict(right=3, right_space=0.3))
 
         # Connection between the coordinate transformation and the limit block
-        Connection.connect(dq_to_alpha_beta.output_right, limit.input_left)
+        Connection.connect(dq_to_abc.output_right, limit.input_left)
 
         # Pulse width modulation block
-        pwm = Box(limit.position.add_x(2.5), size=(1.5, 1.2), text='PWM', inputs=dict(left=2, left_space=0.6),
+        pwm = Box(limit.position.add_x(2.8), size=(1.5, 1.2), text='PWM', inputs=dict(left=3, left_space=0.3),
                   outputs=dict(right=3, right_space=0.3))
 
         # Connection between the limit and the PWM block
         Connection.connect(limit.output_right, pwm.input_left,
-                           text=[r'$u^*_{\mathrm{s} \upalpha}$', r'$u^*_{\mathrm{s} \upbeta}$'], distance_y=0.25)
+                           text=[r'$u^*_{\mathrm{s a,b,c}}$', '', ''], distance_y=0.25)
 
         # Coordinate transformation from ABC to AlphaBeta coordinates
         abc_to_alpha_beta = AbcToAlphaBetaTransformation(pwm.position.sub(1, 3), input='right', output='left')
@@ -98,7 +98,7 @@ def scim_cc(emf_feedforward):
 
         # Coordinate transformation from AlphaBeta to DQ coordinates
         alpha_beta_to_dq = AlphaBetaToDqTransformation(
-            Point.merge(dq_to_alpha_beta.position, abc_to_alpha_beta.position), input='right', output='left')
+            Point.merge(dq_to_abc.position, abc_to_alpha_beta.position), input='right', output='left')
 
         # Connections between the coordinate transformation and the add blocks
         con_i_sd = Connection.connect(alpha_beta_to_dq.output_left[0], add_i_sd.input_bottom[0], text='-',
@@ -114,13 +114,13 @@ def scim_cc(emf_feedforward):
         Connection.connect(observer.output_left[0], alpha_beta_to_dq.input_bottom[0])
 
         # Texts at the outputs of the flux observer
-        Text(position=observer.output_left[0].add(-0.4, 0.3), text=r'$\angle \hat{\underline{\Psi}}_r$')
-        Text(position=observer.output_left[1].add(-0.4, -0.3), text=r'$\hat{\Psi}_r$')
+        Text(position=observer.output_left[0].add(-0.4, 0.3), text=r'$\angle \hat{\underline{\Psi}}_{\mathrm{r}}$')
+        Text(position=observer.output_left[1].add(-0.4, -0.3), text=r'$\hat{\Psi}_{\mathrm{r}}$')
 
         # Connections between the coordinate transformations
         Connection.connect(abc_to_alpha_beta.output, alpha_beta_to_dq.input_right,
                            text=[r'$i_{\mathrm{s} \upalpha}$', r'$i_{\mathrm{s} \upbeta}$'])
-        Connection.connect(alpha_beta_to_dq.output_top, dq_to_alpha_beta.input_bottom,
+        Connection.connect(alpha_beta_to_dq.output_top, dq_to_abc.input_bottom,
                            text=r'$\angle \hat{\underline{\Psi}}_r$', text_align='right')
 
         # Feedforward block

@@ -37,8 +37,8 @@ def ext_ex_dc_ops(start, control_task):
     Connection.connect(box_abs.output_right, multiply.input_left)
 
     # Block of motor parameters
-    box_rl = Box(multiply.position.add_y(1.2), size=(1.5, 0.8), text=r"$\sqrt{\frac{R_a}{R_e}}L'_e$",
-                 outputs=dict(bottom=1))
+    box_rl = Box(multiply.position.add_y(1.2), size=(1.5, 0.8),
+                 text=r"$\sqrt{\frac{R_{\mathrm{a}}}{R_{\mathrm{e}}}L'_{\mathrm{e}}$", outputs=dict(bottom=1))
 
     # Connect the motor parameters block with the multiply block
     Connection.connect(box_rl.output_bottom, multiply.input_top)
@@ -56,7 +56,7 @@ def ext_ex_dc_ops(start, control_task):
     Connection.connect(inp, divide_1.input_left[0], start_direction='south')
 
     # L_e prime block
-    box_le = Box(divide_1.input_left[1].sub_x(1), size=(0.8, 0.8), text=r"$L'_e$")
+    box_le = Box(divide_1.input_left[1].sub_x(1), size=(0.8, 0.8), text=r"$L'_{\mathrm{e}}$")
 
     # Conncet the l_e prime and division blcok
     Connection.connect(box_le.output_right[0], divide_1.input_left[1])

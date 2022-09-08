@@ -110,7 +110,7 @@ def scim_ops(start, control_task):
 
     # Connections of the add block
     Connection.connect(box_min.output_right, add_psi.input_left, text=r'$\Psi^{*}_{\mathrm{lim}}$')
-    Connection.connect(divide.output_top, add_psi.input_bottom, text=r'$\hat{\Psi}_r$')
+    Connection.connect(divide.output_top, add_psi.input_bottom, text=r'$\hat{\Psi}_{\mathrm{r}}$')
     Connection.connect(add_psi.output_right, pi_psi.input_left)
 
     # Limit the current reference values

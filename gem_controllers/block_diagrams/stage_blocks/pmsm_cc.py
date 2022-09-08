@@ -1,5 +1,5 @@
 from control_block_diagram.components import Point, Box, Connection, Circle
-from control_block_diagram.predefined_components import DqToAlphaBetaTransformation,\
+from control_block_diagram.predefined_components import DqToAlphaBetaTransformation, DqToAbcTransformation,\
      AbcToAlphaBetaTransformation, AlphaBetaToDqTransformation, Add, PIController, Multiply, Limit
 
 
@@ -57,37 +57,37 @@ def pmsm_cc(emf_feedforward):
         Connection.connect(pi_i_sq.output_right[0], add_u_sq.input_left[0], text=r'$\Delta u^{*}_{\mathrm{sq}}$',
                            distance_y=0.4, move_text=(0.25, 0))
 
-        # Coordinate transformation from DQ to AlphaBeta coordinates
-        dq_to_alpha_beta = DqToAlphaBetaTransformation(Point.get_mid(add_u_sd.position, add_u_sq.position).add_x(2),
-                                                       input_space=1)
+        # Coordinate transformation from DQ to Abc coordinates
+        dq_to_abc = DqToAbcTransformation(Point.get_mid(add_u_sd.position, add_u_sq.position).add_x(2),
+                                          input_space=1)
 
         # Connections between the add blocks and the coordinate transformation
-        Connection.connect(add_u_sd.output_right[0], dq_to_alpha_beta.input_left[0], text=r'$u^{*}_{\mathrm{sd}}$',
+        Connection.connect(add_u_sd.output_right[0], dq_to_abc.input_left[0], text=r'$u^{*}_{\mathrm{sd}}$',
                            distance_y=0.28)
-        Connection.connect(add_u_sq.output_right[0], dq_to_alpha_beta.input_left[1], text=r'$u^{*}_{\mathrm{sq}}$',
+        Connection.connect(add_u_sq.output_right[0], dq_to_abc.input_left[1], text=r'$u^{*}_{\mathrm{sq}}$',
                            distance_y=0.28, move_text=(0.4, 0))
 
         # Limit of the input voltages
-        limit = Limit(dq_to_alpha_beta.position.add_x(1.8), size=(1, 1.2), inputs=dict(left=2, left_space=0.6),
-                      outputs=dict(right=2, right_space=0.6))
+        limit = Limit(dq_to_abc.position.add_x(1.8), size=(1, 1.2), inputs=dict(left=3, left_space=0.3),
+                      outputs=dict(right=3, right_space=0.3))
 
         # Connection between the coordinate transformation and the limit block
-        Connection.connect(dq_to_alpha_beta.output_right, limit.input_left)
+        Connection.connect(dq_to_abc.output_right, limit.input_left)
 
         # Pulse width modulation block
-        pwm = Box(limit.position.add_x(2.5), size=(1.5, 1.2), text='PWM', inputs=dict(left=2, left_space=0.6),
+        pwm = Box(limit.position.add_x(2.5), size=(1.5, 1.2), text='PWM', inputs=dict(left=3, left_space=0.3),
                   outputs=dict(right=3, right_space=0.3))
 
         # Connection between the limit and the PWM block
         Connection.connect(limit.output_right, pwm.input_left,
-                           text=[r'$u^*_{\mathrm{s} \upalpha}$', r'$u^*_{\mathrm{s} \upbeta}$'], distance_y=0.25)
+                           text=[r'$u^*_{\mathrm{s a,b,c}}$', '', ''], distance_y=0.25)
 
         # Coordinate transformation from ABC to AlphaBeta coordinates
         abc_to_alpha_beta = AbcToAlphaBetaTransformation(pwm.position.sub(1, 3.5), input='right', output='left')
 
         # Coordinate transformation from AlphaBeta to DQ coordinates
         alpha_beta_to_dq = AlphaBetaToDqTransformation(
-            Point.merge(dq_to_alpha_beta.position, abc_to_alpha_beta.position), input='right', output='left')
+            Point.merge(dq_to_abc.position, abc_to_alpha_beta.position), input='right', output='left')
 
         # Distance of the blocks in the EMF Feedforward path
         distance = (add_u_sq.position.y - alpha_beta_to_dq.output_left[0].y) / 4
@@ -150,13 +150,13 @@ def pmsm_cc(emf_feedforward):
                            text=[r'$i_{\mathrm{s} \upalpha}$', r'$i_{\mathrm{s} \upbeta}$'])
 
         # Add block for the advanced angle
-        add = Add(Point.get_mid(dq_to_alpha_beta.position, alpha_beta_to_dq.position), inputs=dict(bottom=1, right=1),
+        add = Add(Point.get_mid(dq_to_abc.position, alpha_beta_to_dq.position), inputs=dict(bottom=1, right=1),
                   outputs=dict(top=1))
 
         # Connections of the add block
         Connection.connect(alpha_beta_to_dq.output_top, add.input_bottom, text=r'$\varepsilon_{\mathrm{el}}$',
                            text_align='right', move_text=(0, -0.1))
-        Connection.connect(add.output_top, dq_to_alpha_beta.input_bottom)
+        Connection.connect(add.output_top, dq_to_abc.input_bottom)
 
         # Calculate the advanced angle
         box_t_a = Box(add.position.add_x(1.5), size=(1, 0.8), text=r'$1.5 T_{\mathrm{s}}$', inputs=dict(right=1),
@@ -164,7 +164,7 @@ def pmsm_cc(emf_feedforward):
 
         # Connections of the advanced angle block
         Connection.connect(box_t_a.output, add.input_right, text=r'$\Delta \varepsilon$')
-        Connection.connect(box_t_a.input[0].add_x(0.5), box_t_a.input[0], text=r'$\omega_{el}$',
+        Connection.connect(box_t_a.input[0].add_x(0.5), box_t_a.input[0], text=r'$\omega_{\mathrm{el}}$',
                            text_position='start', text_align='right', distance_x=0.3)
 
         start = pwm.position    # starting point of the next block
