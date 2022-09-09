@@ -38,6 +38,16 @@ class TorqueController(gc.GemController):
     def t_n(self):
         return self._current_controller.t_n
 
+    @property
+    def references(self):
+        refs = self._current_controller.references
+        refs.update(dict(zip(self._referenced_currents, self._current_reference)))
+        return refs
+
+    @property
+    def referenced_states(self):
+        return np.append(self._current_controller.referenced_states, self._referenced_currents)
+
     def __init__(
             self,
             env: (gem.core.ElectricMotorEnvironment, None) = None,
@@ -62,12 +72,14 @@ class TorqueController(gc.GemController):
             else:  # motor in ac_motors
                 self._clipping_stage = gc.stages.clipping_stages.SquaredClippingStage('TC')
         self._current_reference = np.array([])
+        self._referenced_currents = np.array([])
 
     def tune(self, env, env_id, current_safety_margin=0.2, tune_current_controller=True, **kwargs):
         if tune_current_controller:
             self._current_controller.tune(env, env_id, **kwargs)
         self._clipping_stage.tune(env, env_id, margin=current_safety_margin)
         self._operation_point_selection.tune(env, env_id, current_safety_margin)
+        self._referenced_currents = gc.parameter_reader.currents[gc.utils.get_motor_type(env_id)]
 
     def torque_control(self, state, reference):
         self._current_reference = self._operation_point_selection(state, reference)

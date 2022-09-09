@@ -1,5 +1,6 @@
 import gym_electric_motor as gem
 import gem_controllers as gc
+from gym_electric_motor.visualization import MotorDashboard
 from gym_electric_motor.physical_system_wrappers import FluxObserver
 
 
@@ -9,6 +10,8 @@ env_id = 'Cont-TC-SCIM-v0'
 env = gem.make(
         env_id,
         physical_system_wrappers=(FluxObserver(),),
+        visualization=MotorDashboard(state_plots=['omega', 'torque', 'i_sd', 'i_sq', 'u_sd', 'u_sq', 'psi_angle', 'psi_abs']),
+
     )
 
 # Initialize the controller

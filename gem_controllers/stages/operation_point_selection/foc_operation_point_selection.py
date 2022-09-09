@@ -52,8 +52,8 @@ class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
         self.psi_low = None     # minimum delta flux
         self.integrated_reset = None    # reset value integrated flux
 
-    def tune(self, env, env_id, current_safety_margin=0.2):
-        super().tune(env, env_id, current_safety_margin)
+    def tune(self, env, env_id, current_safety_margin=0.2, **kwargs):
+        super().tune(env, env_id, current_safety_margin, **kwargs)
 
         # set the state indices
         self.omega_idx = env.state_names.index('omega')

@@ -47,6 +47,7 @@ class GymElectricMotorAdapter(gc.GemController):
             self._output_stage = gc.stages.DiscOutputStage()
         else:
             self._output_stage = gc.stages.ContOutputStage()
+        self._reference_plotter = gc.ReferencePlotter()
 
     def control(self, state, reference):
         # Copy state and reference to be independent from further calculations
@@ -54,6 +55,7 @@ class GymElectricMotorAdapter(gc.GemController):
         denormalized_ref = self._input_stage(state_, reference_)
         voltage_set_point = self._controller.control(state_, denormalized_ref)
         action = self._output_stage(state_, voltage_set_point)
+        self._reference_plotter.update_plots(self._controller.references)
         return action
 
     def tune(self, env, env_id, tune_controller=True, **kwargs):
@@ -61,6 +63,7 @@ class GymElectricMotorAdapter(gc.GemController):
         self._output_stage.tune(env, env_id)
         if tune_controller:
             self._controller.tune(env, env_id, **kwargs)
+        self._reference_plotter.tune(env, self._controller.referenced_states, **kwargs)
 
     def reset(self):
         self._input_stage.reset()

@@ -22,7 +22,7 @@ class SeriesDcOperationPointSelection(OperationPointSelection):
     def _select_operating_point(self, state, reference):
         return np.sqrt(reference / self._cross_inductance)
 
-    def tune(self, env, env_id, current_safety_margin=0.2):
-        super().tune(env, env_id, current_safety_margin=current_safety_margin)
+    def tune(self, env, env_id, current_safety_margin=0.2, **kwargs):
+        super().tune(env, env_id, current_safety_margin=current_safety_margin, **kwargs)
         motor = gc.utils.get_motor_type(env_id)
         self._cross_inductance = reader.l_prime_reader[motor](env)
