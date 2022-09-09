@@ -253,6 +253,8 @@ voltages = {
 def get_output_voltages(motor_type, action_type):
     if motor_type in dc_motors:
         return voltages[motor_type]
+    elif motor_type in dc_motors:
+        return voltages[motor_type]
     elif motor_type in induction_motors:
         return ['u_sa', 'u_sb', 'u_sc']
     else:
