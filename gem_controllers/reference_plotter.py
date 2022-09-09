@@ -1,3 +1,6 @@
+from gym_electric_motor.visualization.motor_dashboard import StatePlot
+
+
 class ReferencePlotter:
     def __init__(self):
         self._referenced_plots = []
@@ -8,7 +11,7 @@ class ReferencePlotter:
         if plot_references:
             for visualization in env.visualizations:
                 for time_plot in visualization._time_plots:
-                    if time_plot.state in referenced_states:
+                    if isinstance(time_plot, StatePlot) and time_plot.state in referenced_states:
                         self._referenced_plots.append(time_plot)
                         self._referenced_states.append(time_plot.state)
 
