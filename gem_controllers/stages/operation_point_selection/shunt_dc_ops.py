@@ -72,8 +72,8 @@ class ShuntDcOperationPointSelection(OperationPointSelection):
             i_e = -1e-4
         return reference / self._cross_inductance / i_e
 
-    def tune(self, env, env_id, current_safety_margin=0.2):
-        super().tune(env, env_id, current_safety_margin)
+    def tune(self, env, env_id, current_safety_margin=0.2, **kwargs):
+        super().tune(env, env_id, current_safety_margin, **kwargs)
         self._cross_inductance = reader.l_prime_reader['ShuntDc'](env)
         self._i_e_idx = env.state_names.index('i_e')
         self._i_a_idx = env.state_names.index('i_a')

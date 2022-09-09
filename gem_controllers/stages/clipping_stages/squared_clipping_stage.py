@@ -33,7 +33,7 @@ class SquaredClippingStage(ClippingStage):
         self._clipping_difference = reference - clipped
         return clipped
 
-    def tune(self, env, env_id, margin=0.0):
+    def tune(self, env, env_id, margin=0.0, **_):
         motor_type = gc.utils.get_motor_type(env_id)
         state_names = []
         if self._control_task == 'CC':

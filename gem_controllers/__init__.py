@@ -8,4 +8,5 @@ from .pi_current_controller import PICurrentController
 from .torque_controller import TorqueController
 from .pi_speed_controller import PISpeedController
 from .gem_adapter import GymElectricMotorAdapter
+from .reference_plotter import ReferencePlotter
 

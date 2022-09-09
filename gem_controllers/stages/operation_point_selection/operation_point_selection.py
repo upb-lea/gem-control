@@ -9,5 +9,5 @@ class OperationPointSelection(Stage):
     def _select_operating_point(self, state, reference):
         raise NotImplementedError
 
-    def tune(self, env, env_id, current_safety_margin=0.2):
+    def tune(self, env, env_id, current_safety_margin=0.2, **_):
         pass
