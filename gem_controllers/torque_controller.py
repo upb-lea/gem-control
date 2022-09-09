@@ -67,6 +67,8 @@ class TorqueController(gc.GemController):
         if env_id is not None and clipping_stage is None:
             if gc.utils.get_motor_type(env_id) in gc.parameter_reader.dc_motors:
                 self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('TC')
+            elif gc.utils.get_motor_type(env_id) == 'EESM':
+                self._clipping_stage = gc.stages.clipping_stages.CombinedClippingStage('TC')
             else:  # motor in ac_motors
                 self._clipping_stage = gc.stages.clipping_stages.SquaredClippingStage('TC')
         self._current_reference = np.array([])

@@ -1,6 +1,7 @@
 from gym_electric_motor.physical_systems.electric_motors import SynchronousMotor
 import gem_controllers as gc
 from .stage import Stage
+import numpy as np
 
 
 class AbcTransformation(Stage):
@@ -30,7 +31,7 @@ class AbcTransformation(Stage):
 
     def __call__(self, state, reference):
         epsilon_adv = self._angle_advance(state)
-        return SynchronousMotor.t_32(SynchronousMotor.q(reference, epsilon_adv))
+        return np.append(SynchronousMotor.t_32(SynchronousMotor.q(reference[0:2], epsilon_adv)), reference[2:])
 
     def _angle_advance(self, state):
         return state[self.angle_idx] + self._advance_factor * self.tau * state[self.omega_idx]
