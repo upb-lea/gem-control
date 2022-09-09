@@ -251,7 +251,7 @@ voltages = {
 
 
 def get_output_voltages(motor_type, action_type):
-    if action_type != 'Cont':
+    if motor_type in dc_motors:
         return voltages[motor_type]
     elif motor_type in dc_motors:
         return voltages[motor_type]

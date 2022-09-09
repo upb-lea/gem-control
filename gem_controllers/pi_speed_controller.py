@@ -34,6 +34,16 @@ class PISpeedController(gc.GemController):
     def clipping_stage(self):
         return self._clipping_stage
 
+    @property
+    def references(self):
+        refs = self._torque_controller.references
+        refs.update(dict(torque=self._torque_reference[0]))
+        return refs
+
+    @property
+    def referenced_states(self):
+        return np.append(self._torque_controller.referenced_states, 'torque')
+
     def __init__(
             self,
             _env: (gem.core.ElectricMotorEnvironment, None) = None,

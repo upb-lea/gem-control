@@ -57,6 +57,14 @@ class PICurrentController(gc.CurrentController):
         else:
             return self._tau_current_loop
 
+    @property
+    def references(self):
+        return dict()
+
+    @property
+    def referenced_states(self):
+        return np.array([])
+
     def __init__(self, env, env_id, base_current_controller='PI', decoupling=True):
         super().__init__()
         self._current_base_controller = None
@@ -78,7 +86,7 @@ class PICurrentController(gc.CurrentController):
         self._anti_windup_stage = gc.stages.AntiWindup('CC')
         self._current_base_controller = gc.stages.base_controllers.get(base_current_controller)('CC')
 
-    def tune(self, env, env_id, a=4):
+    def tune(self, env, env_id, a=4, **kwargs):
         action_type = gc.utils.get_action_type(env_id)
         motor_type = gc.utils.get_motor_type(env_id)
         if action_type in ['Finite', 'Cont'] and motor_type in gc.parameter_reader.ac_motors:

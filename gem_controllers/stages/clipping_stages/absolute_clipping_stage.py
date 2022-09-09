@@ -25,7 +25,7 @@ class AbsoluteClippingStage(ClippingStage):
         self._clipping_difference = reference - clipped
         return clipped
 
-    def tune(self, env, env_id, margin=0.0):
+    def tune(self, env, env_id, margin=0.0, **_):
         motor_type = gc.utils.get_motor_type(env_id)
         if self._control_task == 'CC':
             action_names = gc.parameter_reader.voltages[motor_type]

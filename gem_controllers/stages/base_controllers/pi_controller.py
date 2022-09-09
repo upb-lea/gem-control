@@ -18,7 +18,7 @@ class PIController(PController, IController):
             + IController._control(self, filtered_state, reference)
         return action
 
-    def tune(self, env, env_id, a=4, t_n=None):
+    def tune(self, env, env_id, a=4, t_n=None, **_):
         if self._control_task == EBaseControllerTask.CC:
             self._tune_current_controller(env, env_id, a)
         elif self._control_task == EBaseControllerTask.SC:
