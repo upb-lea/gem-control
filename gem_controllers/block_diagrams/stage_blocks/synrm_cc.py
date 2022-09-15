@@ -3,18 +3,18 @@ from control_block_diagram.predefined_components import DqToAbcTransformation, A
     AlphaBetaToDqTransformation, Add, PIController, Multiply, Limit
 
 
-def pmsm_cc(emf_feedforward):
+def synrm_cc(emf_feedforward):
     """
     Args:
         emf_feedforward: Boolean whether emf feedforward stage is included
 
     Returns:
-        Function to build the PMSM Current Control Block
+        Function to build the SynRM Current Control Block
     """
 
-    def cc_pmsm(start, control_task):
+    def cc_synrm(start, control_task):
         """
-        Function to build the PMSM Current Control Block
+        Function to build the SynRM Current Control Block
         Args:
             start:          Starting Point of the Block
             control_task:   Control task of the controller
@@ -90,7 +90,7 @@ def pmsm_cc(emf_feedforward):
             Point.merge(dq_to_abc.position, abc_to_alpha_beta.position), input='right', output='left')
 
         # Distance of the blocks in the EMF Feedforward path
-        distance = (add_u_sq.position.y - alpha_beta_to_dq.output_left[0].y) / 4
+        distance = (add_u_sq.position.y - alpha_beta_to_dq.output_left[0].y) / 3
 
         # Multiplications of the EMF Feedforward
         multiply_u_sq = Multiply(add_u_sq.position.sub_y(distance), outputs=dict(top=1))
@@ -101,22 +101,14 @@ def pmsm_cc(emf_feedforward):
         Connection.connect(multiply_u_sd.output_top, add_u_sd.input_bottom, text=r'-', text_position='end',
                            text_align='right', move_text=(-0.2, -0.2))
 
-        # Add block for the permanent flux psi_p
-        add_psi_p = Add(multiply_u_sq.position.sub_y(distance), outputs=dict(top=1))
-
-        # Connections of the add block
-        Connection.connect(add_psi_p.output_top, multiply_u_sq.input_bottom)
-        Connection.connect(add_psi_p.input_left[0].sub_x(0.3), add_psi_p.input_left[0], text=r'$\Psi_{\mathrm{p}}$',
-                           text_position='start', text_align='left', distance_x=0.25)
-
         # Multiplication with the inductances
-        box_ls_1 = Box(add_psi_p.position.sub_y(distance), size=(0.6, 0.6), inputs=dict(bottom=1), outputs=dict(top=1),
+        box_ls_1 = Box(multiply_u_sq.position.sub_y(distance), size=(0.6, 0.6), inputs=dict(bottom=1), outputs=dict(top=1),
                        text=r'$L_{\mathrm{d}}$')
         box_ls_2 = Box(Point.merge(multiply_u_sd.position, box_ls_1.position), size=(0.6, 0.6), inputs=dict(bottom=1),
                        outputs=dict(top=1), text=r'$L_{\mathrm{q}}$')
 
         # Connections from the multiplications
-        Connection.connect(box_ls_1.output_top, add_psi_p.input_bottom)
+        Connection.connect(box_ls_1.output_top, multiply_u_sq.input_bottom)
         Connection.connect(multiply_u_sd.input_left[0].sub_x(0.3), multiply_u_sd.input_left[0])
         Connection.connect(box_ls_2.output_top, multiply_u_sd.input_bottom)
 
@@ -179,9 +171,9 @@ def pmsm_cc(emf_feedforward):
                                                                                text_align='right')],
                                i=[abc_to_alpha_beta.input_right, dict(radius=0.1, fill=False,
                                                                       text=[r'$\mathbf{i}_{\mathrm{s a,b,c}}$', '',
-                                                                            ''])],)
+                                                                            ''])])
         connections = dict()    # Connections
 
         return start, inputs, outputs, connect_to_line, connections
 
-    return cc_pmsm
+    return cc_synrm

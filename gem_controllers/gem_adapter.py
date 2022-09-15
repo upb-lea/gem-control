@@ -51,6 +51,8 @@ class GymElectricMotorAdapter(gc.GemController):
             self._output_stage = gc.stages.DiscOutputStage()
         else:
             self._output_stage = gc.stages.ContOutputStage()
+        self._block_diagram = None
+        self._reference_plotter = gc.ReferencePlotter()
 
     def control(self, state, reference):
         # Copy state and reference to be independent from further calculations

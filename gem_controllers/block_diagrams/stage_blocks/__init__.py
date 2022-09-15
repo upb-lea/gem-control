@@ -19,3 +19,8 @@ from .shunt_dc_ops import shunt_dc_ops
 from .shunt_dc_output import shunt_dc_output
 from .pmsm_sc import pmsm_speed_controller
 from .scim_sc import scim_speed_controller
+from .eesm_ops import eesm_ops
+from .eesm_cc import eesm_cc
+from .eesm_output import eesm_output
+from .synrm_cc import synrm_cc
+from .synrm_output import synrm_output

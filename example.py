@@ -5,10 +5,10 @@ from gym_electric_motor.physical_system_wrappers import FluxObserver
 
 if __name__ == '__main__':
 
-    env_id = 'Cont-TC-SCIM-v0'
+    env_id = 'Cont-CC-EESM-v0'
     env = gem.make(
             env_id,
-            physical_system_wrappers=(FluxObserver(),)
+            #physical_system_wrappers=(FluxObserver(),)
         )
 
     state, reference = env.reset()
@@ -19,7 +19,7 @@ if __name__ == '__main__':
         env_id,
         a=5,
         block_diagram=True,
-        current_safety_margin=0.15,
+        current_safety_margin=0.2,
         save_block_diagram_as='pdf'
     )
 

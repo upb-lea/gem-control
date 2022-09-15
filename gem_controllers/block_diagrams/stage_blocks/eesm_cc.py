@@ -3,18 +3,18 @@ from control_block_diagram.predefined_components import DqToAbcTransformation, A
     AlphaBetaToDqTransformation, Add, PIController, Multiply, Limit
 
 
-def pmsm_cc(emf_feedforward):
+def eesm_cc(emf_feedforward):
     """
     Args:
         emf_feedforward: Boolean whether emf feedforward stage is included
 
     Returns:
-        Function to build the PMSM Current Control Block
+        Function to build the EESM Current Control Block
     """
 
-    def cc_pmsm(start, control_task):
+    def cc_eesm(start, control_task):
         """
-        Function to build the PMSM Current Control Block
+        Function to build the EESM Current Control Block
         Args:
             start:          Starting Point of the Block
             control_task:   Control task of the controller
@@ -27,25 +27,30 @@ def pmsm_cc(emf_feedforward):
         space = 1 if control_task == 'CC' else 1.5
 
         # Add blocks for the i_sd and i_sq references and states
-        add_i_sd = Add(start.add_x(space))
-        add_i_sq = Add(add_i_sd.position.sub(0.5, 1))
+        add_i_e = Add(start.add(space - 0.5, 1))
+        add_i_sd = Add(start.add_x(space + 0.5))
+        add_i_sq = Add(start.add(space, -1))
 
         if control_task == 'CC':
             # Connections at the inputs
-            Connection.connect(add_i_sd.input_left[0].sub_x(space), add_i_sd.input_left[0],
+            Connection.connect(add_i_sd.input_left[0].sub_x(space + 1), add_i_sd.input_left[0],
                                text=r'$i^{*}_{\mathrm{sd}}$', text_position='start', text_align='left')
-            Connection.connect(add_i_sq.input_left[0].sub_x(space - 0.5), add_i_sq.input_left[0],
+            Connection.connect(add_i_sq.input_left[0].sub_x(space + 0.5), add_i_sq.input_left[0],
                                text=r'$i^{*}_{\mathrm{sq}}$', text_position='start', text_align='left')
+            Connection.connect(add_i_e.input_left[0].sub_x(space), add_i_e.input_left[0],
+                               text=r'$i^{*}_{\mathrm{e}}$', text_position='start', text_align='left')
 
         # PI Controllers for the d and q component
-        pi_i_sd = PIController(add_i_sd.position.add_x(1.2), size=(1, 0.8), input_number=1, output_number=1,
-                               text='Current\nController')
+        pi_i_sd = PIController(add_i_sd.position.add_x(1.2), size=(1, 0.8), input_number=1, output_number=1)
         pi_i_sq = PIController(Point.merge(pi_i_sd.position, add_i_sq.position), size=(1, 0.8), input_number=1,
                                output_number=1)
+        pi_i_e = PIController(Point.merge(pi_i_sd.position, add_i_e.position), size=(1, 0.8), input_number=1,
+                               output_number=1, text='Current\nController')
 
         # Connection between the add blocks and the PI Controllers
         Connection.connect(add_i_sd.output_right, pi_i_sd.input_left)
         Connection.connect(add_i_sq.output_right, pi_i_sq.input_left)
+        Connection.connect(add_i_e.output_right, pi_i_e.input_left)
 
         # Add blocks for the EMF Feedforward
         add_u_sd = Add(pi_i_sd.position.add_x(2))
@@ -71,16 +76,24 @@ def pmsm_cc(emf_feedforward):
         limit = Limit(dq_to_abc.position.add_x(1.8), size=(1, 1.2), inputs=dict(left=3, left_space=0.3),
                       outputs=dict(right=3, right_space=0.3))
 
+        limit_e = Limit(Point.merge(limit.position, pi_i_e.position), size=(1, 1), inputs=dict(left=1),
+                        outputs=dict(right=1))
+
         # Connection between the coordinate transformation and the limit block
         Connection.connect(dq_to_abc.output_right, limit.input_left)
+        Connection.connect(pi_i_e.output_right, limit_e.input_left)
 
         # Pulse width modulation block
         pwm = Box(limit.position.add_x(2.5), size=(1.5, 1.2), text='PWM', inputs=dict(left=3, left_space=0.3),
                   outputs=dict(right=3, right_space=0.3))
 
+        pwm_e = Box(limit_e.position.add_x(2.5), size=(1.5, 1), text='PWM', inputs=dict(left=1),
+                    outputs=dict(right=1))
+
         # Connection between the limit and the PWM block
         Connection.connect(limit.output_right, pwm.input_left,
-                           text=[r'$u^*_{\mathrm{s a,b,c}}$', '', ''], distance_y=0.25)
+                           text=[ '', '', r'$u^*_{\mathrm{s a,b,c}}$'], distance_y=0.25, text_align='bottom')
+        Connection.connect(limit_e.output_right, pwm_e.input_left, text=[r'$u^*_{\mathrm{e}}$'])
 
         # Coordinate transformation from ABC to AlphaBeta coordinates
         abc_to_alpha_beta = AbcToAlphaBetaTransformation(pwm.position.sub(1, 3.5), input='right', output='left')
@@ -133,7 +146,7 @@ def pmsm_cc(emf_feedforward):
         Connection.connect_to_line(con_4, box_ls_2.input_bottom[0])
 
         # Derivation of the angle
-        box_d_dt = Box(Point.merge(alpha_beta_to_dq.position, start.sub_y(6.57020066645696)).sub_x(2), size=(1, 0.8),
+        box_d_dt = Box(Point.merge(alpha_beta_to_dq.position, start.sub_y(7.42020066645696)).sub_x(2), size=(1, 0.8),
                        text=r'$\mathrm{d} / \mathrm{d}t$', inputs=dict(right=1), outputs=dict(left=1))
 
         # Conncetion between the derivation and multiplication block
@@ -169,19 +182,32 @@ def pmsm_cc(emf_feedforward):
 
         start = pwm.position    # starting point of the next block
         # Inputs of the stage
-        inputs = dict(i_d_ref=[add_i_sd.input_left[0], dict(text=r'$i^{*}_{\mathrm{sd}}$', distance_y=0.25)],
-                      i_q_ref=[add_i_sq.input_left[0], dict(text=r'$i^{*}_{\mathrm{sq}}$', distance_y=0.25)],
-                      epsilon=[box_d_dt.input_right[0], dict()])
-        outputs = dict(S=pwm.output_right, omega=con_omega[0].points[1])    # Outputs of the stage
+        inputs = dict(i_d_ref=[add_i_sd.input_left[0], dict(text=r'$i^{*}_{\mathrm{sd}}$', distance_y=0.25,
+                                                            move_text=(0.3, 0), text_position='start',
+                                                            text_aglin='top')],
+                      i_q_ref=[add_i_sq.input_left[0], dict(text=r'$i^{*}_{\mathrm{sq}}$', distance_y=0.25,
+                                                            move_text=(0.3, 0), text_position='start',
+                                                            text_aglin='top')],
+                      i_e_ref=[add_i_e.input_left[0], dict(text=r'$i^{*}_{\mathrm{e}}$', distance_y=0.25,
+                                                           move_text=(0.3, 0), text_position='start',
+                                                           text_aglin='top')],
+                      epsilon=[box_d_dt.input_right[0], dict()],
+                      i_e=[add_i_e.input_bottom[0], dict(text=r'-', text_position='end', text_align='right',
+                                                         move_text=(-0.2, -0.2))])
+
+        # Outputs of the stage
+        outputs = dict(S=pwm.output_right, omega=con_omega[0].points[1], S_e=pwm_e.output_right[0])
+
         # Connections to other lines
         connect_to_line = dict(epsilon=[alpha_beta_to_dq.input_bottom[0], dict(text=r'$\varepsilon_{\mathrm{el}}$',
                                                                                text_position='middle',
                                                                                text_align='right')],
                                i=[abc_to_alpha_beta.input_right, dict(radius=0.1, fill=False,
                                                                       text=[r'$\mathbf{i}_{\mathrm{s a,b,c}}$', '',
-                                                                            ''])],)
+                                                                            ''])])
         connections = dict()    # Connections
 
         return start, inputs, outputs, connect_to_line, connections
 
-    return cc_pmsm
+    return cc_eesm
+
