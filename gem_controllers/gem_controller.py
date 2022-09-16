@@ -35,6 +35,9 @@ class GemController:
         base_current_controller: str = 'PI',
         base_speed_controller: str = 'PI',
         a: int = 4,
+        plot_references: bool = True,
+        block_diagram: bool = True,
+        save_block_diagram_as: (str, tuple) = None,
     ):
         """A factory function that generates (and parameterizes) a matching GemController for a given gym-electric-motor
         environment `env`.
@@ -50,6 +53,9 @@ class GemController:
             base_current_controller('PI'/'PID'/'P'/'ThreePoint'): Selection of the basic control algorithm for the
              current controller.
             a(float): Tuning parameter of the symmetrical optimum.
+            plot_references(bool): Flag, if the reference values of the underlying control circuits should be plotted
+            block_diagram(bool): Selection whether the block diagram should be displayed
+            save_block_diagram_as(str, tuple): Selection of whether the block diagram should be saved
 
         Returns:
             GemController: An initialized (and tuned) instance of a controller that fits to the specified environment.
@@ -62,6 +68,7 @@ class GemController:
             env, env_id, base_current_controller=base_current_controller, decoupling=decoupling
         )
         tuner_kwargs['a'] = a
+        tuner_kwargs['plot_references'] = plot_references
         if control_task in ['TC', 'SC']:
             # Initilize the operation point selection
             controller = gc.TorqueController(env, env_id, current_controller=controller)
@@ -76,6 +83,9 @@ class GemController:
 
         # Fit the controllers parameters to the environment
         controller.tune(env, env_id, **tuner_kwargs)
+
+        if block_diagram:
+            controller.build_block_diagram(env_id, save_block_diagram_as)
 
         return controller
 
@@ -135,6 +145,8 @@ class GemController:
         """
 
         state, reference = env.reset()
+        if self.block_diagram:
+            self.block_diagram.open()
         self.reset()
         current_episode_length = 0
         for _ in range(n_steps):    # Simulate the environment and controller for n steps
@@ -148,3 +160,5 @@ class GemController:
                 self.reset()
                 current_episode_length = 0
             current_episode_length = current_episode_length + 1
+        if self.block_diagram:
+            self.block_diagram.close()

@@ -44,6 +44,16 @@ class TorqueController(gc.GemController):
         """Time constant of the current controller stage"""
         return self._current_controller.t_n
 
+    @property
+    def references(self):
+        refs = self._current_controller.references
+        refs.update(dict(zip(self._referenced_currents, self._current_reference)))
+        return refs
+
+    @property
+    def referenced_states(self):
+        return np.append(self._current_controller.referenced_states, self._referenced_currents)
+
     def __init__(
             self,
             env: (gem.core.ElectricMotorEnvironment, None) = None,
@@ -75,9 +85,12 @@ class TorqueController(gc.GemController):
         if env_id is not None and clipping_stage is None:
             if gc.utils.get_motor_type(env_id) in gc.parameter_reader.dc_motors:
                 self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('TC')
+            elif gc.utils.get_motor_type(env_id) == 'EESM':
+                self._clipping_stage = gc.stages.clipping_stages.CombinedClippingStage('TC')
             else:  # motor in ac_motors
                 self._clipping_stage = gc.stages.clipping_stages.SquaredClippingStage('TC')
         self._current_reference = np.array([])
+        self._referenced_currents = np.array([])
 
     def tune(self, env, env_id, current_safety_margin=0.2, tune_current_controller=True, **kwargs):
         """
@@ -94,6 +107,7 @@ class TorqueController(gc.GemController):
             self._current_controller.tune(env, env_id, **kwargs)
         self._clipping_stage.tune(env, env_id, margin=current_safety_margin)
         self._operation_point_selection.tune(env, env_id, current_safety_margin)
+        self._referenced_currents = gc.parameter_reader.currents[gc.utils.get_motor_type(env_id)]
 
     def torque_control(self, state, reference):
         """
