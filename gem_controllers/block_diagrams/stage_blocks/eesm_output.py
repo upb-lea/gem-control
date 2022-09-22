@@ -31,6 +31,7 @@ def eesm_output(emf_feedforward):
         # Connection between the converter and the motor block
         con_1 = Connection.connect(converter.output_bottom, eesm.input_top, arrow=False)
         output_i_e = Circle(con_1[3].start.sub_y(4.2), radius=0.1, outputs=dict(left=1), fill=None)
+        con_2 = Connection.connect(output_i_e.output_left[0], output_i_e.output_left[0].sub_x(11), arrow=False)
         Text(r'$i_{\mathrm{e}}$', output_i_e.output_left[0].add(-2, 0.25))
 
         start = eesm.position   # starting point of the next block
@@ -39,9 +40,9 @@ def eesm_output(emf_feedforward):
                                                         distance_y=0.25, text_align='bottom')],
                       S_e=[converter.input_left[0], dict(text=r'$\mathbf{S}_{\mathrm{e}}$',
                                                          distance_y=0.25, text_position='start', move_text=(0.4, 0))])
-        outputs = dict(epsilon=eesm.output_left[0], i_e=output_i_e.output_left[0])     # Outputs of the stage
+        outputs = dict(epsilon=eesm.output_left[0], i_e=con_2.end)     # Outputs of the stage
         connect_to_lines = dict()   # Connections to other lines
-        connections = dict(i=con_1)     # Connections
+        connections = dict(i=con_1, i_e=con_2)     # Connections
 
         return start, inputs, outputs, connect_to_lines, connections
 
