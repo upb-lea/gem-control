@@ -17,7 +17,7 @@ if __name__ == '__main__':
     c = gc.GemController.make(
         env,
         env_id,
-        a=5,
+        a=8,
         block_diagram=True,
         current_safety_margin=0.2,
         save_block_diagram_as='pdf'

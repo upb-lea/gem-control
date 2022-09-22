@@ -53,8 +53,9 @@ def eesm_cc(emf_feedforward):
         Connection.connect(add_i_e.output_right, pi_i_e.input_left)
 
         # Add blocks for the EMF Feedforward
-        add_u_sd = Add(pi_i_sd.position.add_x(2))
+        add_u_sd = Add(pi_i_sd.position.add_x(1.6))
         add_u_sq = Add(pi_i_sq.position.add_x(1.2))
+        add_u_e = Add(pi_i_e.position.add_x(2))
 
         # Connections between the PI Controllers and the Add blocks
         Connection.connect(pi_i_sd.output_right[0], add_u_sd.input_left[0], text=r'$\Delta u^{*}_{\mathrm{sd}}$',
@@ -68,9 +69,9 @@ def eesm_cc(emf_feedforward):
 
         # Connections between the add blocks and the coordinate transformation
         Connection.connect(add_u_sd.output_right[0], dq_to_abc.input_left[0], text=r'$u^{*}_{\mathrm{sd}}$',
-                           distance_y=0.28)
+                           distance_y=0.28, move_text=(0.18, 0))
         Connection.connect(add_u_sq.output_right[0], dq_to_abc.input_left[1], text=r'$u^{*}_{\mathrm{sq}}$',
-                           distance_y=0.28, move_text=(0.4, 0))
+                           distance_y=0.28, move_text=(0.38, 0))
 
         # Limit of the input voltages
         limit = Limit(dq_to_abc.position.add_x(1.8), size=(1, 1.2), inputs=dict(left=3, left_space=0.3),
@@ -102,36 +103,12 @@ def eesm_cc(emf_feedforward):
         alpha_beta_to_dq = AlphaBetaToDqTransformation(
             Point.merge(dq_to_abc.position, abc_to_alpha_beta.position), input='right', output='left')
 
-        # Distance of the blocks in the EMF Feedforward path
-        distance = (add_u_sq.position.y - alpha_beta_to_dq.output_left[0].y) / 4
+        emf = Box(Point.merge(add_u_sd.position, Point.get_mid(dq_to_abc.position, alpha_beta_to_dq.position)),
+                  size=(2, 1), inputs=dict(bottom=4), outputs=dict(top=3, top_space=0.4), text='EMF Feedforward')
 
-        # Multiplications of the EMF Feedforward
-        multiply_u_sq = Multiply(add_u_sq.position.sub_y(distance), outputs=dict(top=1))
-        multiply_u_sd = Multiply(Point.merge(add_u_sd.position, multiply_u_sq.position), outputs=dict(top=1))
-
-        # Connections between the multiplication and the add blocks
-        Connection.connect(multiply_u_sq.output_top, add_u_sq.input_bottom)
-        Connection.connect(multiply_u_sd.output_top, add_u_sd.input_bottom, text=r'-', text_position='end',
-                           text_align='right', move_text=(-0.2, -0.2))
-
-        # Add block for the permanent flux psi_p
-        add_psi_p = Add(multiply_u_sq.position.sub_y(distance), outputs=dict(top=1))
-
-        # Connections of the add block
-        Connection.connect(add_psi_p.output_top, multiply_u_sq.input_bottom)
-        Connection.connect(add_psi_p.input_left[0].sub_x(0.3), add_psi_p.input_left[0], text=r'$\Psi_{\mathrm{p}}$',
-                           text_position='start', text_align='left', distance_x=0.25)
-
-        # Multiplication with the inductances
-        box_ls_1 = Box(add_psi_p.position.sub_y(distance), size=(0.6, 0.6), inputs=dict(bottom=1), outputs=dict(top=1),
-                       text=r'$L_{\mathrm{d}}$')
-        box_ls_2 = Box(Point.merge(multiply_u_sd.position, box_ls_1.position), size=(0.6, 0.6), inputs=dict(bottom=1),
-                       outputs=dict(top=1), text=r'$L_{\mathrm{q}}$')
-
-        # Connections from the multiplications
-        Connection.connect(box_ls_1.output_top, add_psi_p.input_bottom)
-        Connection.connect(multiply_u_sd.input_left[0].sub_x(0.3), multiply_u_sd.input_left[0])
-        Connection.connect(box_ls_2.output_top, multiply_u_sd.input_bottom)
+        Connection.connect(emf.output_top[0], add_u_sq.input_bottom[0])
+        Connection.connect(emf.output_top[1], add_u_sd.input_bottom[0])
+        Connection.connect(emf.output_top[2], add_u_e.input_bottom[0])
 
         # Connections between the coordinate transformation and the add blocks
         con_3 = Connection.connect(alpha_beta_to_dq.output_left[0], add_i_sd.input_bottom[0], text=r'-',
@@ -142,16 +119,16 @@ def eesm_cc(emf_feedforward):
                                    text_align='right', move_text=(-0.2, -0.2))
 
         # Connections between the previous conncetions and the inductances blocks
-        Connection.connect_to_line(con_3, box_ls_1.input_bottom[0])
-        Connection.connect_to_line(con_4, box_ls_2.input_bottom[0])
+        Connection.connect_to_line(con_3, emf.input_bottom[3])
+        Connection.connect_to_line(con_4, emf.input_bottom[2])
 
         # Derivation of the angle
-        box_d_dt = Box(Point.merge(alpha_beta_to_dq.position, start.sub_y(7.42020066645696)).sub_x(2), size=(1, 0.8),
+        box_d_dt = Box(Point.merge(alpha_beta_to_dq.position, start.sub_y(7.42020066645696)).sub_x(1.5), size=(1, 0.8),
                        text=r'$\mathrm{d} / \mathrm{d}t$', inputs=dict(right=1), outputs=dict(left=1))
 
         # Conncetion between the derivation and multiplication block
-        con_omega = Connection.connect(box_d_dt.output_left, multiply_u_sq.input_left, space_y=1,
-                                       text=r'$\omega_{\mathrm{el}}$', move_text=(0, 2), text_align='left',
+        con_omega = Connection.connect(box_d_dt.output_left[0], emf.input_bottom[0], space_y=1,
+                                       text=r'$\omega_{\mathrm{el}}$', move_text=(0, 1.7), text_align='left',
                                        distance_x=0.3)
 
         if control_task == 'SC':
@@ -181,6 +158,7 @@ def eesm_cc(emf_feedforward):
                            text_position='start', text_align='right', distance_x=0.3)
 
         start = pwm.position    # starting point of the next block
+
         # Inputs of the stage
         inputs = dict(i_d_ref=[add_i_sd.input_left[0], dict(text=r'$i^{*}_{\mathrm{sd}}$', distance_y=0.25,
                                                             move_text=(0.3, 0), text_position='start',
@@ -196,7 +174,7 @@ def eesm_cc(emf_feedforward):
                                                          move_text=(-0.2, -0.2))])
 
         # Outputs of the stage
-        outputs = dict(S=pwm.output_right, omega=con_omega[0].points[1], S_e=pwm_e.output_right[0])
+        outputs = dict(S=pwm.output_right, omega=con_omega.points[1], S_e=pwm_e.output_right[0])
 
         # Connections to other lines
         connect_to_line = dict(epsilon=[alpha_beta_to_dq.input_bottom[0], dict(text=r'$\varepsilon_{\mathrm{el}}$',
@@ -204,7 +182,8 @@ def eesm_cc(emf_feedforward):
                                                                                text_align='right')],
                                i=[abc_to_alpha_beta.input_right, dict(radius=0.1, fill=False,
                                                                       text=[r'$\mathbf{i}_{\mathrm{s a,b,c}}$', '',
-                                                                            ''])])
+                                                                            ''])],
+                               i_e=[emf.input_bottom[1], dict(radius=0.05, fill='black')])
         connections = dict()    # Connections
 
         return start, inputs, outputs, connect_to_line, connections
