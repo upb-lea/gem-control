@@ -51,7 +51,7 @@ class PIDController(PIController):
             a(float): Design parameter of the symmetrical optimum.
         """
 
-        super()._tune_current_controller(env, env, env_id, a)
+        super()._tune_current_controller(env, env_id, a)
         self.d_gain = self.p_gain * self.tau
 
     def _tune_speed_controller(self, env, env_id, a=4, t_n=None):
