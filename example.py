@@ -6,21 +6,20 @@ from gym_electric_motor.physical_system_wrappers import FluxObserver
 
 if __name__ == '__main__':
 
-    env_id = 'Cont-TC-EESM-v0'
+    env_id = 'Cont-CC-PMSM-v0'
     env = gem.make(
             env_id,
-            visualization=MotorDashboard(state_plots=['torque', 'i_sd', 'i_sq', 'i_e', 'u_sd', 'u_sq', 'u_e'])
+            visualization=MotorDashboard(state_plots=['torque', 'i_sd', 'i_sq', 'u_sd', 'u_sq'])
             #physical_system_wrappers=(FluxObserver(),)
         )
 
     state, reference = env.reset()
-
     # Initialize the controller
     c = gc.GemController.make(
         env,
         env_id,
         a=8,
-        block_diagram=False,
+        block_diagram=True,
         current_safety_margin=0.2,
         #save_block_diagram_as='pdf'
     )

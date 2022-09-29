@@ -108,7 +108,7 @@ class GymElectricMotorAdapter(gc.GemController):
         self._reference_plotter.tune(env, self._controller.referenced_states, **kwargs)
 
     def build_block_diagram(self, env_id, save_block_diagram_as):
-        self._block_diagram = gc.block_diagrams.block_diagram.build_block_diagram(self, env_id, save_block_diagram_as)
+        self._block_diagram = gc.build_block_diagram(self, env_id, save_block_diagram_as)
 
     def reset(self):
         """Reset all stages of the controller."""

@@ -11,7 +11,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
       name='gem_control',
-      version='0.0.2',
+      version='0.0.3',
       description='Classic Controllers for the gym-electric-motor toolbox',
       packages=setuptools.find_packages(),
       install_requires=requirements,
