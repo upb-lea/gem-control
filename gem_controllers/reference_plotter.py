@@ -11,9 +11,10 @@ class ReferencePlotter:
         if plot_references:
             for visualization in env.visualizations:
                 for time_plot in visualization._time_plots:
-                    if isinstance(time_plot, StatePlot) and time_plot.state in referenced_states:
-                        self._referenced_plots.append(time_plot)
-                        self._referenced_states.append(time_plot.state)
+                    if isinstance(time_plot, StatePlot):
+                        if time_plot.state in referenced_states:
+                            self._referenced_plots.append(time_plot)
+                            self._referenced_states.append(time_plot.state)
 
         for plot in self._referenced_plots:
             plot._referenced = True
