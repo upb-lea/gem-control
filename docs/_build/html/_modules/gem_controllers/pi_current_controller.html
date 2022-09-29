@@ -37,7 +37,6 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/read_me.html">Readme File</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../parts/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/usage_guide/usage_guides.html">Usage Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/api_documentation/gem_control.html">GEM Control API Documentation</a></li>
 </ul>
@@ -135,6 +134,16 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tau_current_loop</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">references</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reference values of the current control stage.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">referenced_states</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Referenced states of the current control stage.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">base_current_controller</span><span class="o">=</span><span class="s1">&#39;PI&#39;</span><span class="p">,</span> <span class="n">decoupling</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initilizes a PI current control stage.</span>
@@ -159,18 +168,22 @@
         <span class="c1"># Choose the emf feedforward function</span>
         <span class="k">if</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">gc</span><span class="o">.</span><span class="n">parameter_reader</span><span class="o">.</span><span class="n">induction_motors</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_emf_feedforward</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">EMFFeedforwardInd</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;EESM&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_emf_feedforward</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">EMFFeedforwardEESM</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_emf_feedforward</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">EMFFeedforward</span><span class="p">()</span>
 
         <span class="c1"># Choose the clipping function</span>
-        <span class="k">if</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">gc</span><span class="o">.</span><span class="n">parameter_reader</span><span class="o">.</span><span class="n">ac_motors</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;EESM&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">clipping_stages</span><span class="o">.</span><span class="n">CombinedClippingStage</span><span class="p">(</span><span class="s1">&#39;CC&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">gc</span><span class="o">.</span><span class="n">parameter_reader</span><span class="o">.</span><span class="n">ac_motors</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">clipping_stages</span><span class="o">.</span><span class="n">SquaredClippingStage</span><span class="p">(</span><span class="s1">&#39;CC&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">clipping_stages</span><span class="o">.</span><span class="n">AbsoluteClippingStage</span><span class="p">(</span><span class="s1">&#39;CC&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_anti_windup_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">AntiWindup</span><span class="p">(</span><span class="s1">&#39;CC&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_current_base_controller</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">base_controllers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">base_current_controller</span><span class="p">)(</span><span class="s1">&#39;CC&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PICurrentController.tune"><a class="viewcode-back" href="../../parts/api_documentation/pi_current_controller.html#gem_controllers.pi_current_controller.PICurrentController.tune">[docs]</a>    <span class="k">def</span> <span class="nf">tune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+<div class="viewcode-block" id="PICurrentController.tune"><a class="viewcode-back" href="../../parts/api_documentation/pi_current_controller.html#gem_controllers.pi_current_controller.PICurrentController.tune">[docs]</a>    <span class="k">def</span> <span class="nf">tune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Tune the components of the current control stage.</span>
 

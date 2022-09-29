@@ -17,6 +17,17 @@ class EMFFeedforwardEESM(EMFFeedforward):
         self._action_idx = None
 
     def __call__(self, state, reference):
+        """
+        Calculate the emf feedforward voltages and add them to the actions of the current controller.
+
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference voltages.
+
+        Returns:
+            input voltages(np.ndarray): decoupled input voltages
+        """
+
         self.psi = np.array([0, self._l_m * state[self._i_e_idx], 0])
         action = super().__call__(state, reference)
         action = action + self._decoupling_params * state[self._currents_idx]
@@ -24,6 +35,14 @@ class EMFFeedforwardEESM(EMFFeedforward):
         return action
 
     def tune(self, env, env_id, **_):
+        """
+        Set all needed motor parameters for the decoupling.
+
+        Args:
+            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
+            env_id(str): The corresponding environment-id to specify the concrete environment.
+        """
+
         super().tune(env, env_id, **_)
         l_m = env.physical_system.electrical_motor.motor_parameter['l_m']
         l_d = env.physical_system.electrical_motor.motor_parameter['l_d']

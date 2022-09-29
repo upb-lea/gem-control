@@ -248,12 +248,20 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
 
     def solve_analytical(self, torque, psi):
         """
-           Assuming linear magnetization characteristics, the optimal currents for given reference and flux can be obtained
-           by solving the reference and flux equations. These lead to a fourth degree polynomial which can be solved
-           analytically.  There are two ways to use this analytical solution for control. On the one hand, the currents
-           can be determined in advance as in the case of interpolation for different torques and fluxes and stored in a
-           LUT (torque_control='analytical'). On the other hand, the solution can be calculated at runtime with the
-           given reference and flux (torque_control='online').
+        Assuming linear magnetization characteristics, the optimal currents for given reference and flux can be
+        obtained by solving the reference and flux equations. These lead to a fourth degree polynomial which can be
+        solved analytically. There are two ways to use this analytical solution for control. On the one hand, the
+        currents can be determined in advance as in the case of interpolation for different torques and fluxes and
+        stored in a LUT (torque_control='analytical'). On the other hand, the solution can be calculated at runtime
+        with the given reference and flux (torque_control='online').
+
+        Args:
+            torque(float): The torque reference value.
+            psi(float): The optimal flux value.
+
+        Returns:
+            i_d(float): optimal $i_{sd}$ current
+            i_q(flaot): optimal $i_{sq}$ current
         """
 
         poly = [
@@ -309,10 +317,15 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
 
     def _select_operating_point(self, state, reference):
         """
-            This main method is called by the CascadedFieldOrientedController to calculate reference values for the i_d
-            and i_q currents from a given reference reference.
-        """
+        Calculate the current operation point for a given torque reference value.
 
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference of the state.
+
+        Returns:
+            current_reference(np.ndarray): references for the current control stage
+        """
         # get the optimal psi for a given reference from the mtpc characteristic
         psi_idx_ = self._get_t_idx_mtpc(reference)
         psi_opt = self.mtpc[psi_idx_, 3]

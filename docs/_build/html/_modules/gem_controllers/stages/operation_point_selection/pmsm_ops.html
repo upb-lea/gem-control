@@ -37,7 +37,6 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../parts/read_me.html">Readme File</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../parts/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../parts/usage_guide/usage_guides.html">Usage Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../parts/api_documentation/gem_control.html">GEM Control API Documentation</a></li>
 </ul>
@@ -317,12 +316,20 @@
 
 <div class="viewcode-block" id="PMSMOperationPointSelection.solve_analytical"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection.solve_analytical">[docs]</a>    <span class="k">def</span> <span class="nf">solve_analytical</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">torque</span><span class="p">,</span> <span class="n">psi</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">           Assuming linear magnetization characteristics, the optimal currents for given reference and flux can be obtained</span>
-<span class="sd">           by solving the reference and flux equations. These lead to a fourth degree polynomial which can be solved</span>
-<span class="sd">           analytically.  There are two ways to use this analytical solution for control. On the one hand, the currents</span>
-<span class="sd">           can be determined in advance as in the case of interpolation for different torques and fluxes and stored in a</span>
-<span class="sd">           LUT (torque_control=&#39;analytical&#39;). On the other hand, the solution can be calculated at runtime with the</span>
-<span class="sd">           given reference and flux (torque_control=&#39;online&#39;).</span>
+<span class="sd">        Assuming linear magnetization characteristics, the optimal currents for given reference and flux can be</span>
+<span class="sd">        obtained by solving the reference and flux equations. These lead to a fourth degree polynomial which can be</span>
+<span class="sd">        solved analytically. There are two ways to use this analytical solution for control. On the one hand, the</span>
+<span class="sd">        currents can be determined in advance as in the case of interpolation for different torques and fluxes and</span>
+<span class="sd">        stored in a LUT (torque_control=&#39;analytical&#39;). On the other hand, the solution can be calculated at runtime</span>
+<span class="sd">        with the given reference and flux (torque_control=&#39;online&#39;).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            torque(float): The torque reference value.</span>
+<span class="sd">            psi(float): The optimal flux value.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            i_d(float): optimal $i_{sd}$ current</span>
+<span class="sd">            i_q(flaot): optimal $i_{sq}$ current</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">poly</span> <span class="o">=</span> <span class="p">[</span>
@@ -378,10 +385,15 @@
 
 <div class="viewcode-block" id="PMSMOperationPointSelection._select_operating_point"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/operation_point_selection/pmsm_ops.html#gem_controllers.stages.operation_point_selection.pmsm_ops.PMSMOperationPointSelection._select_operating_point">[docs]</a>    <span class="k">def</span> <span class="nf">_select_operating_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            This main method is called by the CascadedFieldOrientedController to calculate reference values for the i_d</span>
-<span class="sd">            and i_q currents from a given reference reference.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        Calculate the current operation point for a given torque reference value.</span>
 
+<span class="sd">        Args:</span>
+<span class="sd">             state(np.ndarray): The state of the environment.</span>
+<span class="sd">             reference(np.ndarray): The reference of the state.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            current_reference(np.ndarray): references for the current control stage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># get the optimal psi for a given reference from the mtpc characteristic</span>
         <span class="n">psi_idx_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_t_idx_mtpc</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>
         <span class="n">psi_opt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtpc</span><span class="p">[</span><span class="n">psi_idx_</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>

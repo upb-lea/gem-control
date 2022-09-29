@@ -1,13 +1,15 @@
 import gym_electric_motor as gem
 import gem_controllers as gc
+from gym_electric_motor.visualization.motor_dashboard import MotorDashboard
 from gym_electric_motor.physical_system_wrappers import FluxObserver
 
 
 if __name__ == '__main__':
 
-    env_id = 'Cont-CC-EESM-v0'
+    env_id = 'Cont-TC-EESM-v0'
     env = gem.make(
             env_id,
+            visualization=MotorDashboard(state_plots=['torque', 'i_sd', 'i_sq', 'i_e', 'u_sd', 'u_sq', 'u_e'])
             #physical_system_wrappers=(FluxObserver(),)
         )
 
@@ -18,9 +20,9 @@ if __name__ == '__main__':
         env,
         env_id,
         a=8,
-        block_diagram=True,
+        block_diagram=False,
         current_safety_margin=0.2,
-        save_block_diagram_as='pdf'
+        #save_block_diagram_as='pdf'
     )
 
     # Control the motor environment

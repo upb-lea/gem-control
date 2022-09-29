@@ -16,6 +16,5 @@ ________
    :maxdepth: 1
 
    parts/read_me
-   parts/getting_started
    parts/usage_guide/usage_guides
    parts/api_documentation/gem_control

@@ -37,7 +37,6 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/read_me.html">Readme File</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../parts/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/usage_guide/usage_guides.html">Usage Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/api_documentation/gem_control.html">GEM Control API Documentation</a></li>
 </ul>
@@ -103,6 +102,10 @@
     <span class="k">def</span> <span class="nf">controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_controller</span> <span class="o">=</span> <span class="n">value</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">block_diagram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_diagram</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">_env</span><span class="p">:</span> <span class="p">(</span><span class="n">gem</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">ElectricMotorEnvironment</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -127,6 +130,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_output_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">DiscOutputStage</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_output_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">ContOutputStage</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_block_diagram</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reference_plotter</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">ReferencePlotter</span><span class="p">()</span>
 
 <div class="viewcode-block" id="GymElectricMotorAdapter.control"><a class="viewcode-back" href="../../parts/api_documentation/gem_adapter.html#gem_controllers.gem_adapter.GymElectricMotorAdapter.control">[docs]</a>    <span class="k">def</span> <span class="nf">control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -151,6 +156,7 @@
 
         <span class="c1"># Transform and normalize the input voltages</span>
         <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_stage</span><span class="p">(</span><span class="n">state_</span><span class="p">,</span> <span class="n">voltage_set_point</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reference_plotter</span><span class="o">.</span><span class="n">update_plots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_controller</span><span class="o">.</span><span class="n">references</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">action</span></div>
 
 <div class="viewcode-block" id="GymElectricMotorAdapter.tune"><a class="viewcode-back" href="../../parts/api_documentation/gem_adapter.html#gem_controllers.gem_adapter.GymElectricMotorAdapter.tune">[docs]</a>    <span class="k">def</span> <span class="nf">tune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">tune_controller</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -166,7 +172,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_input_stage</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_output_stage</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">tune_controller</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_controller</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_controller</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reference_plotter</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controller</span><span class="o">.</span><span class="n">referenced_states</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">build_block_diagram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">save_block_diagram_as</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_block_diagram</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">block_diagrams</span><span class="o">.</span><span class="n">block_diagram</span><span class="o">.</span><span class="n">build_block_diagram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">save_block_diagram_as</span><span class="p">)</span>
 
 <div class="viewcode-block" id="GymElectricMotorAdapter.reset"><a class="viewcode-back" href="../../parts/api_documentation/gem_adapter.html#gem_controllers.gem_adapter.GymElectricMotorAdapter.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Reset all stages of the controller.&quot;&quot;&quot;</span>

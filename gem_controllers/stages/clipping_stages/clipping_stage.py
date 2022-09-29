@@ -30,7 +30,7 @@ class ClippingStage(Stage):
         """
         raise NotImplementedError
 
-    def tune(self, env: gym_electric_motor.core.ElectricMotorEnvironment, env_id: str, margin: float = 0.0):
+    def tune(self, env: gym_electric_motor.core.ElectricMotorEnvironment, env_id: str, margin: float = 0.0, **kwargs):
         """
         Set the limits for the clipped states.
 

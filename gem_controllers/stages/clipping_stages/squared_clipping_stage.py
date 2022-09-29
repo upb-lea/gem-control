@@ -54,7 +54,7 @@ class SquaredClippingStage(ClippingStage):
         self._clipping_difference = reference - clipped
         return clipped
 
-    def tune(self, env, env_id, margin=0.0):
+    def tune(self, env, env_id, margin=0.0, **kwargs):
         """
         Set the limits for the clipped states.
 

@@ -66,6 +66,16 @@ class PICurrentController(gc.CurrentController):
         else:
             return self._tau_current_loop
 
+    @property
+    def references(self):
+        """Reference values of the current control stage."""
+        return dict()
+
+    @property
+    def referenced_states(self):
+        """Referenced states of the current control stage."""
+        return np.array([])
+
     def __init__(self, env, env_id, base_current_controller='PI', decoupling=True):
         """
         Initilizes a PI current control stage.
@@ -90,18 +100,22 @@ class PICurrentController(gc.CurrentController):
         # Choose the emf feedforward function
         if gc.utils.get_motor_type(env_id) in gc.parameter_reader.induction_motors:
             self._emf_feedforward = gc.stages.EMFFeedforwardInd()
+        elif gc.utils.get_motor_type(env_id) == 'EESM':
+            self._emf_feedforward = gc.stages.EMFFeedforwardEESM()
         else:
             self._emf_feedforward = gc.stages.EMFFeedforward()
 
         # Choose the clipping function
-        if gc.utils.get_motor_type(env_id) in gc.parameter_reader.ac_motors:
+        if gc.utils.get_motor_type(env_id) == 'EESM':
+            self._clipping_stage = gc.stages.clipping_stages.CombinedClippingStage('CC')
+        elif gc.utils.get_motor_type(env_id) in gc.parameter_reader.ac_motors:
             self._clipping_stage = gc.stages.clipping_stages.SquaredClippingStage('CC')
         else:
             self._clipping_stage = gc.stages.clipping_stages.AbsoluteClippingStage('CC')
         self._anti_windup_stage = gc.stages.AntiWindup('CC')
         self._current_base_controller = gc.stages.base_controllers.get(base_current_controller)('CC')
 
-    def tune(self, env, env_id, a=4):
+    def tune(self, env, env_id, a=4, **kwargs):
         """
         Tune the components of the current control stage.
 

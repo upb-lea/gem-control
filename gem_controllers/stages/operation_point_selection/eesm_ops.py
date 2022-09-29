@@ -4,9 +4,20 @@ from .foc_operation_point_selection import FieldOrientedControllerOperationPoint
 
 
 class EESMOperationPointSelection(FieldOrientedControllerOperationPointSelection):
+    """
+    This class represents the operation point selection of the torque controller for cascaded control of an
+    externally synchronous motor. The operating point is selected in the analog to that of the PMSM and SynRM, but
+    the excitation current is also included in the optimization of the operating point.
+    """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, max_modulation_level: float = 2 / np.sqrt(3), modulation_damping: float = 1.2):
+        """
+        Args:
+            max_modulation_level(float): Maximum value for the modulation controller.
+            modulation_damping(float): Damping of the gain of the modulation controller.
+        """
+
+        super().__init__(max_modulation_level, modulation_damping)
         self.l_d = None
         self.l_q = None
         self.l_m = None
@@ -29,11 +40,23 @@ class EESMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         self.psi_max = None
         self.t_max_psi = None
 
+        self.t_grid_count = None
+        self.psi_grid_count = None
+
         self.torque_equation = None
         self.loss = None
         self.poly = None
 
     def tune(self, env, env_id, current_safety_margin=0.2):
+        """
+        Tune the operation point selcetion stage.
+
+        Args:
+            env(gym_electric_motor.ElectricMotorEnvironment): The environment to be controlled.
+            env_id(str): The id of the environment.
+            current_safety_margin(float): Percentage of the current margin to the current limit.
+        """
+
         super().tune(env, env_id, current_safety_margin)
         self.l_d = self.mp['l_d']
         self.l_q = self.mp['l_q']
@@ -81,9 +104,23 @@ class EESMOperationPointSelection(FieldOrientedControllerOperationPointSelection
                                               ((self.l_m * i_e) ** 2 - psi ** 2) * (self.l_m * i_e) ** 2 + (
                                                           self.l_q * torque / (3 * self.p)) ** 2]
 
-        self.calculate_luts()
+        self._calculate_luts()
 
     def solve_analytical(self, torque, psi, i_e):
+        """
+        Assuming linear magnetization characteristics, the optimal currents for given reference, flux and exitation
+        current can be obtained by solving the reference and flux equations. These lead to a fourth degree polynomial
+        which can be solved analytically.
+
+        Args:
+            torque(float): The torque reference value.
+            psi(float): The optimal flux value.
+            i_e(float): The excitation current.
+
+        Returns:
+            i_d(float): optimal i_sd current
+            i_q(flaot): optimal i_sq current
+        """
         if torque == 0 and i_e == 0:
             return 0, 0
         else:
@@ -91,10 +128,10 @@ class EESMOperationPointSelection(FieldOrientedControllerOperationPointSelection
             i_q = 2 * torque / (3 * self.p * (self.l_m * i_e + (self.l_d - self.l_q) * i_d))
             return i_d, i_q
 
-    def get_i_q(self, i_d, i_e, torque):
-        return 2 * torque / (3 * self.p * (self.l_m * i_e + (self.l_d - self.l_q) * i_d))
-
-    def calculate_luts(self):
+    def _calculate_luts(self):
+        """
+        Calculates the lookup tables for the maximum torque and the optimal currents for a given torque reference.
+        """
         minimum_loss = []
         best_params = []
 
@@ -152,15 +189,43 @@ class EESMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         self.i_e_inter = sp_interpolate.griddata((best_params_psi[:, 0], best_params_psi[:, 1]), best_params_psi[:, 4],
                                                  (self.t_grid, self.psi_grid), method='linear')
 
-    def get_psi_idx(self, psi):
+    def _get_psi_idx(self, psi):
+        """
+        Get the index of the lookup tables for a given flux.
+        Args:
+            psi(float): optimal magnetic flux.
+
+        Returns:
+            index(int): index of the lookup tables of the currents
+        """
+
         psi = np.clip(psi, 0, self.psi_max)
         return int(round(psi / self.psi_max * (self.psi_grid_count - 1)))
 
-    def get_t_idx(self, torque):
+    def _get_t_idx(self, torque):
+        """
+        Get the index of the lookup tables for a given torque.
+        Args:
+            torque(float): The clipped torque reference value.
+
+        Returns:
+            index(int): index of the lookup tables of the currents
+        """
+
         torque = np.clip(torque, 0, self.t_max)
         return int(round(torque / self.t_max * (self.t_grid_count - 1)))
 
     def _select_operating_point(self, state, reference):
+        """
+        Calculate the current operation point for a given torque reference value.
+
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference of the state.
+
+        Returns:
+            current_reference(np.ndarray): references for the current control stage
+        """
 
         psi_max = self.modulation_control(state)
         t_ref = reference[0]
@@ -173,8 +238,8 @@ class EESMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         t_max = self.t_max_psi(psi_opt)
         t_ref_clip = np.clip(t_ref_clip, 0, t_max)
 
-        t_idx = self.get_t_idx(t_ref_clip)
-        psi_idx = self.get_psi_idx(psi)
+        t_idx = self._get_t_idx(t_ref_clip)
+        psi_idx = self._get_psi_idx(psi)
 
         i_d_ref = self.i_d_inter[t_idx, psi_idx]
         i_q_ref = np.sign(t_ref) * self.i_q_inter[t_idx, psi_idx]
@@ -183,4 +248,5 @@ class EESMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         return np.array([i_d_ref, i_q_ref, i_e_ref])
 
     def reset(self):
+        """Reset the EESM operation point selection"""
         super().reset()

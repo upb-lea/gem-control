@@ -37,7 +37,6 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/read_me.html">Readme File</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../parts/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/usage_guide/usage_guides.html">Usage Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/api_documentation/gem_control.html">GEM Control API Documentation</a></li>
 </ul>
@@ -104,6 +103,9 @@
         <span class="n">base_current_controller</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;PI&#39;</span><span class="p">,</span>
         <span class="n">base_speed_controller</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;PI&#39;</span><span class="p">,</span>
         <span class="n">a</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="n">plot_references</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">block_diagram</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">save_block_diagram_as</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A factory function that generates (and parameterizes) a matching GemController for a given gym-electric-motor</span>
 <span class="sd">        environment `env`.</span>
@@ -119,6 +121,9 @@
 <span class="sd">            base_current_controller(&#39;PI&#39;/&#39;PID&#39;/&#39;P&#39;/&#39;ThreePoint&#39;): Selection of the basic control algorithm for the</span>
 <span class="sd">             current controller.</span>
 <span class="sd">            a(float): Tuning parameter of the symmetrical optimum.</span>
+<span class="sd">            plot_references(bool): Flag, if the reference values of the underlying control circuits should be plotted</span>
+<span class="sd">            block_diagram(bool): Selection whether the block diagram should be displayed</span>
+<span class="sd">            save_block_diagram_as(str, tuple): Selection of whether the block diagram should be saved</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            GemController: An initialized (and tuned) instance of a controller that fits to the specified environment.</span>
@@ -131,6 +136,7 @@
             <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">base_current_controller</span><span class="o">=</span><span class="n">base_current_controller</span><span class="p">,</span> <span class="n">decoupling</span><span class="o">=</span><span class="n">decoupling</span>
         <span class="p">)</span>
         <span class="n">tuner_kwargs</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="n">tuner_kwargs</span><span class="p">[</span><span class="s1">&#39;plot_references&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plot_references</span>
         <span class="k">if</span> <span class="n">control_task</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;TC&#39;</span><span class="p">,</span> <span class="s1">&#39;SC&#39;</span><span class="p">]:</span>
             <span class="c1"># Initilize the operation point selection</span>
             <span class="n">controller</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">TorqueController</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">current_controller</span><span class="o">=</span><span class="n">controller</span><span class="p">)</span>
@@ -145,6 +151,9 @@
 
         <span class="c1"># Fit the controllers parameters to the environment</span>
         <span class="n">controller</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="o">**</span><span class="n">tuner_kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">block_diagram</span><span class="p">:</span>
+            <span class="n">controller</span><span class="o">.</span><span class="n">build_block_diagram</span><span class="p">(</span><span class="n">env_id</span><span class="p">,</span> <span class="n">save_block_diagram_as</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">controller</span></div>
 
@@ -204,6 +213,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">state</span><span class="p">,</span> <span class="n">reference</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_diagram</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">block_diagram</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="n">current_episode_length</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_steps</span><span class="p">):</span>    <span class="c1"># Simulate the environment and controller for n steps</span>
@@ -216,7 +227,9 @@
                 <span class="n">state</span><span class="p">,</span> <span class="n">reference</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
                 <span class="n">current_episode_length</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="n">current_episode_length</span> <span class="o">=</span> <span class="n">current_episode_length</span> <span class="o">+</span> <span class="mi">1</span></div></div>
+            <span class="n">current_episode_length</span> <span class="o">=</span> <span class="n">current_episode_length</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_diagram</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">block_diagram</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
 </pre></div>
 
            </div>

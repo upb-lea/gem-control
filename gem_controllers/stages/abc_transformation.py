@@ -1,6 +1,8 @@
 from gym_electric_motor.physical_systems.electric_motors import SynchronousMotor
 import gem_controllers as gc
+import numpy as np
 from .stage import Stage
+from .. import parameter_reader as reader
 
 
 class AbcTransformation(Stage):
@@ -33,6 +35,7 @@ class AbcTransformation(Stage):
         self._advance_factor = 0.5
         self.omega_idx = None
         self.angle_idx = None
+        self._output_len = None
 
     def __call__(self, state, reference):
         """
@@ -45,7 +48,11 @@ class AbcTransformation(Stage):
         """
 
         epsilon_adv = self._angle_advance(state)    # calculate the advance angle
-        return SynchronousMotor.t_32(SynchronousMotor.q(reference, epsilon_adv))
+        output = np.zeros(self._output_len)
+        output[0:3] = SynchronousMotor.t_32(SynchronousMotor.q(reference[0:2], epsilon_adv))
+        if self._output_len > 3:
+            output[3:] = reference[2:]
+        return output
 
     def _angle_advance(self, state):
         """Multiply the advance factor with the speed and the sampling time to calculate the advance angle"""
@@ -68,4 +75,5 @@ class AbcTransformation(Stage):
             self._advance_factor = 1.5 if env.physical_system.converter.dead_time else 0.5
         else:
             self._advance_factor = 0.5
-
+        action_type, _, motor_type = gc.utils.split_env_id(env_id)
+        self._output_len = len(reader.get_output_voltages(motor_type, action_type))

@@ -37,7 +37,6 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/read_me.html">Readme File</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../parts/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/usage_guide/usage_guides.html">Usage Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../parts/api_documentation/gem_control.html">GEM Control API Documentation</a></li>
 </ul>
@@ -113,6 +112,16 @@
         <span class="sd">&quot;&quot;&quot;Time constant of the current controller stage&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_controller</span><span class="o">.</span><span class="n">t_n</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">references</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">refs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_controller</span><span class="o">.</span><span class="n">references</span>
+        <span class="n">refs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_referenced_currents</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_reference</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">refs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">referenced_states</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_controller</span><span class="o">.</span><span class="n">referenced_states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_referenced_currents</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">env</span><span class="p">:</span> <span class="p">(</span><span class="n">gem</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">ElectricMotorEnvironment</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -144,9 +153,12 @@
         <span class="k">if</span> <span class="n">env_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">clipping_stage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">gc</span><span class="o">.</span><span class="n">parameter_reader</span><span class="o">.</span><span class="n">dc_motors</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">clipping_stages</span><span class="o">.</span><span class="n">AbsoluteClippingStage</span><span class="p">(</span><span class="s1">&#39;TC&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;EESM&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">clipping_stages</span><span class="o">.</span><span class="n">CombinedClippingStage</span><span class="p">(</span><span class="s1">&#39;TC&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>  <span class="c1"># motor in ac_motors</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">clipping_stages</span><span class="o">.</span><span class="n">SquaredClippingStage</span><span class="p">(</span><span class="s1">&#39;TC&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_current_reference</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_referenced_currents</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
 
 <div class="viewcode-block" id="TorqueController.tune"><a class="viewcode-back" href="../../parts/api_documentation/torque_controller.html#gem_controllers.torque_controller.TorqueController.tune">[docs]</a>    <span class="k">def</span> <span class="nf">tune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">current_safety_margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">tune_current_controller</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -162,7 +174,8 @@
         <span class="k">if</span> <span class="n">tune_current_controller</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_current_controller</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="n">current_safety_margin</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_operation_point_selection</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">current_safety_margin</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_operation_point_selection</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">current_safety_margin</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_referenced_currents</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">parameter_reader</span><span class="o">.</span><span class="n">currents</span><span class="p">[</span><span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_motor_type</span><span class="p">(</span><span class="n">env_id</span><span class="p">)]</span></div>
 
 <div class="viewcode-block" id="TorqueController.torque_control"><a class="viewcode-back" href="../../parts/api_documentation/torque_controller.html#gem_controllers.torque_controller.TorqueController.torque_control">[docs]</a>    <span class="k">def</span> <span class="nf">torque_control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
