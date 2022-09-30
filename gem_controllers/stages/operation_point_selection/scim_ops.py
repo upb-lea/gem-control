@@ -64,9 +64,10 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         t_val = []
         i_sd_val = []
         i_sq_val = []
+        psi = np.linspace(self.psi_max, 0, self.psi_count)
 
         # Calculate the maximum torque for a given flux
-        for psi_ in np.linspace(self.psi_max, 0, self.psi_count):
+        for psi_ in psi:
             i_sd = psi_ / self.l_m
             i_sq = np.sqrt(self.nominal_value[self.u_sd_idx] ** 2 / (
                         self.nominal_value[self.omega_idx] ** 2 * self.l_s ** 2) - i_sd ** 2)
