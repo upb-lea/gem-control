@@ -133,7 +133,7 @@ def eesm_cc(emf_feedforward):
 
         if control_task == 'SC':
             # Connector at the previous connection
-            Circle(con_omega[0].points[1], radius=0.05, fill='black')
+            Circle(con_omega.points[1], radius=0.05, fill='black')
 
         # Conncetion between the coordinate transformations
         Connection.connect(abc_to_alpha_beta.output, alpha_beta_to_dq.input_right,
