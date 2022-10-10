@@ -26,11 +26,8 @@ An easy way to get started with GEM Control is by playing around with the follow
 Colaboratory. Most important features of GEM Control as well as application demonstrations are showcased, and give a kickstart
 for engineers in industry and academia.
 
-   - GEM Control cookbook
-   - Externally Excited DC Motor Current Control
-   - PMSM Torque Control
-   - EESM Torque Control
-   - SCIM Speed Control
+   - [GEM Control cookbook](https://colab.research.google.com/github/upb-lea/gem-control/blob/sphinx_doc/examples/GEM_Control_Cookbook.ipynb)
+   - [Example Script](https://github.com/upb-lea/gem-control/blob/sphinx_doc/examples/example.py)
 
 A basic routine is as simple as:
 ```py
