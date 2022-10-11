@@ -1,26 +1,35 @@
 import gym_electric_motor as gem
 import gem_controllers as gc
-from gym_electric_motor.visualization import MotorDashboard
 from gym_electric_motor.physical_system_wrappers import FluxObserver
 
 
-env_id = 'Cont-TC-SCIM-v0'
+if __name__ == '__main__':
 
-# Initialize the motor environment. The controller of the induction motor requires a flux observer.
-env = gem.make(
+    # choose the action space
+    action_space = 'Cont'   # 'Cont' or 'Finite'
+
+    # choose the control task
+    control_task = 'TC'     # 'SC' (speed control), 'TC' (torque control) or 'CC' (current control)
+
+    # chosse the motor type
+    motor_type = 'EESM'     # 'PermExDc', 'ExtExDc', 'SeriesDc', 'ShuntDc', 'PMSM', 'EESM', 'SynRM' or 'SCIM'
+
+    env_id = action_space + '-' + control_task + '-' + motor_type + '-v0'
+
+    # Initilize the environment
+    if motor_type == 'SCIM':
+        env = gem.make(env_id, physical_system_wrappers=(FluxObserver(),))
+    else:
+        env = gem.make(env_id)
+
+    # Initialize the controller
+    c = gc.GemController.make(
+        env,
         env_id,
-        physical_system_wrappers=(FluxObserver(),),
-        visualization=MotorDashboard(state_plots=['omega', 'torque', 'i_sd', 'i_sq', 'u_sd', 'u_sq', 'psi_angle', 'psi_abs']),
-
+        a=12,
+        current_safety_margin=0.25,
     )
 
-# Initialize the controller
-c = gc.GemController.make(
-    env,
-    env_id,
-    a=5,
-    current_safety_margin=0.15,
-)
+    # Control the environment
+    c.control_environment(env, n_steps=30000, render_env=True, max_episode_length=10000)
 
-# Control the motor environment
-c.control_environment(env, n_steps=50001, render_env=True)
