@@ -131,8 +131,8 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
 
         return np.array(psi_i_d_q)
 
-    def tune(self, env: gem.core.ElectricMotorEnvironment, env_id: str, current_safety_margin: float = 0.2):
-        super().tune(env, env_id, current_safety_margin)
+    def tune(self, env: gem.core.ElectricMotorEnvironment, env_id: str, current_safety_margin: float = 0.2, **kwargs):
+        super().tune(env, env_id, current_safety_margin, **kwargs)
 
         self.t_count = 250
         self.psi_count = 250
