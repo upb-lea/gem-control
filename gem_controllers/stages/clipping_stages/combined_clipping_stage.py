@@ -32,3 +32,47 @@ class CombinedClippingStage(ClippingStage):
 
         clipped[self._absolute_clipped_states] = np.clip(reference[self._absolute_clipped_states],
                                                          self._action_range_absolute[0], self._action_range_absolute[1])
+
+        self._clipping_difference = reference - clipped
+        return clipped
+
+    def tune(self, env, env_id, margin=0.0, squared_clipped_state=np.array([0, 1]),
+             absoulte_clipped_states=np.array([2])):
+        """
+        Set the limits for the clipped states.
+
+        Args:
+            env(gym_electric_motor.ElectricMotorEnvironment): The environment to be controlled.
+            env_id(str): The id of the environment.
+            margin(float): Percentage, how far the value should be clipped below the limit.
+            squared_clipped_state(np.ndarray): Indices of the squared clipped states.
+            absoulte_clipped_states(np.ndarray): Indices of the absolute clipped states.
+        """
+
+        self._squared_clipped_states = squared_clipped_state
+        self._absolute_clipped_states = absoulte_clipped_states
+        self._margin = margin
+
+        motor_type = gc.utils.get_motor_type(env_id)
+        if self._control_task == 'CC':
+            action_names = gc.parameter_reader.voltages[motor_type]
+        elif self._control_task == 'TC':
+            action_names = gc.parameter_reader.currents[motor_type]
+        elif self._control_task == 'SC':
+            action_names = ['torque']
+        else:
+            raise AttributeError(f'Control task is {self._control_task} but has to be one of [SC, TC, CC].')
+        action_indices = [env.state_names.index(action_name) for action_name in action_names]
+        limits = env.limits[action_indices] * (1 - margin)
+        state_space = env.observation_space[0]
+        lower_action_limit = state_space.low[action_indices] * limits
+        upper_action_limit = state_space.high[action_indices] * limits
+        self._limit_squred_clipping = limits[squared_clipped_state]
+        self._action_range_absolute = lower_action_limit[absoulte_clipped_states], upper_action_limit[
+            absoulte_clipped_states]
+        self._clipping_difference = np.zeros_like(lower_action_limit)
+
+    def reset(self):
+        """Reset the combined clipping stage"""
+        self._clipping_difference = np.zeros(
+            np.size(self._squared_clipped_states) + np.size(self._absolute_clipped_states))
