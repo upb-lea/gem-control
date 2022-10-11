@@ -6,42 +6,29 @@ from . import ClippingStage
 
 
 class CombinedClippingStage(ClippingStage):
+    """This clipping stage combines the absolute clipping and the squared clipping."""
 
     @property
     def clipping_difference(self) -> np.ndarray:
+        """Difference between the reference and the clipped reference"""
         return self._clipping_difference
 
-    @property
-    def action_range(self) -> Tuple[np.ndarray, np.ndarray]:
-        return self._action_range
-
     def __init__(self, control_task='CC'):
-        self._action_range = np.array([]), np.array([])
+        self._action_range_absolute = np.array([]), np.array([])
+        self._limit_squred_clipping = np.array([])
         self._clipping_difference = np.array([])
         self._control_task = control_task
+        self._absolute_clipped_states = np.array([])
+        self._squared_clipped_states = np.array([])
+        self._margin = None
 
     def __call__(self, state, reference):
-        clipped = np.clip(reference, self._action_range[0], self._action_range[1])
-        self._clipping_difference = reference - clipped
-        return clipped
+        clipped = np.zeros(np.size(self._squared_clipped_states) + np.size(self._absolute_clipped_states))
+        relative_reference_length = np.sum((reference[self._squared_clipped_states]/self._limit_squred_clipping)**2)
+        relative_maximum = 1 - self._margin
+        clipped[self._squared_clipped_states] = reference[self._squared_clipped_states] \
+            if relative_reference_length < relative_maximum**2 \
+            else reference[self._squared_clipped_states] / relative_reference_length * relative_maximum
 
-    def tune(self, env, env_id, margin=0.0):
-        motor_type = gc.utils.get_motor_type(env_id)
-        if self._control_task == 'CC':
-            action_names = gc.parameter_reader.voltages[motor_type]
-        elif self._control_task == 'TC':
-            action_names = gc.parameter_reader.currents[motor_type]
-        elif self._control_task == 'SC':
-            action_names = ['torque']
-        else:
-            raise AttributeError(f'Control task is {self._control_task} but has to be one of [SC, TC, CC].')
-        action_indices = [env.state_names.index(action_name) for action_name in action_names]
-        limits = env.limits[action_indices] * (1 - margin)
-        state_space = env.observation_space[0]
-        lower_action_limit = state_space.low[action_indices] * limits
-        upper_action_limit = state_space.high[action_indices] * limits
-        self._action_range = lower_action_limit, upper_action_limit
-        self._clipping_difference = np.zeros_like(lower_action_limit)
-
-    def reset(self):
-        self._clipping_difference = np.zeros_like(self._action_range[0])
+        clipped[self._absolute_clipped_states] = np.clip(reference[self._absolute_clipped_states],
+                                                         self._action_range_absolute[0], self._action_range_absolute[1])
