@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gem_controllers.stages.base_controllers.pi_controller &mdash; gem-control 2021 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> gem-control
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../parts/read_me.html">Readme File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../parts/usage_guide/usage_guides.html">Usage Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../parts/api_documentation/gem_control.html">GEM Control API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">gem-control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>gem_controllers.stages.base_controllers.pi_controller</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gem_controllers.stages.base_controllers.pi_controller</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.p_controller</span> <span class="kn">import</span> <span class="n">PController</span>
+<span class="kn">from</span> <span class="nn">.i_controller</span> <span class="kn">import</span> <span class="n">IController</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">parameter_reader</span> <span class="k">as</span> <span class="n">reader</span>
+<span class="kn">from</span> <span class="nn">.e_base_controller_task</span> <span class="kn">import</span> <span class="n">EBaseControllerTask</span>
+<span class="kn">import</span> <span class="nn">gem_controllers</span> <span class="k">as</span> <span class="nn">gc</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="PIController"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/base_controllers/pi_controller.html#gem_controllers.stages.base_controllers.pi_controller.PIController">[docs]</a><span class="k">class</span> <span class="nc">PIController</span><span class="p">(</span><span class="n">PController</span><span class="p">,</span> <span class="n">IController</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class combines the proportional controller and the integration controller to a PI-Controller&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">control_task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            control_task(str): Control task of the PI controller</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">PController</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">control_task</span><span class="o">=</span><span class="n">control_task</span><span class="p">)</span>
+        <span class="n">IController</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">control_task</span><span class="o">=</span><span class="n">control_task</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PIController.control"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/base_controllers/pi_controller.html#gem_controllers.stages.base_controllers.pi_controller.PIController.control">[docs]</a>    <span class="k">def</span> <span class="nf">control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the reference of the underlying stage by adding the P- and I-component.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">             state(np.ndarray): The state of the environment.</span>
+<span class="sd">             reference(np.ndarray): The reference of the state.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            controller_output(np.ndarray): output of the controller stage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">filtered_state</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_state_indices</span><span class="p">]</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">PController</span><span class="o">.</span><span class="n">_control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filtered_state</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span> \
+            <span class="o">+</span> <span class="n">IController</span><span class="o">.</span><span class="n">_control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filtered_state</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">action</span></div>
+
+<div class="viewcode-block" id="PIController.tune"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/base_controllers/pi_controller.html#gem_controllers.stages.base_controllers.pi_controller.PIController.tune">[docs]</a>    <span class="k">def</span> <span class="nf">tune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">t_n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tune the components of the controller for the desired task.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>
+<span class="sd">            env_id(str): The corresponding environment-id to specify the concrete environment.</span>
+<span class="sd">            a(float): Design parameter of the symmetrical optimum.</span>
+<span class="sd">            t_n(float): Time constant of the underlying controller stage.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_control_task</span> <span class="o">==</span> <span class="n">EBaseControllerTask</span><span class="o">.</span><span class="n">CC</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tune_current_controller</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_control_task</span> <span class="o">==</span> <span class="n">EBaseControllerTask</span><span class="o">.</span><span class="n">SC</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tune_speed_controller</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">t_n</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_control_task</span> <span class="o">==</span> <span class="n">EBaseControllerTask</span><span class="o">.</span><span class="n">FC</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tune_flux_controller</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">t_n</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No tuning method available.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PIController._tune_current_controller"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/base_controllers/pi_controller.html#gem_controllers.stages.base_controllers.pi_controller.PIController._tune_current_controller">[docs]</a>    <span class="k">def</span> <span class="nf">_tune_current_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tune the P-controller and I-controller for the current control by the symmetrical optimum.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>
+<span class="sd">            env_id(str): The corresponding environment-id to specify the concrete environment.</span>
+<span class="sd">            a(float): Design parameter of the symmetrical optimum.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">action_type</span><span class="p">,</span> <span class="n">control_task</span><span class="p">,</span> <span class="n">motor_type</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">split_env_id</span><span class="p">(</span><span class="n">env_id</span><span class="p">)</span>
+        <span class="n">PController</span><span class="o">.</span><span class="n">_tune_current_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="n">tau</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">physical_system</span><span class="o">.</span><span class="n">tau</span>
+        <span class="n">currents</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">currents</span><span class="p">[</span><span class="n">motor_type</span><span class="p">]</span>
+        <span class="n">voltages</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">voltages</span><span class="p">[</span><span class="n">motor_type</span><span class="p">]</span>
+        <span class="n">voltage_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">state_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">voltage</span><span class="p">)</span> <span class="k">for</span> <span class="n">voltage</span> <span class="ow">in</span> <span class="n">voltages</span><span class="p">]</span>
+        <span class="n">current_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">state_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">current</span><span class="p">)</span> <span class="k">for</span> <span class="n">current</span> <span class="ow">in</span> <span class="n">currents</span><span class="p">]</span>
+        <span class="n">voltage_limits</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="n">voltage_indices</span><span class="p">]</span>
+        <span class="n">i_gain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_gain</span> <span class="o">/</span> <span class="p">(</span><span class="n">tau</span> <span class="o">*</span> <span class="n">a</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">action_range</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">low</span><span class="p">[</span><span class="n">voltage_indices</span><span class="p">]</span> <span class="o">*</span> <span class="n">voltage_limits</span><span class="p">,</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">high</span><span class="p">[</span><span class="n">voltage_indices</span><span class="p">]</span> <span class="o">*</span> <span class="n">voltage_limits</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i_gain</span> <span class="o">=</span> <span class="n">i_gain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_range</span> <span class="o">=</span> <span class="n">action_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">tau</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_indices</span> <span class="o">=</span> <span class="n">current_indices</span></div>
+
+<div class="viewcode-block" id="PIController._tune_speed_controller"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/base_controllers/pi_controller.html#gem_controllers.stages.base_controllers.pi_controller.PIController._tune_speed_controller">[docs]</a>    <span class="k">def</span> <span class="nf">_tune_speed_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">t_n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tune the P-controller and I-controller for the speed control by the symmetrical optimum.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>
+<span class="sd">            env_id(str): The corresponding environment-id to specify the concrete environment.</span>
+<span class="sd">            a(float): Design parameter of the symmetrical optimum.</span>
+<span class="sd">            t_n(float): Time constant of the underlying torque controller.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">PController</span><span class="o">.</span><span class="n">_tune_speed_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">t_n</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i_gain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_gain</span> <span class="o">/</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">t_n</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">physical_system</span><span class="o">.</span><span class="n">tau</span>
+        <span class="n">speed_index</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">state_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;omega&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">speed_index</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="PIController._tune_flux_controller"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/base_controllers/pi_controller.html#gem_controllers.stages.base_controllers.pi_controller.PIController._tune_flux_controller">[docs]</a>    <span class="k">def</span> <span class="nf">_tune_flux_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">t_n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tune the P-controller and I-controller for the flux control by the symmetrical optimum.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>
+<span class="sd">            env_id(str): The corresponding environment-id to specify the concrete environment.</span>
+<span class="sd">            a(float): Design parameter of the symmetrical optimum.</span>
+<span class="sd">            t_n(float): Time constant of the underlying torque controller.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">physical_system</span><span class="o">.</span><span class="n">tau</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_gain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span> <span class="o">*</span> <span class="n">t_n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i_gain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_gain</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Felix Book,  Barnabas Haucke-Korber, Maximilian Schenke, Arne Traue, Oliver Wallscheid.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
