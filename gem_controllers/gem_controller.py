@@ -29,10 +29,13 @@ class GemController:
         env: gym_electric_motor.core.ElectricMotorEnvironment,
         env_id: str,
         decoupling: bool = True,
-        current_safety_margin:float = 0.2,
+        current_safety_margin: float = 0.2,
         base_current_controller: str = 'PI',
         base_speed_controller: str = 'PI',
         a: int = 4,
+
+        block_diagram: bool = True,
+        save_block_diagram_as: (str, tuple) = None,
         plot_references: bool = True,
     ):
         """A factory function that generates (and parameterizes) a matching GemController for a given gym-electric-motor
@@ -49,6 +52,8 @@ class GemController:
             base_current_controller('PI'/'PID'/'P'/'ThreePoint'): Selection of the basic control algorithm for the
              current controller.
             a(float): Tuning parameter of the symmetrical optimum.
+            block_diagram(bool): Selection whether the block diagram should be displayed
+            save_block_diagram_as(str, tuple): Selection of whether the block diagram should be saved
             plot_references(bool): Flag, if the reference values of the underlying control circuits should be plotted
 
         Returns:
@@ -74,6 +79,9 @@ class GemController:
         # Fit the controllers parameters to the environment
         controller.tune(env, env_id, **tuner_kwargs)
 
+        if block_diagram:
+            controller.build_block_diagram(env_id, save_block_diagram_as)
+
         return controller
 
     @property
@@ -98,6 +106,8 @@ class GemController:
 
     def control_environment(self, env, n_steps, max_episode_length=np.inf, render_env=False):
         state, reference = env.reset()
+        if self.block_diagram:
+            self.block_diagram.open()
         self.reset()
         current_episode_length = 0
         for _ in range(n_steps):
@@ -110,3 +120,5 @@ class GemController:
                 self.reset()
                 current_episode_length = 0
             current_episode_length = current_episode_length + 1
+        if self.block_diagram:
+            self.block_diagram.close()
