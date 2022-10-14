@@ -1,3 +1,3 @@
 gym-electric-motor >= 1.1.0
 numpy >= 1.16.4
-git+git://github.com/upb-lea/control-block-diagram@main#egg=control-block-diagram
+control-block-diagram @ git+https://github.com/upb-lea/control-block-diagram@main
