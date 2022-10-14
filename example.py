@@ -26,8 +26,10 @@ if __name__ == '__main__':
     c = gc.GemController.make(
         env,
         env_id,
-        a=12,
+        a=8,
+        block_diagram=True,
         current_safety_margin=0.25,
+        save_block_diagram_as=(),
     )
 
     # Control the environment

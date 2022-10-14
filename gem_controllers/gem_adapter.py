@@ -30,6 +30,10 @@ class GymElectricMotorAdapter(gc.GemController):
     def controller(self, value):
         self._controller = value
 
+    @property
+    def block_diagram(self):
+        return self._block_diagram
+
     def __init__(
         self,
         _env: (gem.core.ElectricMotorEnvironment, None) = None,
@@ -47,6 +51,8 @@ class GymElectricMotorAdapter(gc.GemController):
             self._output_stage = gc.stages.DiscOutputStage()
         else:
             self._output_stage = gc.stages.ContOutputStage()
+
+        self._block_diagram = None
         self._reference_plotter = gc.ReferencePlotter()
 
     def control(self, state, reference):
@@ -64,6 +70,9 @@ class GymElectricMotorAdapter(gc.GemController):
         if tune_controller:
             self._controller.tune(env, env_id, **kwargs)
         self._reference_plotter.tune(env, self._controller.referenced_states, **kwargs)
+
+    def build_block_diagram(self, env_id, save_block_diagram_as):
+        self._block_diagram = gc.block_diagrams.block_diagram.build_block_diagram(self, env_id, save_block_diagram_as)
 
     def reset(self):
         self._input_stage.reset()

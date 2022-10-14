@@ -5,3 +5,5 @@ from .permex_dc_ops import PermExDcOperationPointSelection
 from .operation_point_selection import OperationPointSelection
 from .extex_dc_ttc import ExtExDcOperationPointSelection
 from .eesm_ops import EESMOperationPointSelection
+from .pmsm_ops import PMSMOperationPointSelection
+from .scim_ops import SCIMOperationPointSelection
