@@ -75,6 +75,7 @@ class IController(BaseController):
     def __call__(self, state, reference):
         """
         Calculate the reference values of the I controller
+
         Args:
              state(np.ndarray): The state of the environment.
              reference(np.ndarray): The reference of the state.

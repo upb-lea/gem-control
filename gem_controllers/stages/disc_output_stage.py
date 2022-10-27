@@ -49,6 +49,7 @@ class DiscOutputStage(Stage):
     def to_discrete(multi_discrete_action):
         """
         Transform multi discrete action to a discrete action.
+
         Args:
             multi_discrete_action(np.array): Array of multi discrete actions
 

@@ -1,5 +1,5 @@
 class Stage:
-    """The stage is the basic entity in the gem-controller structure. """
+    """The stage is the basic module in the gem-controller structure. """
 
     def __call__(self, state, reference):
         """The stages control function.

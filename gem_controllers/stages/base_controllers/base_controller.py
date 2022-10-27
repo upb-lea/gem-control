@@ -33,10 +33,11 @@ class BaseController(Stage):
     def tune(self, env, env_id, **base_controller_kwargs):
         """
         Tune a base controller.
+
         Args:
-            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
-            env_id(str): The corresponding environment-id to specify the concrete environment.
-            **base_controller_kwargs: Keyword arguments, that should be passed to a base controller
+             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
+             env_id(str): The corresponding environment-id to specify the concrete environment.
+             **base_controller_kwargs: Keyword arguments, that should be passed to a base controller
         """
         pass
 

@@ -192,6 +192,7 @@ class EESMOperationPointSelection(FieldOrientedControllerOperationPointSelection
     def _get_psi_idx(self, psi):
         """
         Get the index of the lookup tables for a given flux.
+
         Args:
             psi(float): optimal magnetic flux.
 
@@ -205,6 +206,7 @@ class EESMOperationPointSelection(FieldOrientedControllerOperationPointSelection
     def _get_t_idx(self, torque):
         """
         Get the index of the lookup tables for a given torque.
+
         Args:
             torque(float): The clipped torque reference value.
 

@@ -287,7 +287,7 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         return i_d, i_q
 
     def _get_i_d_q(self, torque, psi, psi_idx):
-        """Get the i_d and i_q current from the mtpc lut"""
+        """Get the i_d and i_q current from the MTPC lut"""
 
         i_d, i_q = self.solve_analytical(torque, psi)
         if i_d > self.mtpc[psi_idx, 1]:
@@ -306,7 +306,7 @@ class PMSMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         return int(round((psi - self.psi_min) / (self.psi_max - self.psi_min) * (self.psi_count - 1)))
 
     def _get_psi_idx_mtpf(self, psi):
-        """Get the index of the flux of the mtpf lookup table."""
+        """Get the index of the flux of the MTPF lookup table."""
         return np.clip(
             int((self.psi_count - 1) - round(psi / self.psi_max_mtpf * (self.psi_count - 1))), 0, self.psi_count)
 

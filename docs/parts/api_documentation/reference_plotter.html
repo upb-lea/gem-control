@@ -89,21 +89,27 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="gem_controllers.reference_plotter.ReferencePlotter.tune">
 <span class="sig-name descname"><span class="pre">tune</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">referenced_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_references</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/gem_controllers/reference_plotter.html#ReferencePlotter.tune"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.reference_plotter.ReferencePlotter.tune" title="Permalink to this definition"></a></dt>
-<dd><p>Tune the reference plotter.
-:param env: The GEM-Environment that the controller shall be created for.
-:type env: ElectricMotorEnvironment
-:param referenced_states: Array of all referenced states.
-:type referenced_states: np.ndarray
-:param plot_references: Flag, if the references of the subordinate stages should be plotted.
-:type plot_references: bool</p>
+<dd><p>Tune the reference plotter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<em>ElectricMotorEnvironment</em>) – The GEM-Environment that the controller shall be created for.</p></li>
+<li><p><strong>referenced_states</strong> (<em>np.ndarray</em>) – Array of all referenced states.</p></li>
+<li><p><strong>plot_references</strong> (<em>bool</em>) – Flag, if the references of the subordinate stages should be plotted.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gem_controllers.reference_plotter.ReferencePlotter.update_plots">
 <span class="sig-name descname"><span class="pre">update_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">references</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/gem_controllers/reference_plotter.html#ReferencePlotter.update_plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.reference_plotter.ReferencePlotter.update_plots" title="Permalink to this definition"></a></dt>
-<dd><p>Update the state plots of the GEM environment
-:param references: Array of all reference values of the subordinate stages.
-:type references: np.ndarray</p>
+<dd><p>Update the state plots of the GEM environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>references</strong> (<em>np.ndarray</em>) – Array of all reference values of the subordinate stages.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

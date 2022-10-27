@@ -79,6 +79,7 @@
 <div class="viewcode-block" id="ReferencePlotter.tune"><a class="viewcode-back" href="../../parts/api_documentation/reference_plotter.html#gem_controllers.reference_plotter.ReferencePlotter.tune">[docs]</a>    <span class="k">def</span> <span class="nf">tune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">referenced_states</span><span class="p">,</span> <span class="n">plot_references</span><span class="p">,</span> <span class="o">**</span><span class="n">_</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Tune the reference plotter.</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>
 <span class="sd">            referenced_states(np.ndarray): Array of all referenced states.</span>
@@ -98,7 +99,8 @@
 
 <div class="viewcode-block" id="ReferencePlotter.update_plots"><a class="viewcode-back" href="../../parts/api_documentation/reference_plotter.html#gem_controllers.reference_plotter.ReferencePlotter.update_plots">[docs]</a>    <span class="k">def</span> <span class="nf">update_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">references</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Update the state plots of the GEM environment</span>
+<span class="sd">        Update the state plots of the GEM environment.</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            references(np.ndarray): Array of all reference values of the subordinate stages.</span>
 <span class="sd">        &quot;&quot;&quot;</span>

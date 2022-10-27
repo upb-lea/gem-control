@@ -32,6 +32,7 @@ class InputStage(Stage):
     def __call__(self, state, reference):
         """
         Denormalize the state and the references
+
         Args:
              state(np.ndarray): The state of the environment.
              reference(np.ndarray): The reference values at the input.

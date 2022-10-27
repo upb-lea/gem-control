@@ -24,6 +24,7 @@ class SeriesDcOperationPointSelection(OperationPointSelection):
     def _select_operating_point(self, state, reference):
         """
         Calculate the current refrence values.
+
         Args:
              state(np.ndarray): The state of the environment.
              reference(np.ndarray): The reference of the state.

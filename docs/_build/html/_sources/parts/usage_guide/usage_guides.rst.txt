@@ -8,7 +8,7 @@ Create a GEM environment
 To create a GEM environment use the gem.make() command. First of all, the type of the environment is defined by
 the env_id. This specifies the action space (`'Finite'` or `'Cont'`), the control task ( `'SC'` for Speed Control,
 `'TC'` for Torque Control or `'CC'` for Current Control) and the motor type. There are many parameters to customize
-the environment. In the following code block an example for the initialization of a speed control of an PMSM is
+the environment. In the following code block, an example for the initialization of a speed control of an PMSM is
 shown. A detailed description for the configuration of a GEM environment can be found in the
 `GEM Cookbook <https://colab.research.google.com/github/upb-lea/gym-electric-motor/blob/master/examples/environment_features/GEM_cookbook.ipynb>`_.
 
