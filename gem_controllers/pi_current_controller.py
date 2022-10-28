@@ -4,7 +4,7 @@ import gem_controllers as gc
 
 
 class PICurrentController(gc.CurrentController):
-    """This class forms the PI Current controller, for any motor."""
+    """This class forms the PI current controller, for any motor."""
 
     @property
     def signal_names(self):

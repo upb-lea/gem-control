@@ -9,14 +9,14 @@ def eesm_cc(emf_feedforward):
         emf_feedforward: Boolean whether emf feedforward stage is included
 
     Returns:
-        Function to build the EESM Current Control Block
+        Function to build the EESM current control block
     """
 
     def cc_eesm(start, control_task):
         """
-        Function to build the EESM Current Control Block
+        Function to build the EESM current control block
         Args:
-            start:          Starting Point of the Block
+            start:          Starting point of the block
             control_task:   Control task of the controller
 
         Returns:

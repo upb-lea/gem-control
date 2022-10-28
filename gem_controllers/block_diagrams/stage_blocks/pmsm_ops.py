@@ -46,9 +46,9 @@ class TMaxPsiBox(Box):
 
 def pmsm_ops(start, control_task):
     """
-    Function to build the PMSM Operation Point Selection Block
+    Function to build the PMSM operation point selection block
     Args:
-        start:          Starting Point of the Block
+        start:          Starting point of the block
         control_task:   Control task of the controller
 
     Returns:

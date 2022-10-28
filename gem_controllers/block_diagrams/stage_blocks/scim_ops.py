@@ -46,9 +46,9 @@ class TMaxPsiBox(Box):
 
 def scim_ops(start, control_task):
     """
-    Function to build the SCIM Operation Point Selection Block
+    Function to build the SCIM operation point selection block
     Args:
-        start:          Starting Point of the Block
+        start:          Starting point of the block
         control_task:   Control task of the controller
 
     Returns:

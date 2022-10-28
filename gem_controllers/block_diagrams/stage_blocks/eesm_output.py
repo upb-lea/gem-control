@@ -8,14 +8,14 @@ def eesm_output(emf_feedforward):
         emf_feedforward: Boolean whether emf feedforward stage is included
 
     Returns:
-        Function to build the EESM Output Block
+        Function to build the EESM output block
     """
 
     def _eesm_output(start, control_task):
         """
-        Function to build the EESM Output Block
+        Function to build the EESM output block
         Args:
-            start:          Starting Point of the Block
+            start:          Starting point of the block
             control_task:   Control task of the controller
 
         Returns:

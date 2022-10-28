@@ -8,14 +8,14 @@ def shunt_dc_output(emf_feedforward):
         emf_feedforward: Boolean whether emf feedforward stage is included
 
     Returns:
-        Function to build the Shunt DC Output Block
+        Function to build the Shunt DC output block
     """
 
     def _shunt_dc_output(start, control_task):
         """
-        Function to build the Shunt DC Output Block
+        Function to build the Shunt DC output block
         Args:
-            start:          Starting Point of the Block
+            start:          Starting point of the block
             control_task:   Control task of the controller
 
         Returns:

@@ -12,7 +12,7 @@ def build_block_diagram(controller, env_id, save_block_diagram_as):
     Creates a block diagram of the controller
 
     Args:
-        controller:             GEM Control Controller
+        controller:             GEMController
         env_id:                 GEM environment id
         save_block_diagram_as:  string or tuple of strings of the data types to be saved
 
@@ -68,7 +68,7 @@ def get_stages(controller, motor_type):
     Function to get all block building functions
 
     Args:
-        controller: GEM Control Controller
+        controller: GEMController
         motor_type: type of the motor
 
     Returns:

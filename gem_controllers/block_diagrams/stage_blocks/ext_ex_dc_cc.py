@@ -8,14 +8,14 @@ def ext_ex_dc_cc(emf_feedforward):
         emf_feedforward: Boolean whether emf feedforward stage is included
 
     Returns:
-        Function to build the Externally Excited DC Current Control Block
+        Function to build the Externally Excited DC current control block
     """
 
     def cc_ext_ex_dc(start, control_task):
         """
-        Function to build the Externally Excited DC Current Control Block
+        Function to build the Externally Excited DC current control block
         Args:
-            start:          Starting Point of the Block
+            start:          Starting point of the block
             control_task:   Control task of the controller
 
         Returns:

@@ -4,7 +4,7 @@ from .pi_controller import PIController
 
 
 class PIDController(PIController):
-    """This class extends the PI-Controller by differential controller."""
+    """This class extends the PI controller by differential controller."""
 
     @property
     def d_gain(self):

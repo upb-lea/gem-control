@@ -99,8 +99,8 @@
 <dt class="sig sig-object py" id="gem_controllers.stages.anti_windup.AntiWindup">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gem_controllers.stages.anti_windup.</span></span><span class="sig-name descname"><span class="pre">AntiWindup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">control_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CC'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/gem_controllers/stages/anti_windup.html#AntiWindup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.stages.anti_windup.AntiWindup" title="Permalink to this definition"></a></dt>
 <dd><p>This class should prevent a Windup of a the intgration part of the controller. A windup arises when a reference
-variable is in the limit and the I-controller is still integrated, so that it takes more time for the controlled
-variable to go under the limit again. To prevent this, only the I-controllers whose controlled variable is below the
+variable is in the limit and the I controller is still integrated, so that it takes more time for the controlled
+variable to go under the limit again. To prevent this, only the I controllers whose controlled variable is below the
 limits are integrated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

@@ -5,8 +5,8 @@ import gem_controllers as gc
 
 class AntiWindup:
     """This class should prevent a Windup of a the intgration part of the controller. A windup arises when a reference
-    variable is in the limit and the I-controller is still integrated, so that it takes more time for the controlled
-    variable to go under the limit again. To prevent this, only the I-controllers whose controlled variable is below the
+    variable is in the limit and the I controller is still integrated, so that it takes more time for the controlled
+    variable to go under the limit again. To prevent this, only the I controllers whose controlled variable is below the
     limits are integrated.
     """
 

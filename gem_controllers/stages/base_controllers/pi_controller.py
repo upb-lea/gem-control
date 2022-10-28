@@ -7,7 +7,7 @@ import numpy as np
 
 
 class PIController(PController, IController):
-    """This class combines the proportional controller and the integration controller to a PI-Controller"""
+    """This class combines the proportional controller and the integration controller to a PI controller"""
 
     def __init__(self, control_task):
         """
@@ -56,7 +56,7 @@ class PIController(PController, IController):
 
     def _tune_current_controller(self, env, env_id, a=4):
         """
-        Tune the P-controller and I-controller for the current control by the symmetrical optimum.
+        Tune the P controller and I controller for the current control by the symmetrical optimum.
 
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
@@ -85,7 +85,7 @@ class PIController(PController, IController):
 
     def _tune_speed_controller(self, env, env_id, a=4, t_n=None):
         """
-        Tune the P-controller and I-controller for the speed control by the symmetrical optimum.
+        Tune the P controller and I controller for the speed control by the symmetrical optimum.
 
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.

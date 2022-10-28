@@ -75,7 +75,7 @@
 
 
 <div class="viewcode-block" id="PIController"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/base_controllers/pi_controller.html#gem_controllers.stages.base_controllers.pi_controller.PIController">[docs]</a><span class="k">class</span> <span class="nc">PIController</span><span class="p">(</span><span class="n">PController</span><span class="p">,</span> <span class="n">IController</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This class combines the proportional controller and the integration controller to a PI-Controller&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;This class combines the proportional controller and the integration controller to a PI controller&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">control_task</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -124,7 +124,7 @@
 
 <div class="viewcode-block" id="PIController._tune_current_controller"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/base_controllers/pi_controller.html#gem_controllers.stages.base_controllers.pi_controller.PIController._tune_current_controller">[docs]</a>    <span class="k">def</span> <span class="nf">_tune_current_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Tune the P-controller and I-controller for the current control by the symmetrical optimum.</span>
+<span class="sd">        Tune the P controller and I controller for the current control by the symmetrical optimum.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>
@@ -153,7 +153,7 @@
 
 <div class="viewcode-block" id="PIController._tune_speed_controller"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/base_controllers/pi_controller.html#gem_controllers.stages.base_controllers.pi_controller.PIController._tune_speed_controller">[docs]</a>    <span class="k">def</span> <span class="nf">_tune_speed_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">t_n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Tune the P-controller and I-controller for the speed control by the symmetrical optimum.</span>
+<span class="sd">        Tune the P controller and I controller for the speed control by the symmetrical optimum.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>

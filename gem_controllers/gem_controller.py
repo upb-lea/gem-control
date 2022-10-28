@@ -7,7 +7,7 @@ import numpy as np
 class GemController:
     """The GemController is the base for all motor controllers in the gem-control package.
 
-    A gem-controller consists of multiple stages that execute different control tasks like speed-control, a reference
+    A GemController consists of multiple stages that execute different control tasks like speed-control, a reference
     to current set point mapping or input and output processing.
 
     Furthermore, the GemController has got a `GemController.make` factory function that automatically designs and tunes

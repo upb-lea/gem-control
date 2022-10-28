@@ -9,12 +9,12 @@ def scim_cc(emf_feedforward):
         emf_feedforward: Boolean whether emf feedforward stage is included
 
     Returns:
-        Function to build the SCIM Current Control Block
+        Function to build the SCIM current control block
     """
 
     def cc_scim(start, control_task):
         """
-        Function to build the SCIM Current Control Block
+        Function to build the SCIM current control block
         Args:
             start:          Starting Point of the Block
             control_task:   Control task of the controller
