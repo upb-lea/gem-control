@@ -102,7 +102,7 @@ class PIController(PController, IController):
 
     def _tune_flux_controller(self, env, env_id, a=4, t_n=None):
         """
-        Tune the P-controller and I-controller for the flux control by the symmetrical optimum.
+        Tune the P controller and I controller for the flux control by the symmetrical optimum.
 
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.

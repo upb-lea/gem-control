@@ -43,7 +43,7 @@ class PIDController(PIController):
         return pi_action + d_action
 
     def _tune_current_controller(self, env, env_id, a=4):
-        """Set the gains of the P-, I- and D-Component for the current control.
+        """Set the gains of the P, I and D component for the current control.
 
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.

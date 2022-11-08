@@ -6,9 +6,9 @@ from .. import parameter_reader as reader
 
 
 class AbcTransformation(Stage):
-    """This class calculates the transformation from the dq-coordinate system to the abc-coordinatesystem for three-
-    phase motors. Optionally, an advanced factor can be added to the angle to take the dead time of the inverter and the
-    sampling time into account.
+    """This class calculates the transformation from the dq-coordinate system to the abc-coordinatesystem for
+    three-phase motors. Optionally, an advanced factor can be added to the angle to take the dead time of the inverter
+    and the sampling time into account.
     """
 
     @property

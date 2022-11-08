@@ -52,7 +52,6 @@
 <li class="toctree-l3"><a class="reference internal" href="input_stage.html">Input Stage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cont_output_stage.html">Continuous Output Stage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="disc_output_stage.html">Discrete Output Stage</a></li>
-<li class="toctree-l3"><a class="reference internal" href="stages.html#stage">Stage</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../block_diagrams/block_diagrams.html">Block Diagrams</a></li>
@@ -62,7 +61,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../gem_adapter.html">GEM Adapter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference_plotter.html">Reference Plotter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../utils.html">Utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../gem_control.html#gem-controllers">GEM Controllers</a></li>
 </ul>
 </li>
 </ul>
@@ -98,9 +96,9 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="gem_controllers.stages.abc_transformation.AbcTransformation">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gem_controllers.stages.abc_transformation.</span></span><span class="sig-name descname"><span class="pre">AbcTransformation</span></span><a class="reference internal" href="../../../_modules/gem_controllers/stages/abc_transformation.html#AbcTransformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.stages.abc_transformation.AbcTransformation" title="Permalink to this definition"></a></dt>
-<dd><p>This class calculates the transformation from the dq-coordinate system to the abc-coordinatesystem for three-
-phase motors. Optionally, an advanced factor can be added to the angle to take the dead time of the inverter and the
-sampling time into account.</p>
+<dd><p>This class calculates the transformation from the dq-coordinate system to the abc-coordinatesystem for
+three-phase motors. Optionally, an advanced factor can be added to the angle to take the dead time of the inverter
+and the sampling time into account.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gem_controllers.stages.abc_transformation.AbcTransformation.__call__">
 <span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/gem_controllers/stages/abc_transformation.html#AbcTransformation.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.stages.abc_transformation.AbcTransformation.__call__" title="Permalink to this definition"></a></dt>

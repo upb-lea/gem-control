@@ -1,5 +1,5 @@
 GEM Control API Documentation
-#############################
+##############################
 
 .. toctree::
    :maxdepth: 1
@@ -16,7 +16,7 @@ GEM Control API Documentation
 
 
 GEM Controllers
----------------
+'''''''''''''''
 
 .. autoclass:: gem_controllers.gem_controller.GemController
    :members: make, control, reset, tune, control_environment, signals, signal_names, get_signal_value, stages
