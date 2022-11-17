@@ -84,7 +84,7 @@ class PICurrentController(gc.CurrentController):
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             env_id(str): The corresponding environment-id to specify the concrete environment.
             base_current_controller(str): Selection which base controller should be used for the current control stage.
-            decoupling(bool): Flag, if a EMF-Feedforward correction stage should be used in the pi current controller.
+            decoupling(bool): Flag, if a EMF-Feedforward correction stage should be used in the PI current controller.
         """
 
         super().__init__()

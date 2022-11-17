@@ -116,7 +116,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="gem_controllers.stages.base_controllers.pid_controller.PIDController._tune_current_controller">
 <span class="sig-name descname"><span class="pre">_tune_current_controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/gem_controllers/stages/base_controllers/pid_controller.html#PIDController._tune_current_controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.stages.base_controllers.pid_controller.PIDController._tune_current_controller" title="Permalink to this definition"></a></dt>
-<dd><p>Set the gains of the P, I and D component for the current control.</p>
+<dd><p>Set the gains of the P-, I- and D-component for the current control.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -131,7 +131,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="gem_controllers.stages.base_controllers.pid_controller.PIDController._tune_speed_controller">
 <span class="sig-name descname"><span class="pre">_tune_speed_controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/gem_controllers/stages/base_controllers/pid_controller.html#PIDController._tune_speed_controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.stages.base_controllers.pid_controller.PIDController._tune_speed_controller" title="Permalink to this definition"></a></dt>
-<dd><p>Set the gains of the P-, I- and D-Component for the speed control.</p>
+<dd><p>Set the gains of the P-, I- and D-component for the speed control.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -156,7 +156,7 @@
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The action of the PID-controller</p>
+<dd class="field-even"><p>The action of the PID controller</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>action(np.ndarray)</p>

@@ -102,7 +102,7 @@
 <span class="sd">             reference(np.ndarray): The reference of the state.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            action(np.ndarray): The action of the PID-controller</span>
+<span class="sd">            action(np.ndarray): The action of the PID controller</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pi_action</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">control</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
         <span class="n">current_error</span> <span class="o">=</span> <span class="n">reference</span> <span class="o">-</span> <span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">state_indices</span><span class="p">]</span>
@@ -111,7 +111,7 @@
         <span class="k">return</span> <span class="n">pi_action</span> <span class="o">+</span> <span class="n">d_action</span></div>
 
 <div class="viewcode-block" id="PIDController._tune_current_controller"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/base_controllers/pid_controller.html#gem_controllers.stages.base_controllers.pid_controller.PIDController._tune_current_controller">[docs]</a>    <span class="k">def</span> <span class="nf">_tune_current_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set the gains of the P, I and D component for the current control.</span>
+        <span class="sd">&quot;&quot;&quot;Set the gains of the P-, I- and D-component for the current control.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>
@@ -123,7 +123,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">d_gain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_gain</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span></div>
 
 <div class="viewcode-block" id="PIDController._tune_speed_controller"><a class="viewcode-back" href="../../../../parts/api_documentation/stages/base_controllers/pid_controller.html#gem_controllers.stages.base_controllers.pid_controller.PIDController._tune_speed_controller">[docs]</a>    <span class="k">def</span> <span class="nf">_tune_speed_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">t_n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set the gains of the P-, I- and D-Component for the speed control.</span>
+        <span class="sd">&quot;&quot;&quot;Set the gains of the P-, I- and D-component for the speed control.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>

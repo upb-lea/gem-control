@@ -34,7 +34,7 @@ class PIDController(PIController):
              reference(np.ndarray): The reference of the state.
 
         Returns:
-            action(np.ndarray): The action of the PID-controller
+            action(np.ndarray): The action of the PID controller
         """
         pi_action = super().control(state, reference)
         current_error = reference - state[self.state_indices]
@@ -43,7 +43,7 @@ class PIDController(PIController):
         return pi_action + d_action
 
     def _tune_current_controller(self, env, env_id, a=4):
-        """Set the gains of the P, I and D component for the current control.
+        """Set the gains of the P-, I- and D-component for the current control.
 
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
@@ -55,7 +55,7 @@ class PIDController(PIController):
         self.d_gain = self.p_gain * self.tau
 
     def _tune_speed_controller(self, env, env_id, a=4, t_n=None):
-        """Set the gains of the P-, I- and D-Component for the speed control.
+        """Set the gains of the P-, I- and D-component for the speed control.
 
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.

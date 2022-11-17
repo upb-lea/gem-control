@@ -97,7 +97,7 @@ class PController(BaseController):
 
     def _tune_current_controller(self, env, env_id, a):
         """
-        Tune the P-controller for the current control by the symmetrical optimum.
+        Tune the P controller for the current control by the symmetrical optimum.
 
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
@@ -123,7 +123,7 @@ class PController(BaseController):
 
     def _tune_speed_controller(self, env, env_id, a=4, t_n=None):
         """
-        Tune the P-controller for the speed control by the symmetrical optimum.
+        Tune the P controller for the speed control by the symmetrical optimum.
 
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
