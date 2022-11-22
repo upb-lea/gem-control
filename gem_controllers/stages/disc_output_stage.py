@@ -88,6 +88,8 @@ class DiscOutputStage(Stage):
             self.high_action = 1
         elif type(env.physical_system.converter) == cv.FiniteMultiConverter:
             self.output_stage = DiscOutputStage.to_finite_multi
+            self.low_level[0:3] = np.zeros(3)
+            self.high_level[0:3] = np.zeros(3)
             self.low_action = [0, 0, 0, 2]
             self.high_action = [1, 1, 1, 1]
             self.idle_action = [0, 0, 0, 0]

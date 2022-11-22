@@ -1,5 +1,5 @@
 from .emf_feedforward import EMFFeedforward
-
+from gem_controllers.utils import get_action_type
 import numpy as np
 
 
@@ -15,12 +15,14 @@ class EMFFeedforwardEESM(EMFFeedforward):
         self._action_decoupling = None
         self._currents_idx = None
         self._action_idx = None
+        self._cont_action = None
 
     def __call__(self, state, reference):
         self.psi = np.array([0, self._l_m * state[self._i_e_idx], 0])
         action = super().__call__(state, reference)
         action = action + self._decoupling_params * state[self._currents_idx]
-        action = action + self._action_decoupling * action[self._action_idx]
+        if self._cont_action:
+            action = action + self._action_decoupling * action[self._action_idx]
         return action
 
     def tune(self, env, env_id, **_):
@@ -31,6 +33,7 @@ class EMFFeedforwardEESM(EMFFeedforward):
         r_s = env.physical_system.electrical_motor.motor_parameter['r_s']
         r_e = env.physical_system.electrical_motor.motor_parameter['r_e']
 
+        self._cont_action = get_action_type(env_id) == 'Cont'
         self._l_m = l_m
         self._i_e_idx = env.state_names.index('i_e')
         self._decoupling_params = np.array([-l_m * r_e / l_e, 0, -l_m * r_s / l_d])
