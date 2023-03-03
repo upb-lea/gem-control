@@ -4,9 +4,9 @@ from control_block_diagram.predefined_components import Add, PIController, Limit
 
 def pi_speed_controller(start, control_task):
     """
-    Function to build the Speed Controller Block
+    Function to build the speed controller block
     Args:
-        start:          Starting Point of the Block
+        start:          Starting point of the block
         control_task:   Control task of the controller
 
     Returns:

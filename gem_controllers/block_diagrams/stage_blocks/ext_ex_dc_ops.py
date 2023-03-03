@@ -4,9 +4,9 @@ from control_block_diagram.predefined_components import Multiply, Divide, Limit
 
 def ext_ex_dc_ops(start, control_task):
     """
-    Function to build the Externally Excited DC DC Operation Point Selection Block
+    Function to build the Externally Excited DC operation point selection block
     Args:
-        start:          Starting Point of the Block
+        start:          Starting point of the block
         control_task:   Control task of the controller
 
     Returns:
@@ -38,7 +38,7 @@ def ext_ex_dc_ops(start, control_task):
 
     # Block of motor parameters
     box_rl = Box(multiply.position.add_y(1.2), size=(1.5, 0.8),
-                 text=r"$\sqrt{\frac{R_{\mathrm{a}}}{R_{\mathrm{e}}}L'_{\mathrm{e}}$", outputs=dict(bottom=1))
+                 text=r"$\sqrt{\frac{R_{\mathrm{a}}}{R_{\mathrm{e}}}}L'_{\mathrm{e}}$", outputs=dict(bottom=1))
 
     # Connect the motor parameters block with the multiply block
     Connection.connect(box_rl.output_bottom, multiply.input_top)

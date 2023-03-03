@@ -4,9 +4,9 @@ from control_block_diagram.predefined_components import Limit
 
 def shunt_dc_ops(start, control_task):
     """
-    Function to build the Shunt DC Operation Point Selection Block
+    Function to build the Shunt DC operation point selection block
     Args:
-        start:          Starting Point of the Block
+        start:          Starting point of the block
         control_task:   Control task of the controller
 
     Returns:

@@ -1,10 +1,9 @@
 import numpy as np
-import gym_electric_motor as gem
-
 import gem_controllers as gc
 
 
 class CurrentController(gc.GemController):
+    """Base class for a current controller"""
 
     def control(self, state, reference):
         raise NotImplementedError

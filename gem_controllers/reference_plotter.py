@@ -11,6 +11,7 @@ class ReferencePlotter:
     def tune(self, env, referenced_states, plot_references, **_):
         """
         Tune the reference plotter.
+
         Args:
             env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
             referenced_states(np.ndarray): Array of all referenced states.
@@ -30,7 +31,8 @@ class ReferencePlotter:
 
     def update_plots(self, references):
         """
-        Update the state plots of the GEM environment
+        Update the state plots of the GEM environment.
+
         Args:
             references(np.ndarray): Array of all reference values of the subordinate stages.
         """

@@ -6,9 +6,11 @@ import gem_controllers as gc
 
 
 class EMFFeedforward(Stage):
+    """This class calculates the emf feedforward, to decouple the actions."""
 
     @property
     def inductance(self):
+        """Inductances of the motor"""
         return self._inductance
 
     @inductance.setter
@@ -17,6 +19,7 @@ class EMFFeedforward(Stage):
 
     @property
     def psi(self):
+        """Permanent magnet flux of the motor"""
         return self._psi
 
     @psi.setter
@@ -25,6 +28,7 @@ class EMFFeedforward(Stage):
 
     @property
     def current_indices(self):
+        """Indices of the currents"""
         return self._current_indices
 
     @current_indices.setter
@@ -33,6 +37,7 @@ class EMFFeedforward(Stage):
 
     @property
     def omega_idx(self):
+        """Index of the rotational speed omega"""
         return self._omega_idx
 
     @omega_idx.setter
@@ -41,9 +46,19 @@ class EMFFeedforward(Stage):
 
     @property
     def action_range(self):
+        """Action range of the motor"""
         return self._action_range
 
     def omega_el(self, state):
+        """
+        Calculate the electrical speed.
+
+        Args:
+            state(np.array): state of the environment
+
+        Returns:
+            float: electrical speed
+        """
         return state[self._omega_idx] * self._p
 
     def __init__(self):
@@ -56,10 +71,28 @@ class EMFFeedforward(Stage):
         self._action_range = np.array([]), np.array([])
 
     def __call__(self, state, reference):
+        """
+        Calculate the emf feedforward voltages and add them to the actions of the current controller.
+
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference voltages.
+
+        Returns:
+            input voltages(np.ndarray): decoupled input voltages
+        """
         action = reference + (self._inductance * state[self._current_indices] + self._psi) * self.omega_el(state)
         return action
 
     def tune(self, env, env_id, **_):
+        """
+        Set all needed motor parameters for the decoupling.
+
+        Args:
+            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
+            env_id(str): The corresponding environment-id to specify the concrete environment.
+        """
+
         motor_type = gc.utils.get_motor_type(env_id)
         omega_idx = env.state_names.index('omega')
         current_indices = [env.state_names.index(current) for current in reader.emf_currents[motor_type]]

@@ -11,6 +11,7 @@ class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
     def __init__(self, max_modulation_level: float = 2 / np.sqrt(3), modulation_damping: float = 1.2):
         """
         Operation Point Selection for torque control of synchronous motors
+
         Args:
             max_modulation_level:  Maximum modulation of the modulation controller
             modulation_damping:    Damping of the modulation controller
@@ -52,8 +53,16 @@ class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
         self.psi_low = None     # minimum delta flux
         self.integrated_reset = None    # reset value integrated flux
 
-    def tune(self, env, env_id, current_safety_margin=0.2, **kwargs):
-        super().tune(env, env_id, current_safety_margin, **kwargs)
+    def tune(self, env, env_id, current_safety_margin=0.2):
+        """
+        Tune the operation point selcetion stage.
+
+        Args:
+            env(gym_electric_motor.ElectricMotorEnvironment): The environment to be controlled.
+            env_id(str): The id of the environment.
+            current_safety_margin(float): Percentage of the current margin to the current limit.
+        """
+        super().tune(env, env_id, current_safety_margin)
 
         # set the state indices
         self.omega_idx = env.state_names.index('omega')
@@ -82,6 +91,16 @@ class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
         self.integrated = self.integrated_reset
 
     def _select_operating_point(self, state, reference):
+        """
+        Calculate the current refrence values.
+
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference of the state.
+
+        Returns:
+            np.array: current reference values
+        """
         pass
 
     def modulation_control(self, state):
@@ -127,4 +146,5 @@ class FieldOrientedControllerOperationPointSelection(OperationPointSelection):
         return psi
 
     def reset(self):
+        """Reset the FOC operation point selcetion stage"""
         self.integrated = self.integrated_reset

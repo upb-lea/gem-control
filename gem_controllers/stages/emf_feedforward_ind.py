@@ -16,6 +16,17 @@ class EMFFeedforwardInd(EMFFeedforward):
         self.psi_abs_idx = None
 
     def __call__(self, state, reference):
+        """
+        Decouple the input voltages of an induction motor.
+
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference voltages.
+
+        Returns:
+            np.array: decoupled reference voltages
+        """
+
         # Calculate the stator angular velocity
         omega_s = state[self.omega_idx] + self.r_r * self.l_m / self.l_r * state[self.i_sq_idx] / max(
             np.abs(state[self.psi_abs_idx]), 1e-4) * np.sign(state[self.psi_abs_idx])
@@ -27,6 +38,14 @@ class EMFFeedforwardInd(EMFFeedforward):
         return action
 
     def tune(self, env, env_id, **_):
+        """
+        Set all needed motor parameters for the decoupling.
+
+        Args:
+            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.
+            env_id(str): The corresponding environment-id to specify the concrete environment.
+        """
+
         super().tune(env, env_id, **_)
         mp = env.physical_system.electrical_motor.motor_parameter
         self.r_r = mp['r_r']

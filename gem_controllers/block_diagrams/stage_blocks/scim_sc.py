@@ -1,12 +1,12 @@
-from control_block_diagram.components import Box, Connection
+from control_block_diagram.components import Connection
 from control_block_diagram.predefined_components import Add, PIController, Limit
 
 
 def scim_speed_controller(start, control_task):
     """
-    Function to build the Speed Controller Block of the SCIM
+    Function to build the speed controller block of the SCIM
     Args:
-        start:          Starting Point of the Block
+        start:          Starting point of the block
         control_task:   Control task of the controller
 
     Returns:

@@ -15,6 +15,13 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
 
     def __init__(self,  max_modulation_level: float = 2 / np.sqrt(3), modulation_damping: float = 1.2,
                  psi_controller=PIController(control_task='FC')):
+        """
+        Args:
+            max_modulation_level(float): Maximum value for the modulation controller.
+            modulation_damping(float): Damping of the gain of the modulation controller.
+            psi_controller(gc.stages.BaseController): Flux controller for the i_d current.
+        """
+
         super().__init__(max_modulation_level, modulation_damping)
 
         self.l_m = None
@@ -29,8 +36,8 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
 
         self.psi_controller = psi_controller
 
-    def psi_opt(self):
-        # Calculate the optimal flux for a given torque
+    def _psi_opt(self):
+        """Calculate the optimal flux for a given torque"""
         psi_opt_t = []
         i_sd = np.linspace(0, self.limit[self.i_sd_idx], self.i_sd_count)
         for t in np.linspace(self.t_minimum, self.t_maximum, self.t_count):
@@ -50,14 +57,16 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
             psi_opt_t.append([t, psi_opt, i_sd_opt, i_sq_opt])
         return np.array(psi_opt_t).T
 
-    def t_max(self):
-        # All flux values to calculate the corresponding torque and currents for
-        psi = np.linspace(self.psi_max, 0, self.psi_count)
+    def _t_max(self):
+        """Calculate a lookup table with the maximum torque for a given flux."""
+
         # The resulting torque and currents lists
         t_val = []
         i_sd_val = []
         i_sq_val = []
+        psi = np.linspace(self.psi_max, 0, self.psi_count)
 
+        # Calculate the maximum torque for a given flux
         for psi_ in psi:
             i_sd = psi_ / self.l_m
             i_sq = np.sqrt(self.nominal_value[self.u_sd_idx] ** 2 / (
@@ -76,8 +85,17 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
 
         return np.array([t_val, psi, i_sd_val, i_sq_val])
 
-    def tune(self, env: gem.core.ElectricMotorEnvironment, env_id: str, current_safety_margin: float = 0.2, **kwargs):
-        super().tune(env, env_id, current_safety_margin, **kwargs)
+    def tune(self, env: gem.core.ElectricMotorEnvironment, env_id: str, current_safety_margin: float = 0.2):
+        """
+        Tune the operation point selcetion stage.
+
+        Args:
+            env(gym_electric_motor.ElectricMotorEnvironment): The environment to be controlled.
+            env_id(str): The id of the environment.
+            current_safety_margin(float): Percentage of the current margin to the current limit.
+        """
+
+        super().tune(env, env_id, current_safety_margin)
 
         self.t_count = 1001
         self.psi_count = 1000
@@ -98,10 +116,11 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         self.tau = env.physical_system.tau
         self.psi_controller.tune(env, env_id, 4, self.l_s / self.r_s)
 
-        self.psi_opt_t = self.psi_opt()
+        self.psi_opt_t = self._psi_opt()
         self.psi_max = np.max(self.psi_opt_t[1])
-        self.t_max_psi = self.t_max()
+        self.t_max_psi = self._t_max()
 
+        # Set the parameters of the modulation controller
         self.i_gain = 1 / (self.l_s / (1.25 * self.r_s)) * (self.alpha - 1) / self.alpha ** 2
         self.k_ = 0.8
         self.psi_high = 0.1 * self.psi_max
@@ -109,26 +128,39 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         self.integrated_reset = 0.5 * self.psi_low  # Reset value of the modulation controller
 
     # Methods to get the indices of the lists for maximum torque and optimal flux
-    def get_psi_opt(self, torque):
+    def _get_psi_opt(self, torque):
+        """Get the optimal flux for a given torque"""
         torque = np.clip(torque, self.t_minimum, self.t_maximum)
         return int(round((torque - self.t_minimum) / (self.t_maximum - self.t_minimum) * (self.t_count - 1)))
 
-    def get_t_max(self, psi):
+    def _get_t_max(self, psi):
+        """Get the maximum torque for a given flux"""
         psi = np.clip(psi, 0, self.psi_max)
         return int(round(psi / self.psi_max * (self.psi_count - 1)))
 
     def _select_operating_point(self, state, reference):
+        """
+        Calculate the current operation point for a given torque reference value.
+
+        Args:
+             state(np.ndarray): The state of the environment.
+             reference(np.ndarray): The reference of the state.
+
+        Returns:
+            current_reference(np.ndarray): references for the current control stage
+        """
+
         psi = state[self.psi_abs_idx]
 
         # Get the optimal flux
-        psi_opt = self.psi_opt_t[1, self.get_psi_opt(reference[0])]
+        psi_opt = self.psi_opt_t[1, self._get_psi_opt(reference[0])]
 
         # Limit the flux by the modulation controller
         psi_max = self.modulation_control(state)
         psi_opt = min(psi_opt, psi_max)
 
         # Limit the torque
-        t_max = self.t_max_psi[0, self.psi_count - self.get_t_max(psi_opt)]
+        t_max = self.t_max_psi[0, self.psi_count - self._get_t_max(psi_opt)]
         torque = np.clip(reference[0], -np.abs(t_max), np.abs(t_max))
 
         # Control the i_sd current with a PI-Controller
@@ -147,5 +179,6 @@ class SCIMOperationPointSelection(FieldOrientedControllerOperationPointSelection
         return np.array([i_sd, i_sq])
 
     def reset(self):
+        """Reset the SCIM operation point selection"""
         super().reset()
         self.psi_controller.reset()

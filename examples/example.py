@@ -34,4 +34,3 @@ if __name__ == '__main__':
 
     # Control the environment
     c.control_environment(env, n_steps=30000, render_env=True, max_episode_length=10000)
-

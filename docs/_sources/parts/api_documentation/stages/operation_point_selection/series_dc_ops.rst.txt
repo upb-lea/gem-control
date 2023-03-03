@@ -1,0 +1,6 @@
+Series DC Motor Operation Point Selection
+_________________________________________
+
+.. autoclass:: gem_controllers.stages.operation_point_selection.series_dc_ops.SeriesDcOperationPointSelection
+   :members:
+   :private-members: _select_operating_point

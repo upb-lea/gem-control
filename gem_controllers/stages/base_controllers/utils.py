@@ -2,6 +2,7 @@ import gem_controllers.stages.base_controllers as bc
 
 
 def get(base_controller_id: str):
+    """Returns the class of a base controller called by a string."""
     return _base_controller_registry[base_controller_id]
 
 

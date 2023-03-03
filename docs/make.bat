@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=LEA-RL
+set SPHINXPROJ=GEM-Control
 
 if "%1" == "" goto help
 

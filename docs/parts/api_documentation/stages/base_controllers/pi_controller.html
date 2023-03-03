@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PI Controller &mdash; gem-control 2021 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="PID Controller" href="pid_controller.html" />
+    <link rel="prev" title="I Controller" href="i_controller.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> gem-control
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../read_me.html">Readme File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage_guide/usage_guides.html">Usage Guides</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../gem_control.html">GEM Control API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../stages.html">Stages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="base_controller.html">Base Controllers</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="p_controller.html">P Controller</a></li>
+<li class="toctree-l4"><a class="reference internal" href="i_controller.html">I Controller</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">PI Controller</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pid_controller.html">PID Controller</a></li>
+<li class="toctree-l4"><a class="reference internal" href="three_point_controller.html">Three Point Controller</a></li>
+<li class="toctree-l4"><a class="reference internal" href="base_controller.html#base-controller">Base Controller</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../operation_point_selection/operation_point_selection.html">Operation Point Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../clipping_stages/clipping_stage.html">Clipping Stages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../abc_transformation.html">ABC Transformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../anti_windup.html">Anti Windup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../emf_feedforward/emf_feedforward.html">EMF Feedforward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../input_stage.html">Input Stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../cont_output_stage.html">Continuous Output Stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../disc_output_stage.html">Discrete Output Stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stages.html#stage">Stage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../block_diagrams/block_diagrams.html">Block Diagrams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pi_current_controller.html">PI Current Controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../torque_controller.html">Torque Controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pi_speed_controller.html">PI Speed Controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gem_adapter.html">GEM Adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference_plotter.html">Reference Plotter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils.html">Utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gem_control.html#gem-controllers">GEM Controllers</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">gem-control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../gem_control.html">GEM Control API Documentation</a> &raquo;</li>
+          <li><a href="../stages.html">Stages</a> &raquo;</li>
+          <li><a href="base_controller.html">Base Controllers</a> &raquo;</li>
+      <li>PI Controller</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/parts/api_documentation/stages/base_controllers/pi_controller.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pi-controller">
+<h1>PI Controller<a class="headerlink" href="#pi-controller" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="gem_controllers.stages.base_controllers.pi_controller.PIController">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gem_controllers.stages.base_controllers.pi_controller.</span></span><span class="sig-name descname"><span class="pre">PIController</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">control_task</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/gem_controllers/stages/base_controllers/pi_controller.html#PIController"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.stages.base_controllers.pi_controller.PIController" title="Permalink to this definition"></a></dt>
+<dd><p>This class combines the proportional controller and the integration controller to a PI controller</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>control_task</strong> (<em>str</em>) – Control task of the PI controller</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gem_controllers.stages.base_controllers.pi_controller.PIController._tune_current_controller">
+<span class="sig-name descname"><span class="pre">_tune_current_controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/gem_controllers/stages/base_controllers/pi_controller.html#PIController._tune_current_controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.stages.base_controllers.pi_controller.PIController._tune_current_controller" title="Permalink to this definition"></a></dt>
+<dd><p>Tune the P controller and I controller for the current control by the symmetrical optimum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<em>ElectricMotorEnvironment</em>) – The GEM-Environment that the controller shall be created for.</p></li>
+<li><p><strong>env_id</strong> (<em>str</em>) – The corresponding environment-id to specify the concrete environment.</p></li>
+<li><p><strong>a</strong> (<em>float</em>) – Design parameter of the symmetrical optimum.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gem_controllers.stages.base_controllers.pi_controller.PIController._tune_flux_controller">
+<span class="sig-name descname"><span class="pre">_tune_flux_controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/gem_controllers/stages/base_controllers/pi_controller.html#PIController._tune_flux_controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.stages.base_controllers.pi_controller.PIController._tune_flux_controller" title="Permalink to this definition"></a></dt>
+<dd><p>Tune the P controller and I controller for the flux control by the symmetrical optimum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<em>ElectricMotorEnvironment</em>) – The GEM-Environment that the controller shall be created for.</p></li>
+<li><p><strong>env_id</strong> (<em>str</em>) – The corresponding environment-id to specify the concrete environment.</p></li>
+<li><p><strong>a</strong> (<em>float</em>) – Design parameter of the symmetrical optimum.</p></li>
+<li><p><strong>t_n</strong> (<em>float</em>) – Time constant of the underlying torque controller.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gem_controllers.stages.base_controllers.pi_controller.PIController._tune_speed_controller">
+<span class="sig-name descname"><span class="pre">_tune_speed_controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/gem_controllers/stages/base_controllers/pi_controller.html#PIController._tune_speed_controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.stages.base_controllers.pi_controller.PIController._tune_speed_controller" title="Permalink to this definition"></a></dt>
+<dd><p>Tune the P controller and I controller for the speed control by the symmetrical optimum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<em>ElectricMotorEnvironment</em>) – The GEM-Environment that the controller shall be created for.</p></li>
+<li><p><strong>env_id</strong> (<em>str</em>) – The corresponding environment-id to specify the concrete environment.</p></li>
+<li><p><strong>a</strong> (<em>float</em>) – Design parameter of the symmetrical optimum.</p></li>
+<li><p><strong>t_n</strong> (<em>float</em>) – Time constant of the underlying torque controller.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gem_controllers.stages.base_controllers.pi_controller.PIController.control">
+<span class="sig-name descname"><span class="pre">control</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/gem_controllers/stages/base_controllers/pi_controller.html#PIController.control"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.stages.base_controllers.pi_controller.PIController.control" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the reference of the underlying stage by adding the P- and I-component.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<em>np.ndarray</em>) – The state of the environment.</p></li>
+<li><p><strong>reference</strong> (<em>np.ndarray</em>) – The reference of the state.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>output of the controller stage</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>controller_output(np.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gem_controllers.stages.base_controllers.pi_controller.PIController.tune">
+<span class="sig-name descname"><span class="pre">tune</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/gem_controllers/stages/base_controllers/pi_controller.html#PIController.tune"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gem_controllers.stages.base_controllers.pi_controller.PIController.tune" title="Permalink to this definition"></a></dt>
+<dd><p>Tune the components of the controller for the desired task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<em>ElectricMotorEnvironment</em>) – The GEM-Environment that the controller shall be created for.</p></li>
+<li><p><strong>env_id</strong> (<em>str</em>) – The corresponding environment-id to specify the concrete environment.</p></li>
+<li><p><strong>a</strong> (<em>float</em>) – Design parameter of the symmetrical optimum.</p></li>
+<li><p><strong>t_n</strong> (<em>float</em>) – Time constant of the underlying controller stage.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="i_controller.html" class="btn btn-neutral float-left" title="I Controller" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pid_controller.html" class="btn btn-neutral float-right" title="PID Controller" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Felix Book,  Barnabas Haucke-Korber, Maximilian Schenke, Arne Traue, Oliver Wallscheid.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

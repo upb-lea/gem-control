@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gem_controllers.pi_speed_controller &mdash; gem-control 2021 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> gem-control
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../parts/read_me.html">Readme File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parts/usage_guide/usage_guides.html">Usage Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parts/api_documentation/gem_control.html">GEM Control API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gem-control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>gem_controllers.pi_speed_controller</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gem_controllers.pi_speed_controller</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">gym_electric_motor</span> <span class="k">as</span> <span class="nn">gem</span>
+<span class="kn">import</span> <span class="nn">gem_controllers</span> <span class="k">as</span> <span class="nn">gc</span>
+
+
+<div class="viewcode-block" id="PISpeedController"><a class="viewcode-back" href="../../parts/api_documentation/pi_speed_controller.html#gem_controllers.pi_speed_controller.PISpeedController">[docs]</a><span class="k">class</span> <span class="nc">PISpeedController</span><span class="p">(</span><span class="n">gc</span><span class="o">.</span><span class="n">GemController</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class forms the PI speed controller, for any motor.&quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">speed_control_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">BaseController</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Base controller of the speed controller stage&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_speed_control_stage</span>
+
+    <span class="nd">@speed_control_stage</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">speed_control_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">BaseController</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_speed_control_stage</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">torque_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">gc</span><span class="o">.</span><span class="n">TorqueController</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Subordinated torque controller stage&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_torque_controller</span>
+
+    <span class="nd">@torque_controller</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">torque_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">gc</span><span class="o">.</span><span class="n">TorqueController</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_torque_controller</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">torque_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reference values of the torque controller stage&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_torque_reference</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">anti_windup_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Anti windup stage of the speed controller&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_anti_windup_stage</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">clipping_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clipping stage of the speed controller&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">references</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">refs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_torque_controller</span><span class="o">.</span><span class="n">references</span>
+        <span class="n">refs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">torque</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_torque_reference</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">refs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">referenced_states</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_torque_controller</span><span class="o">.</span><span class="n">referenced_states</span><span class="p">,</span> <span class="s1">&#39;torque&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">_env</span><span class="p">:</span> <span class="p">(</span><span class="n">gem</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">ElectricMotorEnvironment</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">env_id</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">torque_controller</span><span class="p">:</span> <span class="p">(</span><span class="n">gc</span><span class="o">.</span><span class="n">TorqueController</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">base_speed_controller</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;PI&#39;</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initilizes a PI speed control stage.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            _env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>
+<span class="sd">            env_id(str): The corresponding environment-id to specify the concrete environment.</span>
+<span class="sd">            torque_controller(gc.TorqueController): The underlying torque control stage</span>
+<span class="sd">            base_speed_controller(str): Selection which base controller should be used for the speed control stage.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_speed_control_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">base_controllers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">base_speed_controller</span><span class="p">)(</span><span class="s1">&#39;SC&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_torque_controller</span> <span class="o">=</span> <span class="n">torque_controller</span>
+        <span class="k">if</span> <span class="n">torque_controller</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_torque_controller</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">TorqueController</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_torque_reference</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_anti_windup_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">AntiWindup</span><span class="p">(</span><span class="s1">&#39;SC&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">stages</span><span class="o">.</span><span class="n">clipping_stages</span><span class="o">.</span><span class="n">AbsoluteClippingStage</span><span class="p">(</span><span class="s1">&#39;SC&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PISpeedController.tune"><a class="viewcode-back" href="../../parts/api_documentation/pi_speed_controller.html#gem_controllers.pi_speed_controller.PISpeedController.tune">[docs]</a>    <span class="k">def</span> <span class="nf">tune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">tune_torque_controller</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tune the components of the current control stage.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            env(ElectricMotorEnvironment): The GEM-Environment that the controller shall be created for.</span>
+<span class="sd">            env_id(str): The corresponding environment-id to specify the concrete environment.</span>
+<span class="sd">            tune_torque_controller(bool): Flag, if the underlying torque control stage should be tuned.</span>
+<span class="sd">            a(float): Design parameter of the symmetric optimum for the base controllers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">tune_torque_controller</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_torque_controller</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_anti_windup_stage</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span>
+        <span class="n">t_n</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_torque_controller</span><span class="o">.</span><span class="n">t_n</span><span class="p">)</span>  <span class="c1"># Get the time constant of the torque control stage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_speed_control_stage</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="p">,</span> <span class="n">t_n</span><span class="o">=</span><span class="n">t_n</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PISpeedController.speed_control"><a class="viewcode-back" href="../../parts/api_documentation/pi_speed_controller.html#gem_controllers.pi_speed_controller.PISpeedController.speed_control">[docs]</a>    <span class="k">def</span> <span class="nf">speed_control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the torque reference.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state(np.array): actual state of the environment</span>
+<span class="sd">            reference(np.array): actual speed references</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torque_reference(np.array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Calculate the torque reference by the base controller</span>
+        <span class="n">torque_reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_speed_control_stage</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
+
+        <span class="c1"># Clipping the torque reference and integrating the I-Controller</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_torque_reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">torque_reference</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_speed_control_stage</span><span class="p">,</span> <span class="s1">&#39;integrator&#39;</span><span class="p">):</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_anti_windup_stage</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clipping_stage</span><span class="o">.</span><span class="n">clipping_difference</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_speed_control_stage</span><span class="o">.</span><span class="n">integrator</span> <span class="o">+=</span> <span class="n">delta</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_torque_reference</span></div>
+
+<div class="viewcode-block" id="PISpeedController.control"><a class="viewcode-back" href="../../parts/api_documentation/pi_speed_controller.html#gem_controllers.pi_speed_controller.PISpeedController.control">[docs]</a>    <span class="k">def</span> <span class="nf">control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Claculate the reference values for the input voltages.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state(np.array): actual state of the environment</span>
+<span class="sd">            reference(np.array): speed references</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: voltage reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Calculate the torque reference</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">speed_control</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
+
+        <span class="c1"># Calculate the references of the underlying stages</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_torque_controller</span><span class="o">.</span><span class="n">control</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">reference</span></div>
+
+<div class="viewcode-block" id="PISpeedController.reset"><a class="viewcode-back" href="../../parts/api_documentation/pi_speed_controller.html#gem_controllers.pi_speed_controller.PISpeedController.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset all components of the speed control stage and the underlying control stages&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_torque_controller</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_speed_control_stage</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Felix Book,  Barnabas Haucke-Korber, Maximilian Schenke, Arne Traue, Oliver Wallscheid.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

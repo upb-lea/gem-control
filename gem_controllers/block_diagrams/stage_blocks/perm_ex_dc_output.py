@@ -8,14 +8,14 @@ def perm_ex_dc_output(emf_feedforward):
         emf_feedforward: Boolean whether emf feedforward stage is included
 
     Returns:
-        Function to build the Perm Ex DC Output Block
+        Function to build the Perm Ex DC output block
     """
 
     def _perm_ex_dc_output(start, control_task):
         """
-        Function to build the Perm Ex DC Output Block
+        Function to build the Perm Ex DC output block
         Args:
-            start:          Starting Point of the Block
+            start:          Starting point of the block
             control_task:   Control task of the controller
 
         Returns:
