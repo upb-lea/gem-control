@@ -50,6 +50,10 @@ class PISpeedController(gc.GemController):
     def referenced_states(self):
         return np.append(self._torque_controller.referenced_states, 'torque')
 
+    @property
+    def maximum_reference(self):
+        return self._torque_controller.maximum_reference
+
     def __init__(
             self,
             _env: (gem.core.ElectricMotorEnvironment, None) = None,

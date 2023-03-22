@@ -105,7 +105,9 @@ class GymElectricMotorAdapter(gc.GemController):
         self._output_stage.tune(env, env_id)
         if tune_controller:
             self._controller.tune(env, env_id, **kwargs)
-        self._reference_plotter.tune(env, self._controller.referenced_states, **kwargs)
+
+        self._reference_plotter.tune(env, self._controller.referenced_states, plot_references=True,
+                                     maximum_reference=self._controller.maximum_reference)
 
     def build_block_diagram(self, env_id, save_block_diagram_as):
         self._block_diagram = gc.build_block_diagram(self, env_id, save_block_diagram_as)
