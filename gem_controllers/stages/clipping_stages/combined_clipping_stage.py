@@ -13,6 +13,15 @@ class CombinedClippingStage(ClippingStage):
         """Difference between the reference and the clipped reference"""
         return self._clipping_difference
 
+    @property
+    def action_range(self) -> Tuple[np.ndarray, np.ndarray]:
+        """Action range of the controller stage"""
+        action_range_low = np.zeros(len(self._squared_clipped_states) + len(self._absolute_clipped_states))
+        action_range_high = np.zeros(len(self._squared_clipped_states) + len(self._absolute_clipped_states))
+        action_range_low[-1] = self._action_range_absolute[0][0]
+        action_range_high[-1] = self._action_range_absolute[1][0]
+        return action_range_low, action_range_high
+
     def __init__(self, control_task='CC'):
         self._action_range_absolute = np.array([]), np.array([])
         self._limit_squred_clipping = np.array([])

@@ -23,6 +23,11 @@ class SquaredClippingStage(ClippingStage):
         """Margin of the controlled states"""
         return self._margin
 
+    @property
+    def action_range(self):
+        """Action range of the controller stage"""
+        return []
+
     def __init__(self, control_task='CC'):
         """
         Args:
