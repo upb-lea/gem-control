@@ -54,6 +54,10 @@ class TorqueController(gc.GemController):
     def referenced_states(self):
         return np.append(self._current_controller.referenced_states, self._referenced_currents)
 
+    @property
+    def maximum_reference(self):
+        return self._maximum_reference
+
     def __init__(
             self,
             env: (gem.core.ElectricMotorEnvironment, None) = None,
@@ -91,6 +95,7 @@ class TorqueController(gc.GemController):
                 self._clipping_stage = gc.stages.clipping_stages.SquaredClippingStage('TC')
         self._current_reference = np.array([])
         self._referenced_currents = np.array([])
+        self._maximum_reference = dict()
 
     def tune(self, env, env_id, current_safety_margin=0.2, tune_current_controller=True, **kwargs):
         """
@@ -108,6 +113,11 @@ class TorqueController(gc.GemController):
         self._clipping_stage.tune(env, env_id, margin=current_safety_margin)
         self._operation_point_selection.tune(env, env_id, current_safety_margin)
         self._referenced_currents = gc.parameter_reader.currents[gc.utils.get_motor_type(env_id)]
+        for current, action_range_low, action_range_high in zip(self._referenced_currents,
+                                                                self._clipping_stage.action_range[0],
+                                                                self._clipping_stage.action_range[1]):
+            if current in ['i', 'i_a', 'i_e']:
+                self._maximum_reference[current] = [action_range_low, action_range_high]
 
     def torque_control(self, state, reference):
         """

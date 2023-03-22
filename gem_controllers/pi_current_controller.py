@@ -76,6 +76,10 @@ class PICurrentController(gc.CurrentController):
         """Referenced states of the current control stage."""
         return np.array([])
 
+    @property
+    def maximum_reference(self):
+        return dict()
+
     def __init__(self, env, env_id, base_current_controller='PI', decoupling=True):
         """
         Initilizes a PI current control stage.
