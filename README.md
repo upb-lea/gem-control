@@ -5,6 +5,8 @@
 | [**Installation**](#Installation)
 | [**Citing**](#Citing)
 
+[Read the paper (IEEE Xplore)](https://ieeexplore.ieee.org/document/10239044)
+
 ## Overview
 This repository will contain controllers for the [gym-electric-motor](https://upb-lea.github.io/gym-electric-motor/) environments.
 The following motors are supported:
