@@ -3,6 +3,7 @@
 [**Overview**](#Overview)
 | [**Getting Started**](#Getting-Started)
 | [**Installation**](#Installation)
+| [**Citing**](#Citing)
 
 ## Overview
 This repository will contain controllers for the [gym-electric-motor](https://upb-lea.github.io/gym-electric-motor/) environments.
@@ -55,4 +56,18 @@ pip install -e .
 
 # or alternatively
 pip install git+https://github.com/upb-lea/gem-control
+```
+
+## Citing
+Please cite the corresponding whitepaper when using this package:
+```
+@INPROCEEDINGS{10.1109/IEMDC55163.2023.10239044,
+  author={Book, Felix and Traue, Arne and Schenke, Maximilian and Haucke-Korber, Barnabas and Wallscheid, Oliver},
+  booktitle={2023 IEEE International Electric Machines & Drives Conference (IEMDC)}, 
+  title={Gym-Electric-Motor (GEM) Control: An Automated Open-Source Controller Design Suite for Drives}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={1-7},
+  doi={10.1109/IEMDC55163.2023.10239044}}
 ```
